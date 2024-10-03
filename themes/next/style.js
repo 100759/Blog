@@ -9,10 +9,10 @@ const Style = () => {
     <style jsx global>{`
       // 底色
       body {
-        background-color: #c9d6df;
+        background-color: #eeedee;
       }
       .dark body {
-        background-color: #52616b;
+        background-color: black;
       }
 
       // 菜单下划线动画
