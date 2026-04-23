@@ -50,7 +50,7 @@ function FeedCardImage({ src, variant }: { src: string; variant: FeedCardVariant
                 height={height}
                 onLoad={onLoad}
                 onError={onError}
-                className={`absolute inset-0 h-full w-full object-cover object-center hover:scale-105 translation duration-300 ${blurhash && (!loaded || failed) ? "opacity-0" : "opacity-100"
+                className={`absolute inset-0 h-full w-full object-cover object-center transition duration-300 hover:scale-105 ${blurhash && (!loaded || failed) ? "opacity-0" : "opacity-100"
                     }`}
             />
         </div>
@@ -68,18 +68,18 @@ const FEED_CARD_STYLES: Record<
     }
 > = {
     default: {
-        card: "my-2 inline-block w-full break-inside-avoid rounded-2xl bg-w p-6 duration-300 bg-button",
+        card: "group my-3 inline-block w-full break-inside-avoid overflow-hidden rounded-[24px] border border-black/10 bg-[rgba(255,250,245,0.9)] p-4 shadow-[0_12px_28px_rgba(38,24,18,0.06)] backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(38,24,18,0.1)] dark:border-white/10 dark:bg-[rgba(20,18,19,0.9)] dark:hover:shadow-[0_22px_44px_rgba(0,0,0,0.24)]",
         imageWrap: "",
-        meta: "text-gray-400 text-sm",
-        summary: "line-clamp-4 text-pretty overflow-hidden dark:text-neutral-500",
-        title: "text-xl font-bold text-gray-700 dark:text-white text-pretty overflow-hidden",
+        meta: "text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400",
+        summary: "line-clamp-4 text-pretty overflow-hidden text-[15px] leading-7 text-neutral-600 dark:text-neutral-300",
+        title: "site-display text-[1.65rem] sm:text-[1.8rem] font-semibold text-neutral-900 dark:text-white text-pretty overflow-hidden",
     },
     editorial: {
-        card: "my-3 inline-block w-full break-inside-avoid overflow-hidden rounded-[28px] border border-black/10 bg-w p-3 shadow-[0_24px_60px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(15,23,42,0.12)] dark:border-white/10",
-        imageWrap: "mb-3 overflow-hidden rounded-[22px] border border-black/5 dark:border-white/10",
+        card: "group my-3 inline-block w-full break-inside-avoid overflow-hidden rounded-[28px] border border-black/10 bg-[rgba(255,250,245,0.92)] p-3 shadow-[0_16px_38px_rgba(38,24,18,0.08)] backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:shadow-[0_22px_48px_rgba(38,24,18,0.12)] dark:border-white/10 dark:bg-[rgba(20,18,19,0.9)] dark:hover:shadow-[0_24px_54px_rgba(0,0,0,0.28)]",
+        imageWrap: "mb-3 overflow-hidden rounded-[20px] border border-black/5 dark:border-white/10",
         meta: "text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400",
         summary: "line-clamp-5 text-pretty text-[15px] leading-7 text-neutral-600 dark:text-neutral-300",
-        title: "text-2xl font-semibold tracking-[-0.02em] text-neutral-900 dark:text-white text-pretty overflow-hidden",
+        title: "site-display text-[1.8rem] sm:text-[1.95rem] font-semibold tracking-[-0.02em] text-neutral-900 dark:text-white text-pretty overflow-hidden",
     },
 };
 
@@ -103,6 +103,8 @@ export function FeedCard({ id, title, avatar, draft, listed, top, summary, hasht
     const siteConfig = useSiteConfig();
     const activeVariant = normalizeFeedCardVariant(variant ?? siteConfig.feedCardVariant);
     const styles = FEED_CARD_STYLES[activeVariant];
+    const createdAtDate = new Date(createdAt);
+    const updatedAtDate = new Date(updatedAt);
     const body = (
         <div className={styles.card}>
             {avatar ? (
@@ -111,25 +113,29 @@ export function FeedCard({ id, title, avatar, draft, listed, top, summary, hasht
                 </div>
             ) : null}
             <div className={activeVariant === "editorial" ? "px-2 pb-2" : ""}>
+                <div className={`mb-3 flex flex-wrap items-center gap-2 ${styles.meta}`}>
+                    {top === 1 ? (
+                        <span className="rounded-full bg-theme/10 px-2 py-1 text-theme">
+                            {t('article.top.title')}
+                        </span>
+                    ) : null}
+                    {draft === 1 ? <span>{t("draft")}</span> : null}
+                    {listed === 0 ? <span>{t("unlisted")}</span> : null}
+                </div>
                 <h1 className={styles.title}>{title}</h1>
                 <p className={`space-x-2 ${styles.meta}`}>
-                    <span title={new Date(createdAt).toLocaleString()}>
-                        {createdAt === updatedAt ? timeago(createdAt) : t('feed_card.published$time', { time: timeago(createdAt) })}
+                    <span title={createdAtDate.toLocaleString()}>
+                        {createdAtDate.getTime() === updatedAtDate.getTime() ? timeago(createdAtDate) : t('feed_card.published$time', { time: timeago(createdAtDate) })}
                     </span>
-                    {createdAt !== updatedAt &&
-                        <span title={new Date(updatedAt).toLocaleString()}>
-                            {t('feed_card.updated$time', { time: timeago(updatedAt) })}
+                    {createdAtDate.getTime() !== updatedAtDate.getTime() &&
+                        <span title={updatedAtDate.toLocaleString()}>
+                            {t('feed_card.updated$time', { time: timeago(updatedAtDate) })}
                         </span>
                     }
                 </p>
-                <p className={`space-x-2 ${styles.meta} ${activeVariant === "editorial" ? "mt-2" : ""}`}>
-                    {draft === 1 && <span>{t("draft")}</span>}
-                    {listed === 0 && <span>{t("unlisted")}</span>}
-                    {top === 1 && <span className="text-theme">{t('article.top.title')}</span>}
-                </p>
-                <p className={`${styles.summary} ${activeVariant === "editorial" ? "mt-4 max-w-3xl" : ""}`}>{summary}</p>
+                <p className={`${styles.summary} ${activeVariant === "editorial" ? "mt-4 max-w-3xl" : "mt-4"}`}>{summary}</p>
                 {hashtags.length > 0 &&
-                    <div className={`flex flex-row flex-wrap justify-start gap-2 ${activeVariant === "editorial" ? "mt-4" : "mt-2 gap-x-2"}`}>
+                    <div className={`flex flex-row flex-wrap justify-start gap-2 ${activeVariant === "editorial" ? "mt-4" : "mt-4 gap-x-2"}`}>
                         {hashtags.map(({ name }, index) => (
                             <HashTag key={index} name={name} />
                         ))}

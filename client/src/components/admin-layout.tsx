@@ -18,10 +18,10 @@ function AdminNavItem({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+      className={`flex items-center gap-3 rounded-[18px] border px-4 py-3 text-sm font-medium transition-all ${
         active
-          ? "bg-theme text-white"
-          : "t-primary hover:bg-neutral-100 dark:hover:bg-white/5"
+          ? "border-theme/30 bg-theme/10 text-theme shadow-[0_12px_28px_rgba(var(--theme-rgb),0.16)]"
+          : "border-black/5 bg-white/45 t-primary hover:border-black/10 hover:bg-white/75 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
       }`}
     >
       <i className={`${icon} text-base`} />
@@ -43,19 +43,32 @@ export function AdminLayout({
   const siteConfig = useSiteConfig();
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row lg:px-6">
+    <div className="site-shell min-h-screen">
+      <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-6 px-4 py-6 lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:px-6">
         <aside className="w-full shrink-0 lg:sticky lg:top-6 lg:w-72 lg:self-start">
-          <div className="rounded-2xl border border-black/10 bg-w p-5 dark:border-white/10">
-            <Link href="/" className="flex items-center gap-4 rounded-xl px-2 py-2 transition-colors hover:bg-neutral-50 dark:hover:bg-white/5">
+          <div className="site-panel rounded-[30px] p-5">
+            <Link href="/" className="flex items-center gap-4 rounded-[22px] px-2 py-2 transition-colors hover:bg-white/60 dark:hover:bg-white/[0.05]">
               {siteConfig.avatar ? (
-                <img src={siteConfig.avatar} alt="Avatar" className="h-12 w-12 rounded-2xl border border-black/10 dark:border-white/10" />
+                <img src={siteConfig.avatar} alt="Avatar" className="h-12 w-12 rounded-[18px] border border-black/10 dark:border-white/10" />
               ) : null}
               <div className="min-w-0">
-                <p className="truncate text-base font-semibold t-primary">{siteConfig.name}</p>
-                <p className="truncate text-sm text-neutral-500 dark:text-neutral-400">{t("admin.back_to_site")}</p>
+                <p className="site-kicker">{t("admin.title")}</p>
+                <p className="site-display truncate text-[1.35rem] text-neutral-900 dark:text-white">{siteConfig.name}</p>
               </div>
             </Link>
+
+            <div className="mt-5 rounded-[22px] border border-black/5 bg-white/45 px-4 py-4 dark:border-white/10 dark:bg-white/[0.03]">
+              <p className="text-sm leading-6 text-neutral-600 dark:text-neutral-300">
+                {description}
+              </p>
+              <Link
+                href="/"
+                className="mt-4 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/75 px-4 py-2 text-sm font-medium t-primary transition hover:border-black/20 dark:border-white/10 dark:bg-white/[0.06] dark:hover:bg-white/[0.08]"
+              >
+                <i className="ri-arrow-left-line" />
+                <span>{t("admin.back_to_site")}</span>
+              </Link>
+            </div>
 
             <div className="mt-6">
               <p className="px-2 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400 dark:text-neutral-500">
@@ -73,11 +86,11 @@ export function AdminLayout({
         </aside>
 
         <main className="min-w-0 flex-1">
-          <div className="rounded-2xl border border-black/10 bg-w p-6 dark:border-white/10">
+          <div className="site-panel rounded-[34px] p-5 md:p-6">
             <div className="border-b border-black/5 pb-5 dark:border-white/5">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-theme/70">{t("admin.title")}</p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] t-primary">{title}</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-500 dark:text-neutral-400">{description}</p>
+              <p className="site-kicker">{t("admin.title")}</p>
+              <h1 className="site-display mt-3 text-[2.5rem] text-neutral-900 dark:text-white md:text-[3.4rem]">{title}</h1>
+              <p className="mt-3 max-w-3xl text-base leading-7 text-neutral-600 dark:text-neutral-300">{description}</p>
             </div>
             <div className="mt-6">{children}</div>
           </div>

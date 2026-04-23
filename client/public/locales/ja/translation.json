@@ -137,6 +137,10 @@
     "permission_denied": "権限がありません",
     "title": "エラー"
   },
+  "callback": {
+    "title": "お待ちください",
+    "desc": "認証を完了してサイトへ戻っています。"
+  },
   "feed_card": {
     "published$time": "{{time}} に公開",
     "updated$time": "{{time}} に更新"
@@ -169,8 +173,25 @@
   "listed": "記事にリスト",
   "load_more": "もっと読み込む",
   "login": {
+    "error": {
+      "empty": "ユーザー名とパスワードを入力してください",
+      "failed": "ログインに失敗しました",
+      "invalid": "ユーザー名またはパスワードが正しくありません",
+      "network": "通信エラーが発生しました。もう一度お試しください"
+    },
+    "github": {
+      "label": "GitHub OAuth"
+    },
+    "loading": "ログイン中...",
+    "method": {
+      "enabled": "利用可能",
+      "disabled": "未設定"
+    },
+    "no_methods": "利用できるログイン方法がありません",
     "oauth_only": "続行するにはログインしてください",
+    "or": "または",
     "password": {
+      "label": "パスワードログイン",
       "placeholder": "パスワードを入力してください"
     },
     "required": "続行するにはログインしてください",
@@ -467,6 +488,28 @@
         "blue": "ブルー",
         "teal": "ティール",
         "orange": "オレンジ"
+      }
+    },
+    "theme_preset": {
+      "title": "テーマプリセット",
+      "desc": "背景、パネル、文字コントラストの空気感を選びます",
+      "preview": {
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "options": {
+        "paper": {
+          "label": "Paper",
+          "desc": "やわらかなコントラストと温かみを持つ、紙面のようなトーンです。"
+        },
+        "mist": {
+          "label": "Mist",
+          "desc": "冷たい白と石のような青みで、静かで澄んだ印象に寄せます。"
+        },
+        "nocturne": {
+          "label": "Nocturne",
+          "desc": "銅色の余韻を残した濃いダークトーンで、よりドラマチックです。"
+        }
       }
     },
     "rss": {

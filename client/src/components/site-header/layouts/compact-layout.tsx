@@ -9,12 +9,18 @@ export const compactLayoutDefinition: HeaderLayoutDefinition = {
   renderDesktop({ children, profile, siteConfig, isAtTop }) {
     return (
       <div className="hidden w-full lg:block">
-        <div className={`flex items-center justify-between gap-8 px-4 py-3 ${isAtTop ? "bg-transparent backdrop-blur-none" : "bg-white/20 backdrop-blur-xl dark:bg-white/[0.03]"}`}>
+        <div
+          className={`site-panel flex items-center justify-between gap-8 rounded-[26px] px-4 py-3 transition-all ${
+            isAtTop
+              ? "bg-white/55 shadow-[0_18px_45px_rgba(36,24,19,0.08)] dark:bg-[rgba(20,18,19,0.64)]"
+              : "bg-white/72 shadow-[0_22px_52px_rgba(36,24,19,0.12)] dark:bg-[rgba(20,18,19,0.8)]"
+          }`}
+        >
           <BrandLink
             siteConfig={siteConfig}
             compact
             className="min-w-0 flex items-center"
-            avatarClassName="h-10 w-10 rounded-full"
+            avatarClassName="h-10 w-10 rounded-[14px]"
             titleClassName="text-base font-bold tracking-tight text-neutral-900 dark:text-neutral-50"
             showDescription={false}
           />

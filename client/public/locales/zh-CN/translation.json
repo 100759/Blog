@@ -137,6 +137,10 @@
     "permission_denied": "权限不足",
     "title": "错误"
   },
+  "callback": {
+    "title": "请稍候",
+    "desc": "正在完成认证并返回站点。"
+  },
   "feed_card": {
     "published$time": "{{time}} 发布",
     "updated$time": "{{time}} 更新"
@@ -175,11 +179,19 @@
       "invalid": "用户名或密码错误",
       "network": "网络错误，请重试"
     },
+    "github": {
+      "label": "GitHub OAuth"
+    },
     "loading": "登录中...",
+    "method": {
+      "enabled": "可用",
+      "disabled": "未启用"
+    },
     "no_methods": "没有可用的登录方式",
     "oauth_only": "请登录后继续",
     "or": "或",
     "password": {
+      "label": "密码登录",
       "placeholder": "请输入密码"
     },
     "required": "请登录后继续",
@@ -476,6 +488,28 @@
         "blue": "蓝色",
         "teal": "青绿",
         "orange": "橙色"
+      }
+    },
+    "theme_preset": {
+      "title": "主题氛围",
+      "desc": "选择整站背景、面板和文字对比的整体气质",
+      "preview": {
+        "light": "浅色",
+        "dark": "深色"
+      },
+      "options": {
+        "paper": {
+          "label": "纸本暖调",
+          "desc": "偏暖的纸张底色，层次柔和，像一本做得很克制的画册。"
+        },
+        "mist": {
+          "label": "雾蓝冷调",
+          "desc": "冷白和石蓝更突出，界面更清透，也更安静。"
+        },
+        "nocturne": {
+          "label": "夜曲铜黑",
+          "desc": "更浓的暗色层次和铜棕余晖，整体戏剧感更强。"
+        }
       }
     },
     "rss": {

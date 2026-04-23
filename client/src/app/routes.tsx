@@ -159,12 +159,16 @@ function AppRoute({
         const resolvedContent = typeof content === "function" ? content(params) : content;
         const layoutDefinition = getHeaderLayoutDefinition(siteConfig.headerLayout);
 
-        return layoutDefinition.renderRouteShell({
-          header: <Header>{headerComponent}</Header>,
-          content: <Padding className={paddingClassName}>{resolvedContent}</Padding>,
-          footer: <Footer />,
-          paddingClassName,
-        });
+        return (
+          <div className="site-shell">
+            {layoutDefinition.renderRouteShell({
+              header: <Header>{headerComponent}</Header>,
+              content: <Padding className={paddingClassName}>{resolvedContent}</Padding>,
+              footer: <Footer />,
+              paddingClassName,
+            })}
+          </div>
+        );
       }}
     </Route>
   );

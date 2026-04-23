@@ -1,114 +1,155 @@
-import {useEffect, useRef, useState} from "react"
-import {Helmet} from 'react-helmet'
-import {Link} from "wouter"
-import {Waiting} from "../components/loading"
-import { client } from "../app/runtime"
-import {useSiteConfig} from "../hooks/useSiteConfig";
-import {siteName} from "../utils/constants"
-import {useTranslation} from "react-i18next";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Helmet } from "react-helmet";
+import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
+import { Waiting } from "../components/loading";
+import { client } from "../app/runtime";
+import { useSiteConfig } from "../hooks/useSiteConfig";
+import { siteName } from "../utils/constants";
 
-interface FeedItem {
+interface FeedItemRecord {
     id: number;
-    createdAt: Date;
+    createdAt: Date | string;
     title: string | null;
 }
 
 export function TimelinePage() {
-    const [feeds, setFeeds] = useState<Partial<Record<number, FeedItem[]>>>()
-    const [length, setLength] = useState(0)
-    const ref = useRef(false)
-    const { t } = useTranslation()
+    const [feeds, setFeeds] = useState<Partial<Record<number, FeedItemRecord[]>>>();
+    const [length, setLength] = useState(0);
+    const ref = useRef(false);
+    const { t } = useTranslation();
     const siteConfig = useSiteConfig();
+
     function fetchFeeds() {
         client.feed.timeline()
-        .then(({ data }) => {
-            if (data) {
-                const arr = Array.isArray(data) ? data : []
-                setLength(arr.length)
-                // 兼容的分组逻辑
-                const groups = (Object.groupBy
-                    ? Object.groupBy(arr, ({ createdAt }) => new Date(createdAt).getFullYear())
-                    : arr.reduce<Record<number, any[]>>((acc, item) => {
-                        const key = new Date(item.createdAt).getFullYear()
-                        ;(acc[key] ||= []).push(item)
-                        return acc
-                    }, {})
-                )
+            .then(({ data }) => {
+                if (data) {
+                    const arr = Array.isArray(data) ? data : [];
+                    setLength(arr.length);
+                    const groups = (Object.groupBy
+                        ? Object.groupBy(arr, ({ createdAt }) => new Date(createdAt).getFullYear())
+                        : arr.reduce<Record<number, FeedItemRecord[]>>((acc, item) => {
+                            const key = new Date(item.createdAt).getFullYear();
+                            (acc[key] ||= []).push(item as FeedItemRecord);
+                            return acc;
+                        }, {}));
 
-                setFeeds(groups as any)
-            }
-        })
-        .catch(err => {
-            console.error("fetchFeeds error:", err)
-        })
+                    setFeeds(groups as any);
+                }
+            })
+            .catch((err) => {
+                console.error("fetchFeeds error:", err);
+            });
     }
 
     useEffect(() => {
-        if (ref.current) return
-        fetchFeeds()
-        ref.current = true
-    }, [])
+        if (ref.current) return;
+        fetchFeeds();
+        ref.current = true;
+    }, []);
+
+    const years = useMemo(
+        () => (feeds ? Object.keys(feeds).sort((a, b) => parseInt(b, 10) - parseInt(a, 10)) : []),
+        [feeds],
+    );
+
     return (
         <>
             <Helmet>
-                <title>{`${t('timeline')} - ${siteConfig.name}`}</title>
+                <title>{`${t("timeline")} - ${siteConfig.name}`}</title>
                 <meta property="og:site_name" content={siteName} />
-                <meta property="og:title" content={t('timeline')} />
+                <meta property="og:title" content={t("timeline")} />
                 <meta property="og:image" content={siteConfig.avatar} />
                 <meta property="og:type" content="article" />
                 <meta property="og:url" content={document.URL} />
             </Helmet>
             <Waiting for={feeds}>
-                <main className="w-full flex flex-col justify-center items-center mb-8 ani-show">
-                    <div className="wauto text-start text-black dark:text-white py-4 text-4xl font-bold">
-                        <p>
-                            {t('timeline')}
-                        </p>
-                        <div className="flex flex-row justify-between">
-                            <p className="text-sm mt-4 text-neutral-500 font-normal">
-                                {t('article.total$count', { count: length })}
-                            </p>
-                        </div>
-                    </div>
-                    {feeds && Object.keys(feeds).sort((a, b) => parseInt(b) - parseInt(a)).map(year => (
-                        <div key={year} className="wauto flex flex-col justify-center items-start">
-                            <h1 className="flex flex-row items-center space-x-2">
-                                <span className="text-2xl font-bold t-primary ">
-                                    {t('year$year', { year: year })}
-                                </span>
-                                <span className="text-sm t-secondary">
-                                    {t('article.total_short$count', { count: feeds[+year]?.length })}
-                                    </span>
+                <main className="wauto ani-show pb-14 pt-8">
+                    <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]">
+                        <div className="site-panel site-panel-muted rounded-[32px] px-6 py-8 md:px-8 md:py-10">
+                            <p className="site-kicker">{t("timeline")}</p>
+                            <h1 className="site-display mt-4 text-[3rem] text-neutral-900 dark:text-white md:text-[4.6rem]">
+                                {t("timeline")}
                             </h1>
-                            <div className="w-full flex flex-col justify-center items-start my-4">
-                                {feeds[+year]?.map(({ id, title, createdAt }) => (
-                                    <FeedItem key={id} id={id.toString()} title={title || t('unlisted')}
-                                              createdAt={new Date(createdAt)}/>
-                                ))}
+                            <p className="mt-5 max-w-2xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
+                                A chronological index of published writing, grouped by year instead of category.
+                            </p>
+                            <div className="site-rule mt-8 w-full max-w-xl" />
+                            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                                <TimelineStat label={t("article.total$count", { count: length })} value={length} />
+                                <TimelineStat label={t("timeline")} value={years.length} />
+                                <TimelineStat label={siteConfig.name} value={years[0] || "Now"} />
                             </div>
                         </div>
-                    ))}
+
+                        <div className="site-panel rounded-[32px] px-6 py-8 md:px-7 md:py-8">
+                            <p className="site-kicker">{t("timeline")}</p>
+                            <h2 className="site-display mt-3 text-[2.2rem] text-neutral-900 dark:text-white">
+                                {years[0] || ""}
+                            </h2>
+                            <p className="mt-4 text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
+                                Scan the archive by year and jump directly into individual entries.
+                            </p>
+                        </div>
+                    </section>
+
+                    <section className="mt-8 space-y-6">
+                        {years.map((year) => (
+                            <div key={year} className="site-panel rounded-[32px] px-6 py-7 md:px-8">
+                                <div className="flex flex-wrap items-end justify-between gap-4">
+                                    <div>
+                                        <p className="site-kicker">{t("timeline")}</p>
+                                        <h2 className="site-display mt-3 text-[2.6rem] text-neutral-900 dark:text-white">
+                                            {t("year$year", { year })}
+                                        </h2>
+                                    </div>
+                                    <div className="rounded-full border border-black/10 bg-white/55 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300">
+                                        {t("article.total_short$count", { count: feeds?.[+year]?.length || 0 })}
+                                    </div>
+                                </div>
+                                <div className="mt-6 space-y-3">
+                                    {feeds?.[+year]?.map(({ id, title, createdAt }) => (
+                                        <TimelineFeedItem
+                                            key={id}
+                                            id={String(id)}
+                                            title={title || t("unlisted")}
+                                            createdAt={new Date(createdAt)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </section>
                 </main>
             </Waiting>
         </>
-    )
+    );
 }
 
-export function FeedItem({ id, title, createdAt }: { id: string, title: string, createdAt: Date }) {
-    const formatter = new Intl.DateTimeFormat('en-US', { day: '2-digit', month: '2-digit' });
+function TimelineFeedItem({ id, title, createdAt }: { id: string; title: string; createdAt: Date }) {
+    const formatter = new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "short" });
     return (
-        <div className="flex flex-row pl-8">
-            <div className="flex flex-row items-center">
-                <div className="w-2 h-2 bg-theme rounded-full"></div>
-            </div>
-            <div className="flex-1 rounded-2xl m-2 duration-300 flex flex-row items-center space-x-4   ">
-                <span className="t-secondary text-sm" title={new Date(createdAt).toLocaleString()}>
-                    {formatter.format(new Date(createdAt))}
+        <Link
+            href={`/feed/${id}`}
+            target="_blank"
+            className="grid grid-cols-[auto_1fr] items-start gap-4 rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 transition hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-theme/15"
+        >
+            <div className="mt-1 flex items-center gap-3">
+                <div className="h-3 w-3 rounded-full bg-theme shadow-[0_0_0_6px_rgba(var(--theme-rgb),0.12)]" />
+                <span className="text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400" title={createdAt.toLocaleString()}>
+                    {formatter.format(createdAt)}
                 </span>
-                <Link href={`/feed/${id}`} target="_blank" className="text-base t-primary hover:text-theme text-pretty overflow-hidden">
-                    {title}
-                </Link>
             </div>
+            <h3 className="site-display text-[1.8rem] text-neutral-900 dark:text-white">{title}</h3>
+        </Link>
+    );
+}
+
+function TimelineStat({ label, value }: { label: string; value: number | string }) {
+    return (
+        <div className="rounded-[22px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">{label}</p>
+            <p className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">{value}</p>
         </div>
-    )
+    );
 }

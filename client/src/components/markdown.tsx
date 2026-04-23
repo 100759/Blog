@@ -125,7 +125,7 @@ export function Markdown({ content }: { content: string }) {
 
   const Content = useMemo(() => (
     <ReactMarkdown
-      className="toc-content dark:text-neutral-300"
+      className="toc-content text-[16px] leading-8 text-neutral-700 dark:text-neutral-300"
       remarkPlugins={[gfm, remarkMermaid, remarkMath, remarkAlert]}
       children={content}
       rehypePlugins={[rehypeKatex, rehypeRaw]}
@@ -238,7 +238,7 @@ export function Markdown({ content }: { content: string }) {
         blockquote({ children, ...props }) {
           return (
             <blockquote
-              className="border-l-4 border-gray-300 dark:border-gray-500 pl-4 italic text-gray-500 dark:text-gray-400"
+              className="my-6 rounded-r-[20px] border-l-4 border-theme/40 bg-black/[0.03] px-5 py-4 italic text-neutral-600 dark:bg-white/[0.04] dark:text-neutral-300"
               {...props}
             >
               {children}
@@ -287,7 +287,7 @@ export function Markdown({ content }: { content: string }) {
         a({ children, ...props }) {
           return (
             <a
-              className="text-[#0686c8] dark:text-[#2590f1] hover:underline"
+              className="text-theme underline-offset-4 transition hover:underline"
               {...props}
             >
               {children}
@@ -299,7 +299,7 @@ export function Markdown({ content }: { content: string }) {
             <h1
               id={children?.toString()}
               {...props}
-              className={`${props.className || ""} text-3xl font-bold mt-4`.trim()}
+              className={`${props.className || ""} site-display mt-12 text-[2.5rem] font-semibold text-neutral-900 dark:text-white`.trim()}
               style={{ ...props.style, scrollMarginTop: "var(--header-scroll-offset, 7rem)" }}
             >
               {children}
@@ -311,7 +311,7 @@ export function Markdown({ content }: { content: string }) {
             <h2
               id={children?.toString()}
               {...props}
-              className={`${props.className || ""} text-2xl font-bold mt-4`.trim()}
+              className={`${props.className || ""} site-display mt-10 text-[2.1rem] font-semibold text-neutral-900 dark:text-white`.trim()}
               style={{ ...props.style, scrollMarginTop: "var(--header-scroll-offset, 7rem)" }}
             >
               {children}
@@ -323,7 +323,7 @@ export function Markdown({ content }: { content: string }) {
             <h3
               id={children?.toString()}
               {...props}
-              className={`${props.className || ""} text-xl font-bold mt-4`.trim()}
+              className={`${props.className || ""} mt-8 text-[1.35rem] font-semibold text-neutral-900 dark:text-white`.trim()}
               style={{ ...props.style, scrollMarginTop: "var(--header-scroll-offset, 7rem)" }}
             >
               {children}
@@ -335,7 +335,7 @@ export function Markdown({ content }: { content: string }) {
             <h4
               id={children?.toString()}
               {...props}
-              className={`${props.className || ""} text-lg font-bold mt-4`.trim()}
+              className={`${props.className || ""} mt-8 text-[1.1rem] font-semibold text-neutral-900 dark:text-white`.trim()}
               style={{ ...props.style, scrollMarginTop: "var(--header-scroll-offset, 7rem)" }}
             >
               {children}
@@ -347,7 +347,7 @@ export function Markdown({ content }: { content: string }) {
             <h5
               id={children?.toString()}
               {...props}
-              className={`${props.className || ""} text-base font-bold mt-4`.trim()}
+              className={`${props.className || ""} mt-6 text-base font-semibold text-neutral-900 dark:text-white`.trim()}
               style={{ ...props.style, scrollMarginTop: "var(--header-scroll-offset, 7rem)" }}
             >
               {children}
@@ -359,7 +359,7 @@ export function Markdown({ content }: { content: string }) {
             <h6
               id={children?.toString()}
               {...props}
-              className={`${props.className || ""} text-sm font-bold mt-4`.trim()}
+              className={`${props.className || ""} mt-6 text-sm font-semibold uppercase tracking-[0.14em] text-neutral-700 dark:text-neutral-200`.trim()}
               style={{ ...props.style, scrollMarginTop: "var(--header-scroll-offset, 7rem)" }}
             >
               {children}
@@ -368,13 +368,13 @@ export function Markdown({ content }: { content: string }) {
         },
         p({ children, node, ...props }) {
           return (
-            <p className="mt-2 py-1" {...props}>
+            <p className="mt-3 py-1 text-[16px] leading-8 text-neutral-700 dark:text-neutral-300" {...props}>
               {children}
             </p>
           );
         },
         hr({ children, ...props }) {
-          return <hr className="my-4" {...props} />;
+          return <hr className="my-8 border-none site-rule" {...props} />;
         },
         table: ({ node, ...props }) => <table className="table" {...props} />,
         th: ({ node, ...props }) => (

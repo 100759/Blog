@@ -5,21 +5,21 @@ import { useTranslation } from "react-i18next";
 import ReactModal from "react-modal";
 import Popup from "reactjs-popup";
 import { Link, useLocation } from "wouter";
+import { Button } from "../components/button";
 import { useAlert, useConfirm } from "../components/dialog";
 import { HashTag } from "../components/hashtag";
 import { Waiting } from "../components/loading";
 import { Markdown } from "../components/markdown";
+import { Tips } from "../components/tips";
 import { client } from "../app/runtime";
+import { AdjacentSection } from "../components/adjacent_feed.tsx";
 import { ClientConfigContext } from "../state/config";
 import { ProfileContext } from "../state/profile";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { siteName } from "../utils/constants";
-import { timeago } from "../utils/timeago";
-import { Button } from "../components/button";
-import { Tips } from "../components/tips";
-import mermaid from "mermaid";
-import { AdjacentSection } from "../components/adjacent_feed.tsx";
 import { stripImageUrlMetadata } from "../utils/image-upload";
+import { timeago } from "../utils/timeago";
+import mermaid from "mermaid";
 
 function extractFirstMarkdownImageUrl(content: string) {
   const match = /!\[.*?\]\((\S+?)(?:\s+"[^"]*")?\)/.exec(content);
@@ -30,7 +30,13 @@ function extractFirstMarkdownImageUrl(content: string) {
   return stripImageUrlMetadata(match[1]);
 }
 
-export function FeedPage({ id, TOC, clean }: { id: string, TOC: () => JSX.Element, clean: (id: string) => void }) {
+function buildExcerpt(content: string, fallback?: string | null) {
+  const trimmed = fallback?.trim() || content.replace(/[#>*`[\]()!-]/g, " ").replace(/\s+/g, " ").trim();
+  if (!trimmed) return "";
+  return trimmed.length > 220 ? `${trimmed.slice(0, 220)}…` : trimmed;
+}
+
+export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Element; clean: (id: string) => void }) {
   const { t } = useTranslation();
   const siteConfig = useSiteConfig();
   const profile = useContext(ProfileContext);
@@ -43,96 +49,100 @@ export function FeedPage({ id, TOC, clean }: { id: string, TOC: () => JSX.Elemen
   const { showConfirm, ConfirmUI } = useConfirm();
   const [top, setTop] = useState<number>(0);
   const config = useContext(ClientConfigContext);
-  const counterEnabled = config.getBoolean('counter.enabled');
+  const counterEnabled = config.getBoolean("counter.enabled");
   const hasAISummary = Boolean(feed?.ai_summary?.trim());
-  const showAISummaryState = feed?.ai_summary_status === "pending" || feed?.ai_summary_status === "processing" || feed?.ai_summary_status === "failed";
+  const showAISummaryState =
+    feed?.ai_summary_status === "pending" ||
+    feed?.ai_summary_status === "processing" ||
+    feed?.ai_summary_status === "failed";
+
   function deleteFeed() {
-    // Confirm
-    showConfirm(
-      t("article.delete.title"),
-      t("article.delete.confirm"),
-      () => {
-        if (!feed) return;
-        client.feed
-          .delete(feed.id)
-          .then(({ error }) => {
-            if (error) {
-              showAlert(error.value as string);
-            } else {
-              showAlert(t("delete.success"));
-              setLocation("/");
-            }
-          });
-      })
+    showConfirm(t("article.delete.title"), t("article.delete.confirm"), () => {
+      if (!feed) return;
+      client.feed.delete(feed.id).then(({ error: nextError }) => {
+        if (nextError) {
+          showAlert(nextError.value as string);
+        } else {
+          showAlert(t("delete.success"));
+          setLocation("/");
+        }
+      });
+    });
   }
+
   function topFeed() {
-    const isUnTop = !(top > 0)
-    const topNew = isUnTop ? 1 : 0;
-    // Confirm
+    const willTop = !(top > 0);
+    const nextTop = willTop ? 1 : 0;
     showConfirm(
-      isUnTop ? t("article.top.title") : t("article.untop.title"),
-      isUnTop ? t("article.top.confirm") : t("article.untop.confirm"),
+      willTop ? t("article.top.title") : t("article.untop.title"),
+      willTop ? t("article.top.confirm") : t("article.untop.confirm"),
       () => {
         if (!feed) return;
-        client.feed
-          .setTop(feed.id, topNew)
-          .then(({ error }) => {
-            if (error) {
-              showAlert(error.value as string);
-            } else {
-              showAlert(isUnTop ? t("article.top.success") : t("article.untop.success"));
-              setTop(topNew);
-            }
-          });
-      })
+        client.feed.setTop(feed.id, nextTop).then(({ error: nextError }) => {
+          if (nextError) {
+            showAlert(nextError.value as string);
+          } else {
+            showAlert(willTop ? t("article.top.success") : t("article.untop.success"));
+            setTop(nextTop);
+          }
+        });
+      },
+    );
   }
+
   useEffect(() => {
-    if (ref.current == id) return;
+    if (ref.current === id) return;
     setFeed(undefined);
     setError(undefined);
     setHeadImage(undefined);
-    client.feed
-      .get(id)
-      .then(({ data, error }) => {
-        if (error) {
-          setError(error.value as string);
-        } else if (data && typeof data !== "string") {
-          setTimeout(() => {
-            setFeed(data as any);
-            setTop(data.top || 0);
-            const headImageUrl = extractFirstMarkdownImageUrl(data.content);
-            if (headImageUrl) {
-              setHeadImage(headImageUrl);
-            }
-            clean(id);
-          }, 0);
-        }
-      });
+    client.feed.get(id).then(({ data, error: nextError }) => {
+      if (nextError) {
+        setError(nextError.value as string);
+      } else if (data && typeof data !== "string") {
+        setTimeout(() => {
+          setFeed(data as any);
+          setTop(data.top || 0);
+          const headImageUrl = extractFirstMarkdownImageUrl(data.content);
+          if (headImageUrl) {
+            setHeadImage(headImageUrl);
+          }
+          clean(id);
+        }, 0);
+      }
+    });
     ref.current = id;
-  }, [id]);
+  }, [clean, id]);
+
   useEffect(() => {
     mermaid.initialize({
       startOnLoad: false,
       theme: "default",
     });
-    mermaid.run({
-      suppressErrors: true,
-      nodes: document.querySelectorAll("pre.mermaid_default")
-    }).then(() => {
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: "dark",
-      });
-      mermaid.run({
+    mermaid
+      .run({
         suppressErrors: true,
-        nodes: document.querySelectorAll("pre.mermaid_dark")
+        nodes: document.querySelectorAll("pre.mermaid_default"),
+      })
+      .then(() => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: "dark",
+        });
+        mermaid.run({
+          suppressErrors: true,
+          nodes: document.querySelectorAll("pre.mermaid_dark"),
+        });
       });
-    })
   }, [feed]);
+
+  const excerpt = feed ? buildExcerpt(feed.content) : "";
+  const createdAt = feed ? new Date(feed.createdAt) : undefined;
+  const updatedAt = feed ? new Date(feed.updatedAt) : undefined;
+  const showHeroImage = headImage || siteConfig.avatar;
 
   return (
     <Waiting for={feed || error}>
-      {feed && (
+      {feed ? (
         <Helmet>
           <title>{`${feed.title ?? "Unnamed"} - ${siteConfig.name}`}</title>
           <meta property="og:site_name" content={siteName} />
@@ -140,182 +150,192 @@ export function FeedPage({ id, TOC, clean }: { id: string, TOC: () => JSX.Elemen
           <meta property="og:image" content={headImage ?? siteConfig.avatar} />
           <meta property="og:type" content="article" />
           <meta property="og:url" content={document.URL} />
-          <meta
-            name="og:description"
-            content={
-              feed.content.length > 200
-                ? feed.content.substring(0, 200)
-                : feed.content
-            }
-          />
+          <meta name="og:description" content={excerpt} />
           <meta name="author" content={feed.user.username} />
-          <meta
-            name="keywords"
-            content={feed.hashtags.map(({ name }) => name).join(", ")}
-          />
-          <meta
-            name="description"
-            content={
-              feed.content.length > 200
-                ? feed.content.substring(0, 200)
-                : feed.content
-            }
-          />
+          <meta name="keywords" content={feed.hashtags.map(({ name }) => name).join(", ")} />
+          <meta name="description" content={excerpt} />
         </Helmet>
-      )}
-      <div className="w-full flex flex-row justify-center ani-show">
-        {error && (
-          <>
-            <div className="flex flex-col wauto rounded-2xl bg-w m-2 p-6 items-center justify-center space-y-2">
-              <h1 className="text-xl font-bold t-primary">{error}</h1>
-              {error === "Not found" && id === "about" && (
-                <Tips value={t("about.notfound")} />
-              )}
-              <Button
-                title={t("index.back")}
-                onClick={() => (window.location.href = "/")}
-              />
-            </div>
-          </>
-        )}
-        {feed && !error && (
-          <>
-            <div className="xl:w-64" />
-            <main className="wauto">
-              <article
-                className="rounded-2xl bg-w m-2 px-6 py-4"
-                aria-label={feed.title ?? "Unnamed"}
-              >
-                <div className="flex justify-between">
-                  <div>
-                    <div className="mt-1 mb-1 flex gap-1">
-                      <p
-                        className="text-gray-400 text-[12px]"
-                        title={new Date(feed.createdAt).toLocaleString()}
-                      >
-                        {t("feed_card.published$time", {
-                          time: timeago(feed.createdAt),
-                        })}
-                      </p>
+      ) : null}
 
-                      {feed.createdAt !== feed.updatedAt && (
-                        <p
-                          className="text-gray-400 text-[12px]"
-                          title={new Date(feed.updatedAt).toLocaleString()}
-                        >
-                          {t("feed_card.updated$time", {
-                            time: timeago(feed.updatedAt),
-                          })}
-                        </p>
-                      )}
+      {error ? (
+        <div className="wauto ani-show py-10">
+          <div className="site-panel flex flex-col items-center justify-center rounded-[32px] px-8 py-14 text-center">
+            <p className="site-kicker">Error</p>
+            <h1 className="site-display mt-5 text-[3rem] text-neutral-900 dark:text-white">{error}</h1>
+            {error === "Not found" && id === "about" ? <Tips value={t("about.notfound")} /> : null}
+            <div className="mt-8">
+              <Button title={t("index.back")} onClick={() => (window.location.href = "/")} />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {feed && !error ? (
+        <div className="wauto ani-show py-8">
+          <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_300px]">
+            <div className="min-w-0">
+              <article className="site-panel overflow-hidden rounded-[30px] md:rounded-[36px]" aria-label={feed.title ?? "Unnamed"}>
+                <div className="grid gap-0 lg:grid-cols-[minmax(0,1.12fr)_minmax(260px,0.88fr)]">
+                  <div className="px-5 py-6 md:px-8 md:py-9">
+                    <div className="flex flex-wrap items-center gap-2 text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
+                      {top > 0 ? <span className="rounded-full bg-theme/10 px-3 py-1 text-theme">{t("article.top.title")}</span> : null}
                     </div>
-                    {counterEnabled && <p className='text-[12px] text-gray-400 font-normal link-line'>
-                      <span> {t("count.pv")} </span>
-                      <span>
-                        {feed.pv}
-                      </span>
-                      <span> |</span>
-                      <span> {t("count.uv")} </span>
-                      <span>
-                        {feed.uv}
-                      </span>
-                    </p>}
-                    <div className="flex flex-row items-center">
-                      <h1 className="text-2xl font-bold t-primary break-all">
-                        {feed.title}
-                      </h1>
-                      <div className="flex-1 w-0" />
+
+                    <h1 className="site-display mt-4 break-words text-[2.35rem] text-neutral-900 dark:text-white sm:text-[3rem] md:text-[4.2rem]">
+                      {feed.title}
+                    </h1>
+
+                    {excerpt ? (
+                      <p className="mt-5 max-w-3xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300 md:text-[16px] md:leading-8">{excerpt}</p>
+                    ) : null}
+
+                    <div className="site-rule mt-6 w-full max-w-2xl" />
+
+                    <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] font-medium uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400">
+                      {createdAt ? (
+                        <span title={createdAt.toLocaleString()}>
+                          {createdAt.getTime() === updatedAt?.getTime()
+                            ? timeago(createdAt)
+                            : t("feed_card.published$time", { time: timeago(createdAt) })}
+                        </span>
+                      ) : null}
+                      {createdAt && updatedAt && createdAt.getTime() !== updatedAt.getTime() ? (
+                        <span title={updatedAt.toLocaleString()}>{t("feed_card.updated$time", { time: timeago(updatedAt) })}</span>
+                      ) : null}
+                      {counterEnabled ? (
+                        <>
+                          <span>{t("count.pv")} {feed.pv}</span>
+                          <span>{t("count.uv")} {feed.uv}</span>
+                        </>
+                      ) : null}
+                    </div>
+
+                    {feed.hashtags.length > 0 ? (
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        {feed.hashtags.map(({ id: tagId, name }) => (
+                          <HashTag key={tagId} name={name} />
+                        ))}
+                      </div>
+                    ) : null}
+
+                    <div className="mt-7 flex flex-wrap items-center gap-3">
+                      {profile?.permission ? (
+                        <>
+                          <button
+                            aria-label={top > 0 ? t("untop.title") : t("top.title")}
+                            onClick={topFeed}
+                            className={`min-h-11 rounded-full px-4 py-2 text-sm font-medium transition ${
+                              top > 0
+                                ? "bg-theme text-white shadow-[0_16px_28px_rgba(var(--theme-rgb),0.22)]"
+                                : "border border-black/10 bg-white/55 text-neutral-700 hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
+                            }`}
+                          >
+                            {top > 0 ? t("article.untop.title") : t("article.top.title")}
+                          </button>
+                          <Link
+                            aria-label={t("edit")}
+                            href={`/admin/writing/${feed.id}`}
+                            className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
+                          >
+                            {t("edit")}
+                          </Link>
+                          <button
+                            aria-label={t("delete.title")}
+                            onClick={deleteFeed}
+                            className="min-h-11 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300"
+                          >
+                            {t("delete.title")}
+                          </button>
+                        </>
+                      ) : null}
                     </div>
                   </div>
-                  <div className="pt-2">
-                    {profile?.permission && (
-                      <div className="flex gap-2">
-                        <button
-                          aria-label={top > 0 ? t("untop.title") : t("top.title")}
-                          onClick={topFeed}
-                          className={`flex-1 flex flex-col items-end justify-center px-2 py rounded-full transition ${top > 0 ? "bg-theme text-white hover:bg-theme-hover active:bg-theme-active" : "bg-secondary bg-button dark:text-neutral-400"}`}
-                        >
-                          <i className="ri-skip-up-line" />
-                        </button>
-                        <Link
-                          aria-label={t("edit")}
-                          href={`/admin/writing/${feed.id}`}
-                          className="flex-1 flex flex-col items-end justify-center px-2 py bg-secondary bg-button rounded-full transition"
-                        >
-                          <i className="ri-edit-2-line dark:text-neutral-400" />
-                        </Link>
-                        <button
-                          aria-label={t("delete.title")}
-                          onClick={deleteFeed}
-                          className="flex-1 flex flex-col items-end justify-center px-2 py bg-secondary bg-button rounded-full transition"
-                        >
-                          <i className="ri-delete-bin-7-line text-red-500" />
-                        </button>
+
+                  <div className="border-t border-black/5 bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.05),rgba(255,255,255,0.18))] p-4 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.08),rgba(255,255,255,0.03))] lg:border-l lg:border-t-0 lg:p-5">
+                    {showHeroImage ? (
+                      <img
+                        src={stripImageUrlMetadata(showHeroImage)}
+                        alt=""
+                        className="h-full min-h-[220px] w-full rounded-[22px] object-cover shadow-[0_14px_30px_rgba(36,24,19,0.12)] lg:min-h-[280px] lg:rounded-[28px]"
+                      />
+                    ) : (
+                      <div className="flex h-full min-h-[220px] w-full items-end rounded-[22px] border border-dashed border-black/10 bg-white/55 p-5 dark:border-white/10 dark:bg-white/[0.04] lg:min-h-[280px] lg:rounded-[28px] lg:p-6">
+                        <div>
+                          <p className="site-kicker">{feed.user.username}</p>
+                          <p className="site-display mt-4 text-[2.2rem] text-neutral-900 dark:text-white">{siteConfig.name}</p>
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
-                {(hasAISummary || showAISummaryState) && (
-                  <div className="my-4 p-4 rounded-xl bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-100 dark:border-purple-800/30">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2">
-                        <i className="ri-sparkling-2-fill text-purple-500" />
-                        <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                          {t('ai_summary.title')}
-                        </span>
+
+                {showAISummaryState || hasAISummary ? (
+                  <div className="border-t border-black/5 px-5 py-5 dark:border-white/10 md:px-8 md:py-6">
+                    <div className="rounded-[22px] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04] md:rounded-[24px] md:px-5 md:py-5">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <i className="ri-file-list-3-line text-theme" />
+                          <span className="site-kicker">{t("ai_summary.title")}</span>
+                        </div>
+                        {showAISummaryState ? (
+                          <span className="rounded-full bg-white/70 px-3 py-1 text-[12px] font-medium uppercase tracking-[0.12em] text-neutral-700 dark:bg-white/[0.08] dark:text-neutral-200">
+                            {t(`ai_summary.status.${feed.ai_summary_status}`)}
+                          </span>
+                        ) : null}
                       </div>
-                      {showAISummaryState ? (
-                        <span className="rounded-full bg-white/70 px-2 py-1 text-xs font-medium text-purple-700 dark:bg-white/10 dark:text-purple-300">
-                          {t(`ai_summary.status.${feed.ai_summary_status}`)}
-                        </span>
+                      <p className="mt-3 whitespace-pre-wrap text-[15px] leading-7 text-neutral-700 dark:text-neutral-300">
+                        {hasAISummary ? feed.ai_summary : t(`ai_summary.message.${feed.ai_summary_status}`)}
+                      </p>
+                      {feed.ai_summary_status === "failed" && feed.ai_summary_error ? (
+                        <p className="mt-3 text-sm text-rose-600 dark:text-rose-300 whitespace-pre-wrap">{feed.ai_summary_error}</p>
                       ) : null}
                     </div>
-                    <p className="text-sm t-secondary leading-relaxed whitespace-pre-wrap">
-                      {hasAISummary ? feed.ai_summary : t(`ai_summary.message.${feed.ai_summary_status}`)}
-                    </p>
-                    {feed.ai_summary_status === "failed" && feed.ai_summary_error ? (
-                      <p className="mt-2 text-xs text-rose-600 dark:text-rose-300 whitespace-pre-wrap">
-                        {feed.ai_summary_error}
-                      </p>
-                    ) : null}
                   </div>
-                )}
-                <Markdown content={feed.content} />
-                <div className="mt-6 flex flex-col gap-2">
-                  {feed.hashtags.length > 0 && (
-                    <div className="flex flex-row flex-wrap gap-x-2">
-                      {feed.hashtags.map(({ name }, index) => (
-                        <HashTag key={index} name={name} />
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex flex-row items-center">
-                    <img
-                      src={feed.user.avatar || "/avatar.png"}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <div className="ml-2">
-                      <span className="text-gray-400 text-sm cursor-default">
-                        {feed.user.username}
-                      </span>
+                ) : null}
+
+                <div className="border-t border-black/5 px-5 py-7 dark:border-white/10 md:px-8 md:py-9">
+                  <div className="min-w-0 text-[16px] leading-8 text-neutral-700 dark:text-neutral-300">
+                    <Markdown content={feed.content} />
+                  </div>
+                </div>
+
+                <div className="border-t border-black/5 px-5 py-5 dark:border-white/10 md:px-8 md:py-6">
+                  <div className="flex flex-wrap items-center gap-4">
+                    {feed.user.avatar ? (
+                      <img src={feed.user.avatar} className="h-12 w-12 rounded-[18px] object-cover shadow-[0_12px_24px_rgba(36,24,19,0.14)]" />
+                    ) : (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-[18px] border border-black/10 bg-white/55 dark:border-white/10 dark:bg-white/[0.04]">
+                        <i className="ri-user-line text-neutral-500 dark:text-neutral-300" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="site-kicker">{t("profile.title")}</p>
+                      <p className="mt-2 text-lg font-medium text-neutral-900 dark:text-white">{feed.user.username}</p>
                     </div>
                   </div>
                 </div>
               </article>
-              <AdjacentSection id={id} setError={setError} />
-              {feed && <Comments id={`${feed.id}`} />}
-              <div className="h-16" />
-            </main>
-            <div className="w-80 hidden lg:block relative">
-              <div
-                className={`start-0 end-0 top-[5.5rem] sticky`}
-              >
-                <TOC />
+
+              <div className="mt-8">
+                <AdjacentSection id={id} setError={setError} />
+              </div>
+
+              <div className="mt-8">
+                <Comments id={`${feed.id}`} />
               </div>
             </div>
-          </>
-        )}
-      </div>
+
+            <aside className="hidden xl:block">
+              <div className="sticky top-[6rem]">
+                <div className="site-panel overflow-hidden rounded-[28px] p-5">
+                  <p className="site-kicker mb-4">Outline</p>
+                  <TOC />
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      ) : null}
       <AlertUI />
       <ConfirmUI />
     </Waiting>
@@ -329,37 +349,37 @@ export function TOCHeader({ TOC }: { TOC: () => JSX.Element }) {
     <div className="shrink-0 lg:hidden">
       <button
         onClick={() => setIsOpened(true)}
-        className="w-10 h-10 rounded-full flex flex-row items-center justify-center"
+        className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-black/10 bg-white/70 px-4 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
       >
-        <i className="ri-menu-2-line text-neutral-500 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 ri-lg md:ri-sm md:t-secondary"></i>
+        <i className="ri-menu-2-line" />
+        <span>Outline</span>
       </button>
       <ReactModal
         isOpen={isOpened}
         style={{
           content: {
-            top: "50%",
+            top: "auto",
             left: "50%",
             right: "auto",
-            bottom: "auto",
+            bottom: "1rem",
             marginRight: "-50%",
-            transform: "translate(-50%, -50%)",
+            transform: "translateX(-50%)",
             padding: "0",
             border: "none",
-            borderRadius: "16px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            background: "none",
+            borderRadius: "28px",
+            background: "transparent",
+            maxWidth: "90vw",
+            width: "min(420px, 90vw)",
           },
           overlay: {
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            backgroundColor: "rgba(11, 10, 10, 0.55)",
             zIndex: 1000,
           },
         }}
         onRequestClose={() => setIsOpened(false)}
       >
-        <div className="w-[80vw] sm:w-[60vw] lg:w-[40vw] overflow-clip relative t-primary">
+        <div className="site-panel max-h-[75vh] overflow-auto rounded-[28px] p-5 t-primary">
+          <p className="site-kicker mb-4">Outline</p>
           <TOC />
         </div>
       </ReactModal>
@@ -367,73 +387,69 @@ export function TOCHeader({ TOC }: { TOC: () => JSX.Element }) {
   );
 }
 
-function CommentInput({
-  id,
-  onRefresh,
-}: {
-  id: string;
-  onRefresh: () => void;
-}) {
+function CommentInput({ id, onRefresh }: { id: string; onRefresh: () => void }) {
   const { t } = useTranslation();
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
   const { showAlert, AlertUI } = useAlert();
   const profile = useContext(ProfileContext);
   const [, setLocation] = useLocation();
-  function errorHumanize(error: string) {
-    if (error === "Unauthorized") return t("login.required");
-    else if (error === "Content is required") return t("comment.empty");
-    return error;
+
+  function errorHumanize(nextError: string) {
+    if (nextError === "Unauthorized") return t("login.required");
+    if (nextError === "Content is required") return t("comment.empty");
+    return nextError;
   }
+
   function submit() {
     if (!profile) {
-      setLocation('/login')
+      setLocation("/login");
       return;
     }
-    client.comment
-      .create(parseInt(id), { content })
-      .then(({ error }) => {
-        if (error) {
-          setError(errorHumanize(error.value as string));
-        } else {
-          setContent("");
-          setError("");
-          showAlert(t("comment.success"), () => {
-            onRefresh();
-          });
-        }
-      });
+    client.comment.create(parseInt(id), { content }).then(({ error: nextError }) => {
+      if (nextError) {
+        setError(errorHumanize(nextError.value as string));
+      } else {
+        setContent("");
+        setError("");
+        showAlert(t("comment.success"), () => {
+          onRefresh();
+        });
+      }
+    });
   }
+
   return (
-    <div className="w-full rounded-2xl bg-w t-primary p-6 items-end flex flex-col">
-      <div className="flex flex-col w-full items-start mb-4">
-        <label htmlFor="comment">{t("comment.title")}</label>
+    <div className="site-panel rounded-[30px] px-6 py-6 md:px-7">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="site-kicker">{t("comment.title")}</p>
+          <h3 className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">{t("comment.title")}</h3>
+        </div>
       </div>
-      {profile ? (<>
-        <textarea
-          id="comment"
-          placeholder={t("comment.placeholder.title")}
-          className="bg-w w-full h-24 rounded-lg"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
-        <button
-          className="mt-4 bg-theme text-white px-4 py-2 rounded-full"
-          onClick={submit}
-        >
-          {t("comment.submit")}
-        </button>
-      </>      ) : (
-        <div className="flex flex-row w-full items-center justify-center space-x-2 py-12">
-          <button
-            className="mt-2 bg-theme text-white px-4 py-2 rounded-full"
-            onClick={() => setLocation('/login')}
-          >
+      {profile ? (
+        <>
+          <textarea
+            id="comment"
+            placeholder={t("comment.placeholder.title")}
+            className="mt-6 min-h-32 w-full rounded-[22px] border border-black/10 bg-white/55 px-4 py-4 text-base text-neutral-800 outline-none transition focus:border-theme/40 focus:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-100 dark:focus:bg-white/[0.06] md:rounded-[24px] md:px-5"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+          />
+          <div className="mt-5 flex justify-end">
+            <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-theme px-5 py-3 text-sm font-medium text-white shadow-[0_18px_30px_rgba(var(--theme-rgb),0.24)]" onClick={submit}>
+              {t("comment.submit")}
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="mt-6 flex justify-center py-10">
+          <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-theme px-5 py-3 text-sm font-medium text-white" onClick={() => setLocation("/login")}>
             {t("login.required")}
           </button>
         </div>
       )}
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      {error ? <p className="mt-3 text-sm text-rose-600 dark:text-rose-300">{error}</p> : null}
       <AlertUI />
     </div>
   );
@@ -442,8 +458,8 @@ function CommentInput({
 type Comment = {
   id: number;
   content: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
   user: {
     id: number;
     username: string;
@@ -460,128 +476,104 @@ function Comments({ id }: { id: string }) {
   const { t } = useTranslation();
 
   function loadComments() {
-    client.comment
-      .list(parseInt(id))
-      .then(({ data, error }) => {
-        if (error) {
-          setError(error.value as string);
-        } else if (data && Array.isArray(data)) {
-          setComments(data as any);
-        }
-      });
+    client.comment.list(parseInt(id)).then(({ data, error: nextError }) => {
+      if (nextError) {
+        setError(nextError.value as string);
+      } else if (data && Array.isArray(data)) {
+        setComments(data as any);
+      }
+    });
   }
+
   useEffect(() => {
-    if (ref.current == id) return;
+    if (ref.current === id) return;
     loadComments();
     ref.current = id;
   }, [id]);
+
+  if (!config.getBoolean("comment.enabled")) {
+    return null;
+  }
+
   return (
-    <>
-      {config.getBoolean('comment.enabled') &&
-        <div className="m-2 flex flex-col justify-center items-center">
-          <CommentInput id={id} onRefresh={loadComments} />
-          {error && (
-            <>
-              <div className="flex flex-col wauto rounded-2xl bg-w t-primary m-2 p-6 items-center justify-center">
-                <h1 className="text-xl font-bold t-primary">{error}</h1>
-                <button
-                  className="mt-2 bg-theme text-white px-4 py-2 rounded-full"
-                  onClick={loadComments}
-                >
-                  {t("reload")}
-                </button>
-              </div>
-            </>
-          )}
-          {comments.length > 0 && (
-            <div className="w-full">
-              {comments.map((comment) => (
-                <CommentItem
-                  key={comment.id}
-                  comment={comment}
-                  onRefresh={loadComments}
-                />
-              ))}
-            </div>
-          )}
+    <section>
+      <CommentInput id={id} onRefresh={loadComments} />
+      {error ? (
+        <div className="site-panel mt-4 flex flex-col items-center justify-center rounded-[30px] px-6 py-10 text-center">
+          <h1 className="text-xl font-semibold t-primary">{error}</h1>
+          <button className="mt-4 rounded-full bg-theme px-4 py-2 text-white" onClick={loadComments}>
+            {t("reload")}
+          </button>
         </div>
-      }
-    </>
+      ) : null}
+      {comments.length > 0 ? (
+        <div className="mt-4 space-y-3">
+          {comments.map((comment) => (
+            <CommentItem key={comment.id} comment={comment} onRefresh={loadComments} />
+          ))}
+        </div>
+      ) : null}
+    </section>
   );
 }
 
-function CommentItem({
-  comment,
-  onRefresh,
-}: {
-  comment: Comment;
-  onRefresh: () => void;
-}) {
+function CommentItem({ comment, onRefresh }: { comment: Comment; onRefresh: () => void }) {
   const { showConfirm, ConfirmUI } = useConfirm();
   const { showAlert, AlertUI } = useAlert();
   const { t } = useTranslation();
   const profile = useContext(ProfileContext);
+  const createdAt = new Date(comment.createdAt);
+
   function deleteComment() {
-    showConfirm(
-      t("delete.comment.title"),
-      t("delete.comment.confirm"),
-      async () => {
-        client.comment
-          .delete(comment.id)
-          .then(({ error }) => {
-            if (error) {
-              showAlert(error.value as string);
-            } else {
-              showAlert(t("delete.success"), () => {
-                onRefresh();
-              });
-            }
+    showConfirm(t("delete.comment.title"), t("delete.comment.confirm"), async () => {
+      client.comment.delete(comment.id).then(({ error: nextError }) => {
+        if (nextError) {
+          showAlert(nextError.value as string);
+        } else {
+          showAlert(t("delete.success"), () => {
+            onRefresh();
           });
-      })
+        }
+      });
+    });
   }
+
   return (
-    <div className="flex flex-row items-start rounded-xl mt-2">
-      <img
-        src={comment.user.avatar || ""}
-        className="w-8 h-8 rounded-full mt-4"
-      />
-      <div className="flex flex-col flex-1 w-0 ml-2 bg-w rounded-xl p-4">
-        <div className="flex flex-row">
-          <span className="t-primary text-base font-bold">
-            {comment.user.username}
-          </span>
-          <div className="flex-1 w-0" />
-          <span
-            title={new Date(comment.createdAt).toLocaleString()}
-            className="text-gray-400 text-sm"
+    <div className="site-panel rounded-[26px] px-5 py-5">
+      <div className="flex items-start gap-4">
+        {comment.user.avatar ? (
+          <img src={comment.user.avatar} className="mt-1 h-11 w-11 rounded-[16px] object-cover" />
+        ) : (
+          <div className="mt-1 flex h-11 w-11 items-center justify-center rounded-[16px] border border-black/10 bg-white/55 dark:border-white/10 dark:bg-white/[0.04]">
+            <i className="ri-user-line text-neutral-500 dark:text-neutral-300" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-base font-semibold text-neutral-900 dark:text-white">{comment.user.username}</span>
+            <span title={createdAt.toLocaleString()} className="text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
+              {timeago(createdAt)}
+            </span>
+          </div>
+          <p className="mt-3 break-words text-[15px] leading-7 text-neutral-700 dark:text-neutral-300">{comment.content}</p>
+        </div>
+        {(profile?.permission || profile?.id === comment.user.id) ? (
+          <Popup
+            arrow={false}
+            trigger={
+              <button className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/55 text-neutral-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300">
+                <i className="ri-more-fill" />
+              </button>
+            }
+            position="left center"
           >
-            {timeago(comment.createdAt)}
-          </span>
-        </div>
-        <p className="t-primary break-words">{comment.content}</p>
-        <div className="flex flex-row justify-end">
-          {(profile?.permission || profile?.id == comment.user.id) && (
-            <Popup
-              arrow={false}
-              trigger={
-                <button className="px-2 py bg-secondary rounded-full">
-                  <i className="ri-more-fill t-secondary"></i>
-                </button>
-              }
-              position="left center"
-            >
-              <div className="flex flex-row self-end mr-2">
-                <button
-                  onClick={deleteComment}
-                  aria-label={t("delete.comment.title")}
-                  className="px-2 py bg-secondary rounded-full"
-                >
-                  <i className="ri-delete-bin-2-line t-secondary"></i>
-                </button>
-              </div>
-            </Popup>
-          )}
-        </div>
+            <div className="site-panel rounded-full p-1">
+              <button onClick={deleteComment} aria-label={t("delete.comment.title")} className="flex h-10 w-10 items-center justify-center rounded-full text-rose-600 transition hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/30">
+                <i className="ri-delete-bin-2-line" />
+              </button>
+            </div>
+          </Popup>
+        ) : null}
       </div>
       <ConfirmUI />
       <AlertUI />

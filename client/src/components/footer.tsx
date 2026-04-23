@@ -1,28 +1,32 @@
-import { useContext, useEffect, useRef, useState } from 'react';
-import Popup from 'reactjs-popup';
-import { useLocation } from 'wouter';
-import { ClientConfigContext } from '../state/config';
+import { useContext, useEffect, useRef, useState } from "react";
+import Popup from "reactjs-popup";
+import { useLocation } from "wouter";
+import { ClientConfigContext } from "../state/config";
 import { Helmet } from "react-helmet";
-import { siteName } from '../utils/constants';
+import { siteName } from "../utils/constants";
 import { useTranslation } from "react-i18next";
 import { buildLoginPath, HIDDEN_LOGIN_REDIRECT } from "../utils/auth-redirect";
 
-type ThemeMode = 'light' | 'dark' | 'system';
+type ThemeMode = "light" | "dark" | "system";
+
 function Footer() {
-    const { t } = useTranslation()
-    const [, setLocation] = useLocation()
-    const [modeState, setModeState] = useState<ThemeMode>('system');
+    const { t } = useTranslation();
+    const [, setLocation] = useLocation();
+    const [modeState, setModeState] = useState<ThemeMode>("system");
     const config = useContext(ClientConfigContext);
-    const footerHtml = config.get<string>('footer');
+    const footerHtml = config.get<string>("footer");
     const footerHtmlRef = useRef<HTMLDivElement | null>(null);
     const mountedScriptNodesRef = useRef<HTMLScriptElement[]>([]);
-    const loginEnabled = config.getBoolean('login.enabled');
+    const loginEnabled = config.getBoolean("login.enabled");
+    const siteTitle = config.get<string>("site.name") || "Rin";
+    const siteDescription = config.get<string>("site.description") || "A lightweight personal blogging system";
     const [doubleClickTimes, setDoubleClickTimes] = useState(0);
+
     useEffect(() => {
-        const mode = localStorage.getItem('theme') as ThemeMode || 'system';
+        const mode = localStorage.getItem("theme") as ThemeMode || "system";
         setModeState(mode);
         setMode(mode);
-    }, [])
+    }, []);
 
     useEffect(() => {
         const container = footerHtmlRef.current;
@@ -38,16 +42,16 @@ function Footer() {
             return;
         }
 
-        const template = document.createElement('template');
+        const template = document.createElement("template");
         template.innerHTML = footerHtml;
 
-        const scripts = Array.from(template.content.querySelectorAll('script'));
+        const scripts = Array.from(template.content.querySelectorAll("script"));
         scripts.forEach((script) => script.remove());
 
         container.appendChild(template.content.cloneNode(true));
 
         scripts.forEach((script) => {
-            const nextScript = document.createElement('script');
+            const nextScript = document.createElement("script");
 
             Array.from(script.attributes).forEach((attribute) => {
                 nextScript.setAttribute(attribute.name, attribute.value);
@@ -62,100 +66,122 @@ function Footer() {
             mountedScriptNodesRef.current.forEach((script) => script.remove());
             mountedScriptNodesRef.current = [];
         };
-    }, [footerHtml])
+    }, [footerHtml]);
 
     const setMode = (mode: ThemeMode) => {
         setModeState(mode);
-        localStorage.setItem('theme', mode);
+        localStorage.setItem("theme", mode);
 
-
-        if (mode !== 'system' || (!('theme' in localStorage) && window.matchMedia(`(prefers-color-scheme: ${mode})`).matches)) {
-            document.documentElement.setAttribute('data-color-mode', mode);
+        if (mode !== "system" || (!("theme" in localStorage) && window.matchMedia(`(prefers-color-scheme: ${mode})`).matches)) {
+            document.documentElement.setAttribute("data-color-mode", mode);
         } else {
-            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+            const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
             if (mediaQuery.matches) {
-                document.documentElement.setAttribute('data-color-mode', 'dark');
+                document.documentElement.setAttribute("data-color-mode", "dark");
             } else {
-                document.documentElement.setAttribute('data-color-mode', 'light');
+                document.documentElement.setAttribute("data-color-mode", "light");
             }
         }
         window.dispatchEvent(new Event("colorSchemeChange"));
     };
 
     return (
-        <footer>
+        <footer className="wauto pb-10 pt-6">
             <Helmet>
                 <link rel="alternate" type="application/rss+xml" title={siteName} href="/rss.xml" />
                 <link rel="alternate" type="application/atom+xml" title={siteName} href="/atom.xml" />
                 <link rel="alternate" type="application/json" title={siteName} href="/rss.json" />
             </Helmet>
-            <div className="flex flex-col mb-8 space-y-2 justify-center items-center t-primary ani-show">
-                <div ref={footerHtmlRef} />
-                <p className='text-sm text-neutral-500 font-normal link-line'>
-                    <span onDoubleClick={() => {
-                        if(doubleClickTimes >= 2){ // actually need 3 times doubleClick
-                            setDoubleClickTimes(0)
-                            if(!loginEnabled) {
-                                setLocation(buildLoginPath(HIDDEN_LOGIN_REDIRECT))
-                            }
-                        } else {
-                            setDoubleClickTimes(doubleClickTimes + 1)
-                        }
-                    }}>
-                        © {new Date().getFullYear()} Powered by <a className='hover:underline' href="https://github.com/openRin/Rin" target="_blank">Rin</a>
-                    </span>
-                    {config.getBoolean('rss') && <>
-                        <Spliter />
-                        <Popup trigger={
-                            <button className="hover:underline" type="button">
-                                RSS
-                            </button>
-                        }
-                            position="top center"
-                            arrow={false}
-                            closeOnDocumentClick>
-                            <div className="border-card">
-                                <p className='font-bold t-primary'>
-                                    {t('footer.rss')}
-                                </p>
-                                <p>
-                                    <a href='/rss.xml'>
-                                        RSS
-                                    </a> <Spliter />
-                                    <a href='/atom.xml'>
-                                        Atom
-                                    </a> <Spliter />
-                                    <a href='/rss.json'>
-                                        JSON
-                                    </a>
-                                </p>
 
-                            </div>
-                        </Popup>
-                    </>}
-                </p>
-                <div className="w-fit-content inline-flex rounded-full border border-zinc-200 p-[3px] dark:border-zinc-700">
-                    <ThemeButton mode='light' current={modeState} label="Toggle light mode" icon="ri-sun-line" onClick={setMode} />
-                    <ThemeButton mode='system' current={modeState} label="Toggle system mode" icon="ri-computer-line" onClick={setMode} />
-                    <ThemeButton mode='dark' current={modeState} label="Toggle dark mode" icon="ri-moon-line" onClick={setMode} />
+            <div className="site-panel overflow-hidden rounded-[34px]">
+                <div className="grid gap-6 px-6 py-8 md:grid-cols-[minmax(0,1.3fr)_auto] md:px-8 md:py-9">
+                    <div>
+                        <p className="site-kicker">{siteTitle}</p>
+                        <h2 className="site-display mt-4 text-[2.6rem] text-neutral-900 dark:text-white md:text-[3.4rem]">
+                            {siteTitle}
+                        </h2>
+                        <p className="mt-4 max-w-2xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
+                            {siteDescription}
+                        </p>
+                        <div className="mt-5 text-sm text-neutral-500 dark:text-neutral-400" ref={footerHtmlRef} />
+                    </div>
+
+                    <div className="flex flex-col items-start gap-4 md:items-end">
+                        <div className="inline-flex rounded-full border border-black/10 bg-white/60 p-[4px] backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04]">
+                            <ThemeButton mode="light" current={modeState} label="Toggle light mode" icon="ri-sun-line" onClick={setMode} />
+                            <ThemeButton mode="system" current={modeState} label="Toggle system mode" icon="ri-computer-line" onClick={setMode} />
+                            <ThemeButton mode="dark" current={modeState} label="Toggle dark mode" icon="ri-moon-line" onClick={setMode} />
+                        </div>
+
+                        {config.getBoolean("rss") ? (
+                            <Popup
+                                trigger={
+                                    <button className="rounded-full border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15" type="button">
+                                        RSS
+                                    </button>
+                                }
+                                position="top center"
+                                arrow={false}
+                                closeOnDocumentClick
+                            >
+                                <div className="site-panel flex flex-col gap-2 rounded-[22px] p-4 text-sm t-primary">
+                                    <p className="site-kicker">{t("footer.rss")}</p>
+                                    <div className="flex flex-wrap gap-3">
+                                        <a href="/rss.xml">RSS</a>
+                                        <a href="/atom.xml">Atom</a>
+                                        <a href="/rss.json">JSON</a>
+                                    </div>
+                                </div>
+                            </Popup>
+                        ) : null}
+                    </div>
+                </div>
+
+                <div className="border-t border-black/5 px-6 py-4 dark:border-white/10 md:px-8">
+                    <div className="flex flex-col gap-3 text-sm text-neutral-500 dark:text-neutral-400 md:flex-row md:items-center md:justify-between">
+                        <p
+                            onDoubleClick={() => {
+                                if (doubleClickTimes >= 2) {
+                                    setDoubleClickTimes(0);
+                                    if (!loginEnabled) {
+                                        setLocation(buildLoginPath(HIDDEN_LOGIN_REDIRECT));
+                                    }
+                                } else {
+                                    setDoubleClickTimes(doubleClickTimes + 1);
+                                }
+                            }}
+                            className="cursor-default"
+                        >
+                            Copyright {new Date().getFullYear()} Powered by{" "}
+                            <a className="hover:text-theme" href="https://github.com/openRin/Rin" target="_blank">
+                                Rin
+                            </a>
+                        </p>
+                        <p className="text-xs uppercase tracking-[0.18em] text-neutral-400 dark:text-neutral-500">
+                            {modeState}
+                        </p>
+                    </div>
                 </div>
             </div>
         </footer>
     );
 }
 
-function Spliter() {
-    return (<span className='px-1'>
-        |
-    </span>
-    )
-}
-
-function ThemeButton({ current, mode, label, icon, onClick }: { current: ThemeMode, label: string, mode: ThemeMode, icon: string, onClick: (mode: ThemeMode) => void }) {
-    return (<button aria-label={label} type="button" onClick={() => onClick(mode)}
-        className={`rounded-inherit inline-flex h-[32px] w-[32px] items-center justify-center border-0 t-primary ${current === mode ? "bg-w rounded-full shadow-xl shadow-light" : ""}`}>
-        <i className={`${icon}`} />
-    </button>)
+function ThemeButton({ current, mode, label, icon, onClick }: { current: ThemeMode; label: string; mode: ThemeMode; icon: string; onClick: (mode: ThemeMode) => void }) {
+    return (
+        <button
+            aria-label={label}
+            type="button"
+            onClick={() => onClick(mode)}
+            className={`inline-flex h-[36px] w-[36px] items-center justify-center rounded-full border-0 transition-colors ${
+                current === mode
+                    ? "bg-theme text-white shadow-[0_14px_24px_rgba(var(--theme-rgb),0.28)]"
+                    : "text-neutral-500 hover:bg-black/5 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-neutral-100"
+            }`}
+        >
+            <i className={icon} />
+        </button>
+    );
 }
 
 export default Footer;

@@ -13,6 +13,7 @@ export const SITE_CONFIG_KEYS = {
     feedLayout: "feed.layout",
     feedCardVariant: "feed.card_variant",
     headerLayout: "header.layout",
+    themePreset: "theme.preset",
     themeColor: "theme.color",
 } as const;
 
@@ -36,6 +37,7 @@ export function useSiteConfig() {
         feedLayout: normalizeFeedLayout(config.get<string>(SITE_CONFIG_KEYS.feedLayout) || "list"),
         feedCardVariant: normalizeFeedCardVariant(config.get<string>(SITE_CONFIG_KEYS.feedCardVariant) || "default"),
         headerLayout: config.get<string>(SITE_CONFIG_KEYS.headerLayout) || "classic",
+        themePreset: config.get<string>(SITE_CONFIG_KEYS.themePreset) || "paper",
         themeColor: config.get<string>(SITE_CONFIG_KEYS.themeColor) || "#fc466b",
     };
 }

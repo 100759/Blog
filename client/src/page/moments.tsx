@@ -1,24 +1,23 @@
-import { useContext, useEffect, useRef, useState } from "react"
-import { Helmet } from 'react-helmet'
-import { client } from "../app/runtime"
-
+import { useContext, useEffect, useRef, useState } from "react";
+import { Helmet } from "react-helmet";
+import { useTranslation } from "react-i18next";
+import Modal from "react-modal";
+import { useSearch } from "wouter";
+import { client } from "../app/runtime";
+import { MarkdownEditor } from "../components/markdown_editor";
+import { MomentItem } from "../components/moment_item";
+import { Waiting } from "../components/loading";
+import { useAlert, useConfirm } from "../components/dialog";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-import { siteName } from "../utils/constants"
-import { useTranslation } from "react-i18next"
-import { ProfileContext } from "../state/profile"
-import { tryInt } from "../utils/int"
-import { useSearch } from "wouter"
-import { useAlert, useConfirm } from "../components/dialog"
-import Modal from "react-modal"
-import { MarkdownEditor } from "../components/markdown_editor"
-import { Waiting } from "../components/loading"
-import { MomentItem } from "../components/moment_item"
+import { ProfileContext } from "../state/profile";
+import { siteName } from "../utils/constants";
+import { tryInt } from "../utils/int";
 
 interface Moment {
     id: number;
     content: string;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: Date | string;
+    updatedAt: Date | string;
     user: {
         id: number;
         username: string;
@@ -27,265 +26,288 @@ interface Moment {
 }
 
 export function MomentsPage() {
-    const [moments, setMoments] = useState<Moment[]>([])
-    const [length, setLength] = useState(0)
-    const [content, setContent] = useState("")
-    const [loading, setLoading] = useState(false)
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const [editingMoment, setEditingMoment] = useState<Moment | null>(null)
+    const [moments, setMoments] = useState<Moment[]>([]);
+    const [length, setLength] = useState(0);
+    const [content, setContent] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingMoment, setEditingMoment] = useState<Moment | null>(null);
     const query = new URLSearchParams(useSearch());
-    const ref = useRef("")
-    const { t } = useTranslation()
+    const ref = useRef("");
+    const { t } = useTranslation();
     const siteConfig = useSiteConfig();
     const profile = useContext(ProfileContext);
-    const { showAlert, AlertUI } = useAlert()
-    const { showConfirm, ConfirmUI } = useConfirm()
-    
-    const [currentPage, setCurrentPage] = useState(1)
-    const [hasNextPage, setHasNextPage] = useState(false)
-    const [loadingMore, setLoadingMore] = useState(false)
-    
-    const limit = tryInt(siteConfig.pageSize, query.get("limit"))
-    
+    const { showAlert, AlertUI } = useAlert();
+    const { showConfirm, ConfirmUI } = useConfirm();
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    const limit = tryInt(siteConfig.pageSize, query.get("limit"));
+
     function fetchMoments(page = 1, append = false) {
-        if (loadingMore) return
-        
-        const isInitialLoad = page === 1 && !append
+        if (loadingMore) return;
+
+        const isInitialLoad = page === 1 && !append;
         if (isInitialLoad) {
-            setLoading(true)
+            setLoading(true);
         } else {
-            setLoadingMore(true)
+            setLoadingMore(true);
         }
-        
-        client.moments.list({
-            page: page,
-            limit: limit
-        }).then(({ data }) => {
-            if (data) {
-                setLength(data.data.length)
-                setHasNextPage(data.hasNext)
-                
-                if (append) {
-                    setMoments(prev => [...prev, ...data.data] as any)
-                } else {
-                    setMoments(data.data as any)
+
+        client.moments
+            .list({
+                page,
+                limit,
+            })
+            .then(({ data }) => {
+                if (data) {
+                    setLength(data.data.length);
+                    setHasNextPage(data.hasNext);
+
+                    if (append) {
+                        setMoments((prev) => [...prev, ...(data.data as any)]);
+                    } else {
+                        setMoments(data.data as any);
+                    }
+
+                    setCurrentPage(page);
                 }
-                
-                setCurrentPage(page)
-            }
-        }).finally(() => {
-            if (isInitialLoad) {
-                setLoading(false)
-            } else {
-                setLoadingMore(false)
-            }
-        })
+            })
+            .finally(() => {
+                if (isInitialLoad) {
+                    setLoading(false);
+                } else {
+                    setLoadingMore(false);
+                }
+            });
     }
-    
+
     function loadMore() {
         if (hasNextPage && !loadingMore) {
-            fetchMoments(currentPage + 1, true)
+            fetchMoments(currentPage + 1, true);
         }
     }
-    
+
     function handleSubmit() {
-        if (!content.trim()) return
-        
-        setLoading(true)
-        
+        if (!content.trim()) return;
+
+        setLoading(true);
+
         if (editingMoment) {
-            client.moments.update(editingMoment.id, { content })
-            .then(({ error }) => {
-                if (error) {
-                    showAlert(t('update.failed$message', { message: error.value }))
-                } else {
-                    setContent("")
-                    setEditingMoment(null)
-                    setIsModalOpen(false)
-                    fetchMoments(1, false)
-                    showAlert(t('update.success'))
-                }
-            }).finally(() => {
-                setLoading(false)
-            })
-        } else {
-            client.moments.create({ content })
-            .then(({ error }) => {
-                if (error) {
-                    showAlert(t('publish.failed$message', { message: error.value }))
-                } else {
-                    setContent("")
-                    setIsModalOpen(false)
-                    fetchMoments(1, false)
-                    showAlert(t('publish.success'))
-                }
-            }).finally(() => {
-                setLoading(false)
-            })
-        }
-    }
-    
-    function handleEdit(moment: Moment) {
-        setEditingMoment(moment)
-        setContent(moment.content)
-        setIsModalOpen(true)
-    }
-    
-    function handleDelete(id: number) {
-        showConfirm(
-            t("delete.title"),
-            t("delete.confirm"),
-            () => {
-                client.moments.delete(id).then(({ error }) => {
+            client.moments
+                .update(editingMoment.id, { content })
+                .then(({ error }) => {
                     if (error) {
-                        showAlert(t('delete.failed$message', { message: error.value }))
+                        showAlert(t("update.failed$message", { message: error.value }));
                     } else {
-                        fetchMoments(1, false)
-                        showAlert(t('delete.success'))
+                        setContent("");
+                        setEditingMoment(null);
+                        setIsModalOpen(false);
+                        fetchMoments(1, false);
+                        showAlert(t("update.success"));
                     }
                 })
-            }
-        )
+                .finally(() => {
+                    setLoading(false);
+                });
+        } else {
+            client.moments
+                .create({ content })
+                .then(({ error }) => {
+                    if (error) {
+                        showAlert(t("publish.failed$message", { message: error.value }));
+                    } else {
+                        setContent("");
+                        setIsModalOpen(false);
+                        fetchMoments(1, false);
+                        showAlert(t("publish.success"));
+                    }
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+        }
     }
-    
+
+    function handleEdit(moment: Moment) {
+        setEditingMoment(moment);
+        setContent(moment.content);
+        setIsModalOpen(true);
+    }
+
+    function handleDelete(id: number) {
+        showConfirm(t("delete.title"), t("delete.confirm"), () => {
+            client.moments.delete(id).then(({ error }) => {
+                if (error) {
+                    showAlert(t("delete.failed$message", { message: error.value }));
+                } else {
+                    fetchMoments(1, false);
+                    showAlert(t("delete.success"));
+                }
+            });
+        });
+    }
+
     function openCreateModal() {
-        setEditingMoment(null)
-        setContent("")
-        setIsModalOpen(true)
+        setEditingMoment(null);
+        setContent("");
+        setIsModalOpen(true);
     }
-    
+
     useEffect(() => {
-        const key = `${limit}`
-        if (ref.current === key) return
-        fetchMoments(1, false)
-        ref.current = key
-    }, [limit])
-    
+        const key = `${limit}`;
+        if (ref.current === key) return;
+        fetchMoments(1, false);
+        ref.current = key;
+    }, [limit]);
+
     return (
         <>
             <Helmet>
-                <title>{`${t('moments.title')} - ${siteConfig.name}`}</title>
+                <title>{`${t("moments.title")} - ${siteConfig.name}`}</title>
                 <meta property="og:site_name" content={siteName} />
-                <meta property="og:title" content={t('moments.title')} />
+                <meta property="og:title" content={t("moments.title")} />
                 <meta property="og:image" content={siteConfig.avatar} />
                 <meta property="og:type" content="article" />
                 <meta property="og:url" content={document.URL} />
             </Helmet>
             <Waiting for={!loading}>
-                <main className="w-full flex flex-col justify-center items-center mb-8 ani-show">
-                    <div className="wauto text-start text-black dark:text-white py-4 text-4xl font-bold">
-                        <p>
-                            {t('moments.title')}
-                        </p>
-                        <div className="flex flex-row justify-between items-center">
-                            <p className="text-sm mt-4 text-neutral-500 font-normal">
-                                {t('moments.total$count', { count: length })}
+                <main className="wauto ani-show pb-14 pt-8">
+                    <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]">
+                        <div className="site-panel site-panel-muted rounded-[32px] px-6 py-8 md:px-8 md:py-10">
+                            <p className="site-kicker">{t("moments.title")}</p>
+                            <h1 className="site-display mt-4 text-[3rem] text-neutral-900 dark:text-white md:text-[4.6rem]">
+                                {t("moments.title")}
+                            </h1>
+                            <p className="mt-5 max-w-2xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
+                                {siteConfig.description || t("moments.total$count", { count: length })}
                             </p>
-                            {profile?.permission && (
-                                <button 
-                                    onClick={openCreateModal}
-                                    className="text-sm font-normal rounded-full px-4 py-2 text-white bg-theme"
-                                >
-                                    {t('publish.title')}
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                    
-                    <div className="wauto">
-                        {moments && moments.length > 0 ? (
-                            <div className="space-y-6">
-                                {moments.map((moment) => (
-                                    <MomentItem 
-                                        key={moment.id} 
-                                        moment={moment} 
-                                        onDelete={handleDelete}
-                                        onEdit={handleEdit}
-                                        canManage={profile?.permission || false}
-                                    />
-                                ))}
+                            <div className="site-rule mt-8 w-full max-w-xl" />
+                            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                                <MomentStat label={t("moments.total$count", { count: length })} value={length} />
+                                <MomentStat label={t("load_more")} value={hasNextPage ? currentPage + 1 : currentPage} />
+                                <MomentStat label={t("writing")} value={moments.length} />
                             </div>
-                        ) : null}
-                        
+                        </div>
+
+                        <div className="site-panel rounded-[32px] px-6 py-8 md:px-7 md:py-8">
+                            <p className="site-kicker">{t("moments.title")}</p>
+                            <h2 className="site-display mt-3 text-[2.2rem] text-neutral-900 dark:text-white">
+                                {t("moments.total$count", { count: length })}
+                            </h2>
+                            <p className="mt-4 text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
+                                Stream-like notes, status updates, and short-form entries.
+                            </p>
+                            {profile?.permission ? (
+                                <button
+                                    onClick={openCreateModal}
+                                    className="mt-6 rounded-full bg-theme px-5 py-3 text-sm font-medium text-white shadow-[0_18px_30px_rgba(var(--theme-rgb),0.24)]"
+                                >
+                                    {t("publish.title")}
+                                </button>
+                            ) : null}
+                        </div>
+                    </section>
+
+                    <section className="mt-8">
+                        <div className="space-y-5">
+                            {moments.map((moment) => (
+                                <MomentItem
+                                    key={moment.id}
+                                    moment={moment}
+                                    onDelete={handleDelete}
+                                    onEdit={handleEdit}
+                                    canManage={profile?.permission || false}
+                                />
+                            ))}
+                        </div>
+
                         <Waiting for={!loadingMore}>
-                            <div className="py-4 text-center">
-                                {!hasNextPage && moments && moments.length > 0 ? (
-                                    <div className="text-gray-500 pt-6">{t('no_more')}</div>
+                            <div className="mt-8 flex justify-center">
+                                {!hasNextPage && moments.length > 0 ? (
+                                    <div className="text-sm uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">{t("no_more")}</div>
                                 ) : hasNextPage ? (
                                     <button
                                         onClick={loadMore}
-                                        className="text-sm font-normal rounded-full px-4 py-2 text-white bg-theme"
+                                        className="rounded-full bg-theme px-5 py-3 text-sm font-medium text-white shadow-[0_18px_30px_rgba(var(--theme-rgb),0.24)]"
                                     >
-                                        {t('load_more')}
+                                        {t("load_more")}
                                     </button>
                                 ) : null}
                             </div>
                         </Waiting>
-                    </div>
+                    </section>
                 </main>
             </Waiting>
-            
-            <Modal 
+
+            <Modal
                 isOpen={isModalOpen}
                 onRequestClose={() => setIsModalOpen(false)}
                 style={{
                     content: {
-                        top: '50%',
-                        left: '50%',
-                        right: 'auto',
-                        bottom: 'auto',
-                        marginRight: '-50%',
-                        transform: 'translate(-50%, -50%)',
-                        padding: '0',
-                        border: 'none',
-                        borderRadius: '16px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        background: 'transparent',
-                        maxWidth: '90%',
-                        width: '800px'
+                        top: "50%",
+                        left: "50%",
+                        right: "auto",
+                        bottom: "auto",
+                        marginRight: "-50%",
+                        transform: "translate(-50%, -50%)",
+                        padding: "0",
+                        border: "none",
+                        borderRadius: "24px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        background: "transparent",
+                        maxWidth: "90%",
+                        width: "860px",
                     },
                     overlay: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        zIndex: 1000
-                    }
+                        backgroundColor: "rgba(0, 0, 0, 0.55)",
+                        zIndex: 1000,
+                    },
                 }}
             >
-                <div className="w-full bg-w p-4 rounded-2xl shadow-xl">
-                    <h2 className="text-2xl font-bold mb-4 t-primary">
-                        {editingMoment ? t('moments.edit') : t('moments.publish')}
+                <div className="site-panel w-full rounded-[32px] p-5 md:p-6">
+                    <h2 className="site-display text-[2.4rem] text-neutral-900 dark:text-white">
+                        {editingMoment ? t("moments.edit") : t("moments.publish")}
                     </h2>
-                    
-                    <div className="bg-w rounded-2xl t-primary">
-                        <MarkdownEditor 
-                            content={content}
-                            setContent={setContent}
-                            height="300px"
-                        />
+
+                    <div className="mt-5 rounded-[24px] border border-black/10 bg-white/55 p-2 dark:border-white/10 dark:bg-white/[0.04]">
+                        <MarkdownEditor content={content} setContent={setContent} height="300px" />
                     </div>
-                    
-                    <div className="flex justify-end mt-4 space-x-2">
+
+                    <div className="mt-5 flex justify-end gap-2">
                         <button
                             onClick={() => setIsModalOpen(false)}
-                            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white rounded-lg"
+                            className="rounded-full border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200"
                         >
-                            {t('cancel')}
+                            {t("cancel")}
                         </button>
                         <button
                             onClick={handleSubmit}
                             disabled={loading || !content.trim()}
-                            className="px-4 py-2 bg-theme text-white rounded-lg disabled:opacity-50"
+                            className="rounded-full bg-theme px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                         >
-                            {loading ? t('saving') : editingMoment ? t('update.title') : t('publish.title')}
+                            {loading ? t("saving") : editingMoment ? t("update.title") : t("publish.title")}
                         </button>
                     </div>
                 </div>
             </Modal>
-            
+
             <AlertUI />
             <ConfirmUI />
         </>
-    )
+    );
+}
+
+function MomentStat({ label, value }: { label: string; value: number | string }) {
+    return (
+        <div className="rounded-[22px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">{label}</p>
+            <p className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">{value}</p>
+        </div>
+    );
 }

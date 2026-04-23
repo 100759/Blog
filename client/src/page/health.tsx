@@ -83,31 +83,43 @@ export function HealthPage() {
   }, [items]);
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="flex w-full flex-col gap-6">
       <Helmet>
         <title>{`${t("health.title")} - ${siteConfig.name}`}</title>
       </Helmet>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <SettingsCard tone="success">
-          <SettingsCardHeader title={String(summary.success)} description={t("health.summary.success")} />
-        </SettingsCard>
-        <SettingsCard tone="warning">
-          <SettingsCardHeader title={String(summary.warning)} description={t("health.summary.warning")} />
-        </SettingsCard>
-        <SettingsCard tone="danger">
-          <SettingsCardHeader title={String(summary.danger)} description={t("health.summary.danger")} />
-        </SettingsCard>
-      </div>
-
-      {generatedAt ? (
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          {t("health.generated_at", { date: new Date(generatedAt).toLocaleString() })}
-        </p>
-      ) : null}
+      <section className="site-panel rounded-[30px] px-5 py-5 md:px-6 md:py-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+          <div>
+            <p className="site-kicker">{t("health.title")}</p>
+            <h2 className="site-display mt-3 text-[2.2rem] text-neutral-900 dark:text-white md:text-[3rem]">
+              {siteConfig.name}
+            </h2>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-neutral-600 dark:text-neutral-300">
+              {generatedAt
+                ? t("health.generated_at", { date: new Date(generatedAt).toLocaleString() })
+                : t("health.loading")}
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[24px] border border-emerald-200/60 bg-emerald-50/70 px-4 py-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+              <p className="site-kicker">{t("health.summary.success")}</p>
+              <p className="mt-3 text-[2rem] font-semibold text-emerald-700 dark:text-emerald-300">{summary.success}</p>
+            </div>
+            <div className="rounded-[24px] border border-amber-200/60 bg-amber-50/70 px-4 py-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+              <p className="site-kicker">{t("health.summary.warning")}</p>
+              <p className="mt-3 text-[2rem] font-semibold text-amber-700 dark:text-amber-300">{summary.warning}</p>
+            </div>
+            <div className="rounded-[24px] border border-rose-200/60 bg-rose-50/70 px-4 py-4 dark:border-rose-500/20 dark:bg-rose-500/10">
+              <p className="site-kicker">{t("health.summary.danger")}</p>
+              <p className="mt-3 text-[2rem] font-semibold text-rose-700 dark:text-rose-300">{summary.danger}</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {loading ? (
-        <div className="flex items-center gap-3 py-8 text-sm text-neutral-500 dark:text-neutral-400">
+        <div className="site-panel-muted flex items-center gap-3 rounded-[26px] px-5 py-6 text-sm text-neutral-500 dark:text-neutral-400">
           <ReactLoading width="1.25em" height="1.25em" type="spin" color="#FC466B" />
           <span>{t("health.loading")}</span>
         </div>
@@ -120,7 +132,7 @@ export function HealthPage() {
       ) : null}
 
       {!loading && !error ? (
-        <div className="space-y-4">
+        <div className="grid gap-4 xl:grid-cols-2">
           {orderedItems.map((item) => (
             <HealthCard key={item.id} item={item} />
           ))}

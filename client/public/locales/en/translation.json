@@ -137,6 +137,10 @@
     "permission_denied": "Permission denied",
     "title": "Error"
   },
+  "callback": {
+    "title": "Waiting...",
+    "desc": "Finishing authentication and returning to the site."
+  },
   "feed_card": {
     "published$time": "Published at {{time}}",
     "updated$time": "Updated at {{time}}"
@@ -175,11 +179,19 @@
       "invalid": "Invalid username or password",
       "network": "Network error, please try again"
     },
+    "github": {
+      "label": "GitHub OAuth"
+    },
     "loading": "Logging in...",
+    "method": {
+      "enabled": "Available",
+      "disabled": "Unavailable"
+    },
     "no_methods": "No login methods available",
     "oauth_only": "Please log in to continue",
     "or": "or",
     "password": {
+      "label": "Password login",
       "placeholder": "Please enter your password"
     },
     "required": "Please log in to continue",
@@ -476,6 +488,28 @@
         "blue": "Blue",
         "teal": "Teal",
         "orange": "Orange"
+      }
+    },
+    "theme_preset": {
+      "title": "Theme preset",
+      "desc": "Choose the overall atmosphere for backgrounds, panels, and typography contrast",
+      "preview": {
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "options": {
+        "paper": {
+          "label": "Paper",
+          "desc": "Warm editorial paper with soft contrast and gallery-like warmth."
+        },
+        "mist": {
+          "label": "Mist",
+          "desc": "Cool editorial whites with stone blues and quieter surfaces."
+        },
+        "nocturne": {
+          "label": "Nocturne",
+          "desc": "A denser bronze-black atmosphere with stronger shadow and drama."
+        }
       }
     },
     "rss": {

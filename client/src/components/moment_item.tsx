@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { Markdown } from "./markdown";
 import { timeago } from "../utils/timeago";
+import { Markdown } from "./markdown";
 
 interface Moment {
     id: number;
     content: string;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: Date | string;
+    updatedAt: Date | string;
     user: {
         id: number;
         username: string;
@@ -14,69 +14,68 @@ interface Moment {
     };
 }
 
-export function MomentItem({ 
-    moment, 
+export function MomentItem({
+    moment,
     onDelete,
     onEdit,
-    canManage
-}: { 
-    moment: Moment, 
-    onDelete: (id: number) => void,
-    onEdit: (moment: Moment) => void,
-    canManage: boolean
+    canManage,
+}: {
+    moment: Moment;
+    onDelete: (id: number) => void;
+    onEdit: (moment: Moment) => void;
+    canManage: boolean;
 }) {
-    const { t } = useTranslation()
-    const { createdAt, updatedAt } = moment;
-    
+    const { t } = useTranslation();
+    const createdAt = new Date(moment.createdAt);
+    const updatedAt = new Date(moment.updatedAt);
+
     return (
-        <div className="bg-w p-4 rounded-lg">
-            <div className="flex justify-between">
-                <div className="flex items-center space-x-3">
-                    <img 
-                        src={moment.user.avatar} 
-                        alt={moment.user.username} 
-                        className="w-8 h-8 rounded-full object-cover"
+        <article className="site-panel overflow-hidden rounded-[30px] px-5 py-5 md:px-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <img
+                        src={moment.user.avatar}
+                        alt={moment.user.username}
+                        className="h-12 w-12 rounded-[18px] object-cover shadow-[0_12px_24px_rgba(36,24,19,0.14)]"
                     />
                     <div>
-                        <p className="t-primary">
-                            {moment.user.username}
-                        </p>
-                        <p className="space-x-2 t-secondary text-sm"> 
-                            <span title={new Date(createdAt).toLocaleString()}> 
-                                {createdAt === updatedAt ? timeago(createdAt) : t('feed_card.published$time', { time: timeago(createdAt) })} 
-                            </span> 
-                            {createdAt !== updatedAt && 
-                                <span title={new Date(updatedAt).toLocaleString()}> 
-                                    {t('feed_card.updated$time', { time: timeago(updatedAt) })} 
-                                </span> 
-                            } 
+                        <p className="text-lg font-semibold text-neutral-900 dark:text-white">{moment.user.username}</p>
+                        <p className="mt-1 flex flex-wrap items-center gap-3 text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
+                            <span title={createdAt.toLocaleString()}>
+                                {createdAt.getTime() === updatedAt.getTime()
+                                    ? timeago(createdAt)
+                                    : t("feed_card.published$time", { time: timeago(createdAt) })}
+                            </span>
+                            {createdAt.getTime() !== updatedAt.getTime() ? (
+                                <span title={updatedAt.toLocaleString()}>
+                                    {t("feed_card.updated$time", { time: timeago(updatedAt) })}
+                                </span>
+                            ) : null}
                         </p>
                     </div>
                 </div>
-                {canManage && (
-                    <div>
-                        <div className="flex gap-2">
-                            <button
-                                aria-label={t("edit")}
-                                onClick={() => onEdit(moment)}
-                                className="flex-1 flex flex-col items-end justify-center px-2 py bg-secondary bg-button rounded-full transition"
-                            >
-                                <i className="ri-edit-2-line dark:text-neutral-400" />
-                            </button>
-                            <button
-                                aria-label={t("delete.title")}
-                                onClick={() => onDelete(moment.id)}
-                                className="flex-1 flex flex-col items-end justify-center px-2 py bg-secondary bg-button rounded-full transition"
-                            >
-                                <i className="ri-delete-bin-7-line text-red-500" />
-                            </button>
-                        </div>
+                {canManage ? (
+                    <div className="flex gap-2">
+                        <button
+                            aria-label={t("edit")}
+                            onClick={() => onEdit(moment)}
+                            className="rounded-full border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
+                        >
+                            {t("edit")}
+                        </button>
+                        <button
+                            aria-label={t("delete.title")}
+                            onClick={() => onDelete(moment.id)}
+                            className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300"
+                        >
+                            {t("delete.title")}
+                        </button>
                     </div>
-                )}
+                ) : null}
             </div>
-            <div className="text-black dark:text-white mt-2">
+            <div className="mt-5 text-neutral-800 dark:text-neutral-200">
                 <Markdown content={moment.content} />
             </div>
-        </div>
-    )
+        </article>
+    );
 }

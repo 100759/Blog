@@ -1,65 +1,71 @@
 import type { AdjacentFeed, AdjacentFeedResponse } from "@rin/api";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
+import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { client } from "../app/runtime";
-import {timeago} from "../utils/timeago.ts";
-import {Link} from "wouter";
-import {useTranslation} from "react-i18next";
+import { timeago } from "../utils/timeago.ts";
 
-export function AdjacentSection({id, setError}: { id: string, setError: (error: string) => void }) {
+export function AdjacentSection({ id, setError }: { id: string; setError: (error: string) => void }) {
     const [adjacentFeeds, setAdjacentFeeds] = useState<AdjacentFeedResponse>();
 
     useEffect(() => {
-        client.feed
-            .adjacent(id)
-            .then(({data, error}) => {
-                if (error) {
-                    setError(error.value as string);
-                } else if (data && typeof data !== "string") {
-                    setAdjacentFeeds(data);
-                }
-            });
+        client.feed.adjacent(id).then(({ data, error }) => {
+            if (error) {
+                setError(error.value as string);
+            } else if (data && typeof data !== "string") {
+                setAdjacentFeeds(data);
+            }
+        });
     }, [id, setError]);
+
     return (
-        <div className="rounded-2xl bg-w m-2 grid grid-cols-1 sm:grid-cols-2">
-            <AdjacentCard data={adjacentFeeds?.previousFeed} type="previous"/>
-            <AdjacentCard data={adjacentFeeds?.nextFeed} type="next"/>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <AdjacentCard data={adjacentFeeds?.previousFeed} type="previous" />
+            <AdjacentCard data={adjacentFeeds?.nextFeed} type="next" />
         </div>
-    )
+    );
 }
 
-export function AdjacentCard({data, type}: { data: AdjacentFeed | null | undefined, type: "previous" | "next" }) {
-    const direction = type === "previous" ? "text-start" : "text-end"
-    const radius = type === "previous" ? "rounded-t-2xl sm:rounded-none sm:rounded-l-2xl" : "rounded-b-2xl sm:rounded-none sm:rounded-r-2xl"
-    const {t} = useTranslation()
+export function AdjacentCard({ data, type }: { data: AdjacentFeed | null | undefined; type: "previous" | "next" }) {
+    const direction = type === "previous" ? "items-start text-left" : "items-end text-right";
+    const { t } = useTranslation();
+
     if (!data) {
-        return (<div className="w-full p-6 duration-300">
-            <p className={`t-secondary w-full ${direction}`}>
-                {type === "previous" ? "Previous" : "Next"}
-            </p>
-            <h1 className={`text-xl text-gray-700 dark:text-white text-pretty truncate ${direction}`}>
-                {t('no_more')}
-            </h1>
-        </div>);
+        return (
+            <div className={`site-panel flex min-h-[180px] flex-col justify-between rounded-[28px] px-6 py-6 ${direction}`}>
+                <p className="site-kicker">{type === "previous" ? "Previous" : "Next"}</p>
+                <div>
+                    <h3 className="site-display mt-4 text-[2rem] text-neutral-900 dark:text-white">{t("no_more")}</h3>
+                </div>
+            </div>
+        );
     }
+
+    const createdAt = new Date(data.createdAt);
+    const updatedAt = new Date(data.updatedAt);
+
     return (
-        <Link href={`/feed/${data.id}`} target="_blank"
-              className={`w-full p-6 duration-300 bg-button ${radius}`}>
-            <p className={`t-secondary w-full ${direction}`}>
-                {type === "previous" ? "Previous" : "Next"}
-            </p>
-            <h1 className={`text-xl font-bold text-gray-700 dark:text-white text-pretty truncate ${direction}`}>
-                {data.title}
-            </h1>
-            <p className={`space-x-2 ${direction}`}>
-                <span className="text-gray-400 text-sm" title={new Date(data.createdAt).toLocaleString()}>
-                    {data.createdAt === data.updatedAt ? timeago(data.createdAt) : t('feed_card.published$time', {time: timeago(data.createdAt)})}
-                </span>
-                {data.createdAt !== data.updatedAt &&
-                    <span className="text-gray-400 text-sm" title={new Date(data.updatedAt).toLocaleString()}>
-                        {t('feed_card.updated$time', {time: timeago(data.updatedAt)})}
+        <Link
+            href={`/feed/${data.id}`}
+            target="_blank"
+            className={`site-panel flex min-h-[180px] flex-col justify-between rounded-[28px] px-6 py-6 transition hover:-translate-y-1 ${direction}`}
+        >
+            <p className="site-kicker">{type === "previous" ? "Previous" : "Next"}</p>
+            <div>
+                <h3 className="site-display mt-4 text-[2rem] text-neutral-900 dark:text-white">{data.title}</h3>
+                <p className="mt-4 flex flex-wrap gap-3 text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
+                    <span title={createdAt.toLocaleString()}>
+                        {createdAt.getTime() === updatedAt.getTime()
+                            ? timeago(createdAt)
+                            : t("feed_card.published$time", { time: timeago(createdAt) })}
                     </span>
-                }
-            </p>
+                    {createdAt.getTime() !== updatedAt.getTime() ? (
+                        <span title={updatedAt.toLocaleString()}>
+                            {t("feed_card.updated$time", { time: timeago(updatedAt) })}
+                        </span>
+                    ) : null}
+                </p>
+            </div>
         </Link>
-    )
+    );
 }

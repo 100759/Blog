@@ -1,4 +1,4 @@
-import { SearchableSelect, SettingsBadge, SettingsCard, SettingsCardBody, SettingsCardHeader, SettingsCardRow } from "@rin/ui";
+import { SearchableSelect, SettingsCard, SettingsCardBody, SettingsCardHeader, SettingsCardRow } from "@rin/ui";
 import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useTranslation } from "react-i18next";
@@ -8,6 +8,7 @@ import { client, oauth_url } from "../app/runtime";
 import { Button } from "../components/button";
 import { useAlert } from "../components/dialog.tsx";
 import { HeaderLayoutPreview } from "../components/site-header/layout-preview";
+import { ThemePresetPreview } from "../components/theme-preset-preview";
 import {
   HEADER_BEHAVIOR_OPTIONS,
   HEADER_LAYOUT_OPTIONS,
@@ -18,7 +19,7 @@ import { FEED_CARD_VARIANTS, normalizeFeedCardVariant } from "../components/feed
 import { FeedCardPreview } from "../components/feed-card-preview";
 import { FEED_LAYOUT_OPTIONS, normalizeFeedLayout } from "../components/feed-layout-options";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-import { applyThemeColor, normalizeThemeColor } from "../utils/theme-color";
+import { applySiteTheme, normalizeThemeColor, normalizeThemePreset, THEME_PRESET_DEFINITIONS } from "../utils/theme-color";
 import { AISummarySettings } from "./settings-ai";
 import { ItemButton, ItemImageInput, ItemInput, ItemSwitch, ItemTitle, ItemWithUpload } from "./settings-items";
 import {
@@ -70,6 +71,10 @@ export function Settings() {
     return typeof nextDraft.clientConfig["theme.color"] === "string" ? nextDraft.clientConfig["theme.color"] : undefined;
   }
 
+  function getDraftThemePreset(nextDraft: SettingsDraft) {
+    return typeof nextDraft.clientConfig["theme.preset"] === "string" ? nextDraft.clientConfig["theme.preset"] : undefined;
+  }
+
   useEffect(() => {
     if (ref.current) return;
     loadSettingsConfigState()
@@ -79,7 +84,7 @@ export function Settings() {
         initialDraftRef.current = state.draft;
         setHasStoredAiApiKey(state.hasStoredAiApiKey);
         mergeSessionConfig(state.draft.clientConfig);
-        applyThemeColor(getDraftThemeColor(state.draft));
+        applySiteTheme({ color: getDraftThemeColor(state.draft), preset: getDraftThemePreset(state.draft) });
       })
       .catch((err: any) => {
         showAlert(t("settings.get_config_failed$message", { message: err.message }));
@@ -90,18 +95,26 @@ export function Settings() {
     ref.current = true;
 
     return () => {
-      applyThemeColor(getDraftThemeColor(initialDraftRef.current));
+      applySiteTheme({ color: getDraftThemeColor(initialDraftRef.current), preset: getDraftThemePreset(initialDraftRef.current) });
     };
   }, [showAlert, t]);
 
   const { clientConfig, serverConfig } = useMemo(() => createSettingsConfigWrappers(draft), [draft]);
   const aiValue = useMemo(() => buildAIConfigDraftValue(draft, hasStoredAiApiKey), [draft, hasStoredAiApiKey]);
   const hasUnsavedChanges = !areSettingsDraftsEqual(draft, initialDraft);
+  const themePresetValue = normalizeThemePreset(String(clientConfig.get("theme.preset") ?? "paper"));
   const themeColorValue = normalizeThemeColor(String(clientConfig.get("theme.color") ?? "#fc466b"));
   const feedLayoutValue = normalizeFeedLayout(String(clientConfig.get("feed.layout") ?? "list"));
   const feedCardVariantValue = normalizeFeedCardVariant(String(clientConfig.get("feed.card_variant") ?? "default"));
   const previewSiteName = String(clientConfig.get("site.name") ?? clientConfig.default("site.name") ?? "Rin");
   const previewSiteAvatar = String(clientConfig.get("site.avatar") ?? clientConfig.default("site.avatar") ?? "");
+  const currentThemePresetLabel = t(
+    `settings.theme_preset.options.${themePresetValue}.label`,
+    THEME_PRESET_DEFINITIONS.find((preset) => preset.value === themePresetValue)?.label || "Paper",
+  );
+  const currentHeaderLayoutLabel = t(`settings.header_layout.options.${normalizeHeaderLayout(String(clientConfig.get("header.layout") ?? "classic"))}`);
+  const currentFeedCardLabel = t(`settings.feed_card.options.${feedCardVariantValue}`);
+  const currentFeedLayoutLabel = t(`settings.feed_layout.options.${feedLayoutValue}`);
 
   function setConfigValue(type: "client" | "server", key: string, value: unknown) {
     setDraft((current) => updateDraftConfig(current, type, key, value));
@@ -109,7 +122,7 @@ export function Settings() {
 
   function handleReset() {
     setDraft(initialDraft);
-    applyThemeColor(getDraftThemeColor(initialDraft));
+    applySiteTheme({ color: getDraftThemeColor(initialDraft), preset: getDraftThemePreset(initialDraft) });
   }
 
   async function handleSave() {
@@ -178,11 +191,42 @@ export function Settings() {
   }
 
   return (
-    <div className="flex w-full flex-col">
+    <div className="flex w-full flex-col gap-6">
       <Helmet>
         <title>{`${t("settings.title")} - ${siteConfig.name}`}</title>
       </Helmet>
-      <main className="w-full rounded-2xl bg-w" aria-label={t("main_content")}>
+      <section className="site-panel rounded-[30px] px-5 py-5 md:px-6 md:py-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+          <div>
+            <p className="site-kicker">{t("settings.title")}</p>
+            <h2 className="site-display mt-3 text-[2.2rem] text-neutral-900 dark:text-white md:text-[3rem]">
+              {previewSiteName}
+            </h2>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-neutral-600 dark:text-neutral-300">
+              {String(clientConfig.get("site.description") ?? clientConfig.default("site.description") ?? "")}
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+              <p className="site-kicker">{t("settings.theme_preset.title")}</p>
+              <p className="mt-3 text-lg font-semibold text-neutral-900 dark:text-white">{currentThemePresetLabel}</p>
+            </div>
+            <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+              <p className="site-kicker">{t("settings.header_layout.title")}</p>
+              <p className="mt-3 text-lg font-semibold text-neutral-900 dark:text-white">{currentHeaderLayoutLabel}</p>
+            </div>
+            <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+              <p className="site-kicker">{t("settings.feed_card.title")}</p>
+              <p className="mt-3 text-lg font-semibold text-neutral-900 dark:text-white">{currentFeedCardLabel}</p>
+            </div>
+            <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+              <p className="site-kicker">{t("settings.feed_layout.title")}</p>
+              <p className="mt-3 text-lg font-semibold text-neutral-900 dark:text-white">{currentFeedLayoutLabel}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <main className="w-full" aria-label={t("main_content")}>
         <div className="flex flex-col items-start space-y-2">
           {(loading || saving) && <ReactLoading width="1em" height="1em" type="spin" color="#FC466B" />}
           <ItemTitle title={t("settings.site.title")} />
@@ -279,6 +323,43 @@ export function Settings() {
                 <SettingsCardRow
                   header={
                     <SettingsCardHeader
+                      title={t("settings.theme_preset.title")}
+                      description={t("settings.theme_preset.desc")}
+                    />
+                  }
+                  action={
+                    <div className="text-sm font-medium t-primary">
+                      {t(
+                        `settings.theme_preset.options.${themePresetValue}.label`,
+                        THEME_PRESET_DEFINITIONS.find((preset) => preset.value === themePresetValue)?.label || "Paper",
+                      )}
+                    </div>
+                  }
+                />
+                <SettingsCardBody>
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {THEME_PRESET_DEFINITIONS.map((preset) => (
+                      <ThemePresetPreview
+                        key={preset.value}
+                        preset={preset}
+                        selected={themePresetValue === preset.value}
+                        title={t(`settings.theme_preset.options.${preset.value}.label`, preset.label)}
+                        description={t(`settings.theme_preset.options.${preset.value}.desc`, preset.description)}
+                        lightLabel={t("settings.theme_preset.preview.light")}
+                        darkLabel={t("settings.theme_preset.preview.dark")}
+                        onClick={() => {
+                          setConfigValue("client", "theme.preset", preset.value);
+                          applySiteTheme({ color: themeColorValue, preset: preset.value });
+                        }}
+                      />
+                    ))}
+                  </div>
+                </SettingsCardBody>
+              </div>
+              <div className="mt-4 border-t border-black/5 pt-4 dark:border-white/10">
+                <SettingsCardRow
+                  header={
+                    <SettingsCardHeader
                       title={t("settings.feed_layout.title")}
                       description={t("settings.feed_layout.desc")}
                     />
@@ -363,7 +444,7 @@ export function Settings() {
                           type="button"
                           onClick={() => {
                             setConfigValue("client", "theme.color", option.value);
-                            applyThemeColor(option.value);
+                            applySiteTheme({ color: option.value, preset: themePresetValue });
                           }}
                           className={`flex items-center gap-3 rounded-xl border px-3 py-2 transition-all ${
                             selected
@@ -387,7 +468,7 @@ export function Settings() {
                         onChange={(event) => {
                           const normalized = normalizeThemeColor(event.target.value);
                           setConfigValue("client", "theme.color", normalized);
-                          applyThemeColor(normalized);
+                          applySiteTheme({ color: normalized, preset: themePresetValue });
                         }}
                         className="color-input-reset h-6 w-6 cursor-pointer rounded-full border-0 bg-transparent p-0"
                       />
@@ -651,23 +732,23 @@ export function Settings() {
 
           {hasUnsavedChanges && (
             <div className="sticky bottom-4 z-20 mt-6 w-full pb-2">
-              <SettingsCard tone="warning">
-              <SettingsCardRow
-                header={
-                  <SettingsCardHeader
-                    title={t("settings.ai_summary.save.title")}
-                    description={t("settings.ai_summary.unsaved_changes")}
-                    badge={<SettingsBadge tone="warning">{t("settings.ai_summary.unsaved_changes")}</SettingsBadge>}
-                  />
-                }
-                action={
-                  <>
+              <div className="site-panel rounded-[26px] px-5 py-4 shadow-[0_18px_48px_rgba(15,23,42,0.12)]">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="site-kicker">{t("settings.ai_summary.save.title")}</p>
+                    <p className="mt-2 text-sm leading-6 text-neutral-600 dark:text-neutral-300">
+                      {t("settings.ai_summary.unsaved_changes")}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="rounded-full border border-theme/20 bg-theme/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-theme">
+                      {t("settings.ai_summary.unsaved_changes")}
+                    </span>
                     <Button secondary title={t("reset")} onClick={handleReset} disabled={saving} />
                     <Button title={t("save")} onClick={handleSave} disabled={saving || loading} />
-                  </>
-                }
-              />
-              </SettingsCard>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -698,14 +779,15 @@ export function Settings() {
           },
         }}
       >
-        <div className="flex flex-col items-start bg-w p-4">
-          <h1 className="text-2xl font-bold t-primary">{t("settings.import_result")}</h1>
-          <p className="text-base dark:text-white">{msg}</p>
+        <div className="site-panel flex flex-col items-start rounded-[28px] p-5">
+          <p className="site-kicker">{t("settings.import_result")}</p>
+          <h1 className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">{t("settings.import_result")}</h1>
+          <p className="mt-3 text-base text-neutral-700 dark:text-neutral-200">{msg}</p>
           <div className="flex w-full flex-col items-start">
-            <p className="mt-2 text-base font-bold dark:text-white">{t("settings.import_skipped")}</p>
+            <p className="mt-4 text-base font-semibold text-neutral-900 dark:text-white">{t("settings.import_skipped")}</p>
             <ul className="flex max-h-64 w-full flex-col items-start overflow-auto">
               {msgList.map((item, idx) => (
-                <p key={idx} className="text-sm dark:text-white">
+                <p key={idx} className="text-sm text-neutral-600 dark:text-neutral-300">
                   {t("settings.import_skipped_item$title$reason", { title: item.title, reason: item.reason })}
                 </p>
               ))}

@@ -137,6 +137,10 @@
     "permission_denied": "權限不足",
     "title": "錯誤"
   },
+  "callback": {
+    "title": "請稍候",
+    "desc": "正在完成驗證並返回網站。"
+  },
   "feed_card": {
     "published$time": "{{time}} 發布",
     "updated$time": "{{time}} 更新"
@@ -175,11 +179,19 @@
       "invalid": "用戶名或密碼錯誤",
       "network": "網路錯誤，請重試"
     },
+    "github": {
+      "label": "GitHub OAuth"
+    },
     "loading": "登入中...",
+    "method": {
+      "enabled": "可用",
+      "disabled": "未啟用"
+    },
     "no_methods": "沒有可用的登入方式",
     "oauth_only": "請登入後繼續",
     "or": "或",
     "password": {
+      "label": "密碼登入",
       "placeholder": "請輸入密碼"
     },
     "required": "請登入後繼續",
@@ -476,6 +488,28 @@
         "blue": "藍色",
         "teal": "青綠",
         "orange": "橙色"
+      }
+    },
+    "theme_preset": {
+      "title": "主題氛圍",
+      "desc": "選擇整站背景、面板與文字對比的整體氣質",
+      "preview": {
+        "light": "淺色",
+        "dark": "深色"
+      },
+      "options": {
+        "paper": {
+          "label": "紙本暖調",
+          "desc": "偏暖的紙張底色，層次柔和，像一本做得很克制的畫冊。"
+        },
+        "mist": {
+          "label": "霧藍冷調",
+          "desc": "冷白與石藍更突出，介面更清透，也更安靜。"
+        },
+        "nocturne": {
+          "label": "夜曲銅黑",
+          "desc": "更濃的暗色層次與銅棕餘暉，整體戲劇感更強。"
+        }
       }
     },
     "rss": {

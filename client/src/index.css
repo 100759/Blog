@@ -4,6 +4,16 @@
   --theme-rgb: 252 70 107;
   --theme-hover-rgb: 177 48 73;
   --theme-active-rgb: 151 32 56;
+  --site-paper-rgb: 255 250 245;
+  --site-surface-rgb: 247 240 232;
+  --site-ink-rgb: 33 24 20;
+  --site-muted-rgb: 120 100 90;
+  --site-glow-rgb: 214 180 120;
+  --site-paper-dark-rgb: 20 18 19;
+  --site-surface-dark-rgb: 27 24 25;
+  --site-ink-dark-rgb: 237 233 229;
+  --site-muted-dark-rgb: 180 168 160;
+  --site-glow-dark-rgb: 123 96 71;
 }
 
 /* cantarell-latin-400-normal */
@@ -20,8 +30,29 @@
 }
 
 body {
-  @apply bg-background-light dark:bg-background-dark text-gray-800;
+  @apply text-gray-800;
+  min-height: 100vh;
+  color: rgb(var(--site-ink-rgb));
+  background:
+    radial-gradient(circle at top left, rgb(var(--theme-rgb) / 0.1), transparent 26%),
+    radial-gradient(circle at 85% 12%, rgb(var(--site-glow-rgb) / 0.08), transparent 20%),
+    linear-gradient(180deg, rgb(var(--site-paper-rgb)), rgb(var(--site-surface-rgb)));
   font-family: Cantarell, "Source Han Serif CN VF" !important;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  background-attachment: fixed;
+}
+
+[data-color-mode="dark"] body {
+  color: rgb(var(--site-ink-dark-rgb));
+  background:
+    radial-gradient(circle at top left, rgb(var(--theme-rgb) / 0.14), transparent 22%),
+    radial-gradient(circle at 85% 12%, rgb(var(--site-glow-dark-rgb) / 0.16), transparent 24%),
+    linear-gradient(180deg, rgb(var(--site-paper-dark-rgb)), rgb(12 12 13));
+}
+
+::selection {
+  background: rgb(var(--theme-rgb) / 0.2);
 }
 
 textarea:focus {
@@ -31,6 +62,130 @@ textarea:focus {
 .wmde-markdown {
   @apply bg-w;
   font-family: Cantarell, "Source Han Serif CN VF" !important;
+}
+
+.site-shell {
+  position: relative;
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+.site-shell::before,
+.site-shell::after {
+  content: "";
+  position: fixed;
+  inset: auto;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(10px);
+}
+
+.site-shell::before {
+  top: 5rem;
+  right: min(5vw, 3rem);
+  width: min(32vw, 20rem);
+  height: min(32vw, 20rem);
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgb(var(--theme-rgb) / 0.12), transparent 68%);
+}
+
+.site-shell::after {
+  left: min(3vw, 2rem);
+  bottom: 10rem;
+  width: min(24vw, 15rem);
+  height: min(24vw, 15rem);
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgb(var(--site-glow-rgb) / 0.08), transparent 68%);
+}
+
+[data-color-mode="dark"] .site-shell::after {
+  background: radial-gradient(circle, rgb(var(--site-glow-dark-rgb) / 0.1), transparent 68%);
+}
+
+.site-panel {
+  background: rgb(var(--site-paper-rgb) / 0.9);
+  border: 1px solid rgb(28 20 15 / 0.08);
+  box-shadow: 0 14px 34px rgb(40 28 20 / 0.06);
+  backdrop-filter: blur(10px);
+}
+
+[data-color-mode="dark"] .site-panel {
+  background: rgb(var(--site-paper-dark-rgb) / 0.9);
+  border-color: rgb(255 255 255 / 0.08);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 0.24);
+}
+
+.site-panel-muted {
+  background:
+    linear-gradient(180deg, rgb(var(--theme-rgb) / 0.05), transparent 42%),
+    rgb(var(--site-paper-rgb) / 0.88);
+}
+
+[data-color-mode="dark"] .site-panel-muted {
+  background:
+    linear-gradient(180deg, rgb(var(--theme-rgb) / 0.08), transparent 42%),
+    rgb(var(--site-paper-dark-rgb) / 0.88);
+}
+
+.site-display {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", "Source Han Serif CN VF", serif !important;
+  letter-spacing: -0.028em;
+  line-height: 0.98;
+}
+
+.site-kicker {
+  color: rgb(var(--site-muted-rgb));
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+[data-color-mode="dark"] .site-kicker {
+  color: rgb(var(--site-muted-dark-rgb));
+}
+
+.site-rule {
+  height: 1px;
+  background: linear-gradient(90deg, rgb(var(--theme-rgb) / 0.4), rgb(28 20 15 / 0.06) 28%, transparent);
+}
+
+[data-color-mode="dark"] .site-rule {
+  background: linear-gradient(90deg, rgb(var(--theme-rgb) / 0.5), rgb(255 255 255 / 0.08) 28%, transparent);
+}
+
+@media (max-width: 767px) {
+  body {
+    background-attachment: scroll;
+  }
+
+  .site-shell::before {
+    top: 4rem;
+    right: -2rem;
+    width: min(42vw, 12rem);
+    height: min(42vw, 12rem);
+  }
+
+  .site-shell::after {
+    left: -1rem;
+    bottom: 6rem;
+    width: min(36vw, 9rem);
+    height: min(36vw, 9rem);
+  }
+
+  .site-panel {
+    backdrop-filter: blur(8px);
+  }
+
+  .site-display {
+    letter-spacing: -0.022em;
+    line-height: 1.02;
+  }
+
+  .site-kicker {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+  }
 }
 
 .w-md-editor {

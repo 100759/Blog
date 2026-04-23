@@ -109,28 +109,58 @@ export function CompatTasksPage() {
   };
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="flex w-full flex-col gap-6">
       <Helmet>
         <title>{`${t("compat_tasks.title")} - ${siteConfig.name}`}</title>
       </Helmet>
 
       <AlertUI />
 
-      {generatedAt ? (
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          {t("compat_tasks.generated_at", { date: new Date(generatedAt).toLocaleString() })}
-        </p>
-      ) : null}
+      <section className="site-panel rounded-[30px] px-5 py-5 md:px-6 md:py-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)]">
+          <div>
+            <p className="site-kicker">{t("compat_tasks.title")}</p>
+            <h2 className="site-display mt-3 text-[2.2rem] text-neutral-900 dark:text-white md:text-[3rem]">
+              {siteConfig.name}
+            </h2>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-neutral-600 dark:text-neutral-300">
+              {generatedAt
+                ? t("compat_tasks.generated_at", { date: new Date(generatedAt).toLocaleString() })
+                : t("compat_tasks.loading")}
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[24px] border border-amber-200/60 bg-amber-50/70 px-4 py-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+              <p className="site-kicker">{t("compat_tasks.ai_summary.title")}</p>
+              <p className="mt-3 text-[2rem] font-semibold text-amber-700 dark:text-amber-300">{status.aiSummary.eligible}</p>
+            </div>
+            <div className="rounded-[24px] border border-amber-200/60 bg-amber-50/70 px-4 py-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+              <p className="site-kicker">{t("compat_tasks.ai_summary.run_force")}</p>
+              <p className="mt-3 text-[2rem] font-semibold text-amber-700 dark:text-amber-300">{status.aiSummary.forceEligible}</p>
+            </div>
+            <div className="rounded-[24px] border border-emerald-200/60 bg-emerald-50/70 px-4 py-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+              <p className="site-kicker">{t("compat_tasks.blurhash.title")}</p>
+              <p className="mt-3 text-[2rem] font-semibold text-emerald-700 dark:text-emerald-300">{status.blurhash.eligible}</p>
+            </div>
+            <div className={`rounded-[24px] border px-4 py-4 ${status.aiSummary.queueConfigured ? "border-emerald-200/60 bg-emerald-50/70 dark:border-emerald-500/20 dark:bg-emerald-500/10" : "border-rose-200/60 bg-rose-50/70 dark:border-rose-500/20 dark:bg-rose-500/10"}`}>
+              <p className="site-kicker">{t("queue_status.binding")}</p>
+              <p className={`mt-3 text-lg font-semibold ${status.aiSummary.queueConfigured ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}>
+                {status.aiSummary.queueConfigured ? t("compat_tasks.yes") : t("compat_tasks.no")}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {loading ? (
-        <div className="flex items-center gap-3 py-8 text-sm text-neutral-500 dark:text-neutral-400">
+        <div className="site-panel-muted flex items-center gap-3 rounded-[26px] px-5 py-6 text-sm text-neutral-500 dark:text-neutral-400">
           <ReactLoading width="1.25em" height="1.25em" type="spin" color="#FC466B" />
           <span>{t("compat_tasks.loading")}</span>
         </div>
       ) : null}
 
       {!loading ? (
-        <div className="space-y-4">
+        <div className="grid gap-4 xl:grid-cols-2">
           <SettingsCard tone={status.aiSummary.eligible > 0 ? "warning" : "success"}>
             <SettingsCardHeader
               title={t("compat_tasks.ai_summary.title")}

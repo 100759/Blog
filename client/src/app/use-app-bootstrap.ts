@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ConfigWrapper } from "@rin/config";
 import type { Profile } from "../state/profile";
 import { defaultClientConfig } from "../state/config";
-import { applyThemeColor } from "../utils/theme-color";
+import { applySiteTheme } from "../utils/theme-color";
 import { readBootstrappedClientConfig } from "./bootstrap-config";
 import { client } from "./runtime";
 
@@ -26,7 +26,10 @@ export function useAppBootstrap() {
     const updateClientConfig = (nextConfig: Record<string, unknown>) => {
       sessionStorage.setItem("config", JSON.stringify(nextConfig));
       setConfig(new ConfigWrapper(nextConfig, defaultClientConfig));
-      applyThemeColor(typeof nextConfig["theme.color"] === "string" ? nextConfig["theme.color"] : undefined);
+      applySiteTheme({
+        color: typeof nextConfig["theme.color"] === "string" ? nextConfig["theme.color"] : undefined,
+        preset: typeof nextConfig["theme.preset"] === "string" ? nextConfig["theme.preset"] : undefined,
+      });
     };
 
     client.user.profile().then(({ data, error }) => {
@@ -50,7 +53,10 @@ export function useAppBootstrap() {
     } else if (cachedConfig) {
       const configObject = JSON.parse(cachedConfig) as Record<string, unknown>;
       setConfig(new ConfigWrapper(configObject, defaultClientConfig));
-      applyThemeColor(typeof configObject["theme.color"] === "string" ? configObject["theme.color"] : undefined);
+      applySiteTheme({
+        color: typeof configObject["theme.color"] === "string" ? configObject["theme.color"] : undefined,
+        preset: typeof configObject["theme.preset"] === "string" ? configObject["theme.preset"] : undefined,
+      });
     }
 
     initializedRef.current = true;
