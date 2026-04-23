@@ -564,6 +564,53 @@
     "self_only": "Visible to self only"
   },
   "writing": "Writing",
+  "writing_editor": {
+    "actions": {
+      "alias": "Sync alias",
+      "summary": "Draft summary"
+    },
+    "description": "Shape the draft, save progress without leaving, and publish only when it is ready.",
+    "empty_draft": "Add at least a title, some content, or metadata before saving a new draft.",
+    "loading": "Loading draft...",
+    "outline": "Outline",
+    "outline_empty": "Add Markdown headings to build a quick outline here.",
+    "overview": "Writing snapshot",
+    "publish_article": "Publish article",
+    "quick_actions": "Quick actions",
+    "reading_minutes_one": "{{count}} min read",
+    "reading_minutes_other": "{{count}} min read",
+    "save_continue": "Save and continue",
+    "save_shortcut": "Ctrl/Cmd + S",
+    "snippets": {
+      "code": "Code",
+      "code_placeholder": "console.log('hello world');",
+      "heading": "Heading",
+      "heading_placeholder": "Section title",
+      "list": "List",
+      "list_placeholder": "List item",
+      "mermaid": "Mermaid",
+      "quote": "Quote",
+      "quote_placeholder": "Important note"
+    },
+    "snapshot": "Publishing state",
+    "stats": {
+      "characters": "Characters",
+      "headings": "Headings",
+      "images": "Images",
+      "reading_time": "Reading time",
+      "visibility": "Visibility",
+      "words": "Words"
+    },
+    "status": {
+      "error": "Save failed. Keep editing and try again.",
+      "local": "Local draft is stored in this browser until you save it to the server.",
+      "saved$time": "Saved at {{time}}",
+      "saving": "Saving changes...",
+      "title": "Save state",
+      "unsaved": "Unsaved changes"
+    },
+    "untitled": "Untitled draft"
+  },
   "year$year": "{{year}}",
   "profile": {
     "title": "Profile",

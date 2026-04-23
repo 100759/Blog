@@ -317,6 +317,29 @@ describe('FeedService', () => {
 
             expect(res.status).toBe(400);
         });
+
+        it('should allow saving a blank draft', async () => {
+            const res = await app.request('/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer mock_token_1',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: '',
+                    content: '',
+                    summary: '',
+                    alias: '',
+                    tags: [],
+                    draft: true,
+                    listed: false,
+                }),
+            }, env);
+
+            expect(res.status).toBe(200);
+            const data = await res.json() as any;
+            expect(data.insertedId).toBeDefined();
+        });
     });
 
     describe('POST /:id - Update feed', () => {

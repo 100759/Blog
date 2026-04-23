@@ -564,6 +564,53 @@
     "self_only": "自分のみ可視"
   },
   "writing": "執筆",
+  "writing_editor": {
+    "actions": {
+      "alias": "エイリアスを同期",
+      "summary": "要約を作成"
+    },
+    "description": "書きながら整え、公開は準備が整ってから行えます。保存しても編集は中断されません。",
+    "empty_draft": "新しい下書きを保存する前に、タイトル、本文、または基本情報を少なくとも1つ追加してください。",
+    "loading": "下書きを読み込み中...",
+    "outline": "アウトライン",
+    "outline_empty": "Markdown 見出しを書くと、ここにアウトラインが整理されます。",
+    "overview": "執筆サマリー",
+    "publish_article": "記事を公開",
+    "quick_actions": "クイック操作",
+    "reading_minutes_one": "約 {{count}} 分で読めます",
+    "reading_minutes_other": "約 {{count}} 分で読めます",
+    "save_continue": "保存して続ける",
+    "save_shortcut": "Ctrl/Cmd + S",
+    "snippets": {
+      "code": "コード",
+      "code_placeholder": "console.log('hello world');",
+      "heading": "見出し",
+      "heading_placeholder": "セクション見出し",
+      "list": "リスト",
+      "list_placeholder": "リスト項目",
+      "mermaid": "Mermaid",
+      "quote": "引用",
+      "quote_placeholder": "重要なメモ"
+    },
+    "snapshot": "公開状態",
+    "stats": {
+      "characters": "文字数",
+      "headings": "見出し数",
+      "images": "画像数",
+      "reading_time": "読了時間",
+      "visibility": "公開範囲",
+      "words": "語数"
+    },
+    "status": {
+      "error": "保存に失敗しました。内容は残っているので、後でもう一度試してください。",
+      "local": "ローカル下書きはこのブラウザに保存されています。サーバー保存前でも失われません。",
+      "saved$time": "{{time}} に保存済み",
+      "saving": "変更を保存中...",
+      "title": "保存状態",
+      "unsaved": "未保存の変更があります"
+    },
+    "untitled": "無題の下書き"
+  },
   "year$year": "{{year}} 年",
   "profile": {
     "title": "プロフィール",

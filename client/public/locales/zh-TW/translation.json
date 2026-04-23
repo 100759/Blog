@@ -564,6 +564,53 @@
     "self_only": "僅自己可見"
   },
   "writing": "寫作",
+  "writing_editor": {
+    "actions": {
+      "alias": "同步別名",
+      "summary": "產生摘要"
+    },
+    "description": "先把內容寫順，再決定何時發佈。儲存不會打斷編輯，準備好時再公開。",
+    "empty_draft": "新草稿至少補一個標題、正文或基礎資訊後再儲存。",
+    "loading": "正在載入草稿...",
+    "outline": "文章提綱",
+    "outline_empty": "先寫幾個 Markdown 標題，這裡會自動整理出提綱。",
+    "overview": "寫作概覽",
+    "publish_article": "發佈文章",
+    "quick_actions": "快捷操作",
+    "reading_minutes_one": "約 {{count}} 分鐘閱讀",
+    "reading_minutes_other": "約 {{count}} 分鐘閱讀",
+    "save_continue": "儲存並繼續",
+    "save_shortcut": "Ctrl/Cmd + S",
+    "snippets": {
+      "code": "程式碼區塊",
+      "code_placeholder": "console.log('hello world');",
+      "heading": "標題",
+      "heading_placeholder": "小節標題",
+      "list": "清單",
+      "list_placeholder": "清單項目",
+      "mermaid": "流程圖",
+      "quote": "引用",
+      "quote_placeholder": "重點說明"
+    },
+    "snapshot": "發佈狀態",
+    "stats": {
+      "characters": "字數",
+      "headings": "標題數",
+      "images": "圖片數",
+      "reading_time": "閱讀時長",
+      "visibility": "可見範圍",
+      "words": "詞數"
+    },
+    "status": {
+      "error": "儲存失敗，內容還在，稍後再試。",
+      "local": "本機草稿已保存在目前瀏覽器，落庫前不會遺失。",
+      "saved$time": "已於 {{time}} 儲存",
+      "saving": "正在儲存變更...",
+      "title": "儲存狀態",
+      "unsaved": "有未儲存變更"
+    },
+    "untitled": "未命名草稿"
+  },
   "year$year": "{{year}} 年",
   "profile": {
     "title": "個人資料",

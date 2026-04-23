@@ -1,5 +1,5 @@
 import Editor from '@monaco-editor/react';
-import { editor } from 'monaco-editor';
+import { editor, KeyCode, KeyMod } from 'monaco-editor';
 import React, { useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import Loading from 'react-loading';
@@ -15,16 +15,90 @@ interface MarkdownEditorProps {
   setContent: (content: string) => void;
   placeholder?: string;
   height?: string;
+  onSave?: () => void;
 }
 
-export function MarkdownEditor({ content, setContent, placeholder = "> Write your content here...", height = "400px" }: MarkdownEditorProps) {
+type SnippetAction = {
+  key: string;
+  label: string;
+  icon: string;
+  insert: (selectedText: string) => string;
+};
+
+export function MarkdownEditor({ content, setContent, placeholder = "> Write your content here...", height = "400px", onSave }: MarkdownEditorProps) {
   const { t } = useTranslation();
   const colorMode = useColorMode();
   const editorRef = useRef<editor.IStandaloneCodeEditor>();
   const isComposingRef = useRef(false);
+  const onSaveRef = useRef(onSave);
   const [preview, setPreview] = useState<'edit' | 'preview' | 'comparison'>('edit');
   const [uploading, setUploading] = useState(false);
   const { showAlert, AlertUI } = useAlert();
+
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
+
+  const snippetActions: SnippetAction[] = [
+    {
+      key: "heading",
+      label: t("writing_editor.snippets.heading"),
+      icon: "ri-h-2",
+      insert: (selectedText) => `## ${selectedText.trim() || t("writing_editor.snippets.heading_placeholder")}`,
+    },
+    {
+      key: "quote",
+      label: t("writing_editor.snippets.quote"),
+      icon: "ri-double-quotes-l",
+      insert: (selectedText) => {
+        const value = selectedText.trim() || t("writing_editor.snippets.quote_placeholder");
+        return value
+          .split("\n")
+          .map((line) => `> ${line}`)
+          .join("\n");
+      },
+    },
+    {
+      key: "list",
+      label: t("writing_editor.snippets.list"),
+      icon: "ri-list-unordered",
+      insert: (selectedText) => {
+        const value = selectedText.trim() || t("writing_editor.snippets.list_placeholder");
+        return value
+          .split("\n")
+          .map((line) => `- ${line}`)
+          .join("\n");
+      },
+    },
+    {
+      key: "code",
+      label: t("writing_editor.snippets.code"),
+      icon: "ri-code-s-slash-line",
+      insert: (selectedText) => `\`\`\`ts\n${selectedText.trim() || t("writing_editor.snippets.code_placeholder")}\n\`\`\``,
+    },
+    {
+      key: "mermaid",
+      label: t("writing_editor.snippets.mermaid"),
+      icon: "ri-git-branch-line",
+      insert: () => "```mermaid\ngraph TD\n  A[Start] --> B[Next step]\n```",
+    },
+  ];
+
+  function insertSnippet(buildText: (selectedText: string) => string) {
+    const editorInstance = editorRef.current;
+    if (!editorInstance) return;
+
+    const selection = editorInstance.getSelection();
+    const model = editorInstance.getModel();
+    if (!selection || !model) return;
+
+    const selectedText = model.getValueInRange(selection);
+    const text = buildText(selectedText);
+
+    editorInstance.executeEdits("markdown-snippet", [{ range: selection, text }]);
+    editorInstance.focus();
+    setContent(editorInstance.getValue());
+  }
 
   async function insertImage(
     file: File,
@@ -114,6 +188,12 @@ export function MarkdownEditor({ content, setContent, placeholder = "> Write you
   const handleEditorMount = (editor: editor.IStandaloneCodeEditor) => {
     editorRef.current = editor;
 
+    if (onSaveRef.current) {
+      editor.addCommand(KeyMod.CtrlCmd | KeyCode.KeyS, () => {
+        onSaveRef.current?.();
+      });
+    }
+
     editor.onDidCompositionStart(() => {
       isComposingRef.current = true;
     });
@@ -159,7 +239,28 @@ export function MarkdownEditor({ content, setContent, placeholder = "> Write you
         <FlatTabButton active={preview === 'edit'} onClick={() => setPreview('edit')}> {t("edit")} </FlatTabButton>
         <FlatTabButton active={preview === 'preview'} onClick={() => setPreview('preview')}> {t("preview")} </FlatTabButton>
         <FlatTabButton active={preview === 'comparison'} onClick={() => setPreview('comparison')}> {t("comparison")} </FlatTabButton>
+        <div className="hidden h-5 w-px bg-black/10 dark:bg-white/10 lg:block" />
+        <div className="flex flex-wrap items-center gap-2">
+          {snippetActions.map((action) => (
+            <button
+              key={action.key}
+              type="button"
+              onClick={() => insertSnippet(action.insert)}
+              className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-w px-3 py-2 text-sm t-primary transition-colors hover:border-black/20 dark:border-white/10 dark:hover:border-white/20"
+              title={action.label}
+              aria-label={action.label}
+            >
+              <i className={action.icon} />
+              <span className="hidden sm:inline">{action.label}</span>
+            </button>
+          ))}
+        </div>
         <div className="flex-grow" />
+        {onSave ? (
+          <span className="hidden text-xs uppercase tracking-[0.2em] text-neutral-400 lg:inline">
+            {t("writing_editor.save_shortcut")}
+          </span>
+        ) : null}
         <UploadImageButton />
         {uploading &&
           <div className="flex flex-row items-center space-x-2">

@@ -130,21 +130,28 @@ export function FeedService(): Hono<{
         const uid = c.get('uid');
         const body = await profileAsync(c, 'feed_create_parse', () => c.req.json());
         const { title, alias, listed, content, summary, draft, tags, createdAt } = body;
+        const normalizedTitle = typeof title === "string" ? title.trim() : "";
+        const normalizedContent = typeof content === "string" ? content : "";
+        const normalizedSummary = typeof summary === "string" ? summary.trim() : "";
+        const normalizedAlias = typeof alias === "string" ? alias.trim() : "";
+        const isDraft = Boolean(draft);
 
         if (!admin) {
             return c.text('Permission denied', 403);
         }
 
-        if (!title) {
+        if (!isDraft && !normalizedTitle) {
             return c.text('Title is required', 400);
         }
-        if (!content) {
+        if (!isDraft && !normalizedContent.trim()) {
             return c.text('Content is required', 400);
         }
 
-        const exist = await profileAsync(c, 'feed_create_existing', () => db.query.feeds.findFirst({
-            where: or(eq(feeds.title, title), eq(feeds.content, content))
-        }));
+        const exist = isDraft
+            ? null
+            : await profileAsync(c, 'feed_create_existing', () => db.query.feeds.findFirst({
+                where: or(eq(feeds.title, normalizedTitle), eq(feeds.content, normalizedContent))
+            }));
 
         if (exist) {
             return c.text('Content already exists', 400);
@@ -157,23 +164,23 @@ export function FeedService(): Hono<{
         }
 
         const result = await profileAsync(c, 'feed_create_insert', () => db.insert(feeds).values({
-            title,
-            content,
-            summary,
+            title: normalizedTitle || null,
+            content: normalizedContent,
+            summary: normalizedSummary,
             ai_summary: "",
             ai_summary_status: "idle",
             ai_summary_error: "",
             uid,
-            alias,
+            alias: normalizedAlias || null,
             listed: listed ? 1 : 0,
-            draft: draft ? 1 : 0,
+            draft: isDraft ? 1 : 0,
             createdAt: date,
             updatedAt: date
         }).returning({ insertedId: feeds.id }));
 
         await profileAsync(c, 'feed_create_tags', () => bindTagToPost(db, result[0].insertedId, tags));
         await profileAsync(c, 'feed_create_ai_queue', () => syncFeedAISummaryQueueState(db, serverConfig, env, result[0].insertedId, {
-            draft: Boolean(draft),
+            draft: isDraft,
             updatedAt: date,
             resetSummary: true,
         }));
@@ -660,4 +667,3 @@ type FeedItem = {
     updatedAt: Date;
     tags?: string[];
 }
-

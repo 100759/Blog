@@ -564,6 +564,53 @@
     "self_only": "仅自己可见"
   },
   "writing": "写作",
+  "writing_editor": {
+    "actions": {
+      "alias": "同步别名",
+      "summary": "生成摘要"
+    },
+    "description": "先把内容写顺，再决定何时发布。保存不会打断编辑，准备好时再公开。",
+    "empty_draft": "新草稿至少补一个标题、正文或基础信息后再保存。",
+    "loading": "正在载入草稿...",
+    "outline": "文章提纲",
+    "outline_empty": "先写几个 Markdown 标题，这里会自动整理出提纲。",
+    "overview": "写作概览",
+    "publish_article": "发布文章",
+    "quick_actions": "快捷操作",
+    "reading_minutes_one": "约 {{count}} 分钟阅读",
+    "reading_minutes_other": "约 {{count}} 分钟阅读",
+    "save_continue": "保存并继续",
+    "save_shortcut": "Ctrl/Cmd + S",
+    "snippets": {
+      "code": "代码块",
+      "code_placeholder": "console.log('hello world');",
+      "heading": "标题",
+      "heading_placeholder": "小节标题",
+      "list": "列表",
+      "list_placeholder": "列表项",
+      "mermaid": "流程图",
+      "quote": "引用",
+      "quote_placeholder": "重点说明"
+    },
+    "snapshot": "发布状态",
+    "stats": {
+      "characters": "字数",
+      "headings": "标题数",
+      "images": "图片数",
+      "reading_time": "阅读时长",
+      "visibility": "可见范围",
+      "words": "词数"
+    },
+    "status": {
+      "error": "保存失败，内容还在，稍后再试。",
+      "local": "本地草稿已保存在当前浏览器，落库前不会丢。",
+      "saved$time": "已于 {{time}} 保存",
+      "saving": "正在保存改动...",
+      "title": "保存状态",
+      "unsaved": "有未保存改动"
+    },
+    "untitled": "未命名草稿"
+  },
   "year$year": "{{year}} 年",
   "profile": {
     "title": "个人资料",
