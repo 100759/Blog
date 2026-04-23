@@ -155,6 +155,7 @@ export function WritingPage({ id }: { id?: number }) {
 
   const readingTitle = title.trim() || t("writing_editor.untitled");
   const readingDescription = summary.trim() || siteConfig.description || t("content.empty");
+  const contentText = useMemo(() => stripMarkdown(content), [content]);
   const plainText = useMemo(() => stripMarkdown(`${title}\n${content}`), [content, title]);
   const wordCount = useMemo(() => computeWordCount(plainText), [plainText]);
   const characterCount = plainText.length;
@@ -168,6 +169,42 @@ export function WritingPage({ id }: { id?: number }) {
     [content],
   );
   const imageCount = useMemo(() => (content.match(/!\[.*?\]\(.*?\)/g) ?? []).length, [content]);
+  const publishChecklist = useMemo(
+    () => [
+      {
+        key: "title",
+        done: title.trim().length > 0,
+        label: t("writing_editor.checklist.title"),
+        hint: t("writing_editor.checklist.title_hint"),
+      },
+      {
+        key: "content",
+        done: contentText.length >= 120,
+        label: t("writing_editor.checklist.content"),
+        hint: t("writing_editor.checklist.content_hint", { count: 120 }),
+      },
+      {
+        key: "summary",
+        done: summary.trim().length >= 40,
+        label: t("writing_editor.checklist.summary"),
+        hint: t("writing_editor.checklist.summary_hint", { count: 40 }),
+      },
+      {
+        key: "alias",
+        done: alias.trim().length > 0,
+        label: t("writing_editor.checklist.alias"),
+        hint: t("writing_editor.checklist.alias_hint"),
+      },
+      {
+        key: "tags",
+        done: tagList.length > 0,
+        label: t("writing_editor.checklist.tags"),
+        hint: t("writing_editor.checklist.tags_hint"),
+      },
+    ],
+    [alias, contentText.length, summary, t, tagList.length, title],
+  );
+  const checklistDone = publishChecklist.filter((item) => item.done).length;
   const isDirty = hydratedRef.current && persistedSnapshot !== lastPersistedSnapshotRef.current;
 
   const applyFetchedSnapshot = useCallback((data: any) => {
@@ -589,6 +626,47 @@ export function WritingPage({ id }: { id?: number }) {
               >
                 {t("writing_editor.actions.alias")}
               </button>
+            </div>
+          </div>
+
+          <div className="rounded-[24px] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="site-kicker">{t("writing_editor.checklist.heading")}</p>
+                <p className="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
+                  {t("writing_editor.checklist.description")}
+                </p>
+              </div>
+              <div className="rounded-full border border-black/10 px-3 py-1 text-xs font-medium text-neutral-600 dark:border-white/10 dark:text-neutral-300">
+                {t("writing_editor.checklist.progress", {
+                  done: checklistDone,
+                  total: publishChecklist.length,
+                })}
+              </div>
+            </div>
+            <div className="mt-4 space-y-2">
+              {publishChecklist.map((item) => (
+                <div
+                  key={item.key}
+                  className="flex items-start justify-between gap-3 rounded-2xl border border-black/10 bg-white/70 px-3 py-3 dark:border-white/10 dark:bg-white/[0.03]"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-neutral-900 dark:text-white">{item.label}</p>
+                    <p className="mt-1 text-xs leading-5 text-neutral-500 dark:text-neutral-400">{item.hint}</p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                      item.done
+                        ? "bg-emerald-500/12 text-emerald-700 dark:bg-emerald-500/18 dark:text-emerald-300"
+                        : "bg-amber-500/12 text-amber-700 dark:bg-amber-500/18 dark:text-amber-300"
+                    }`}
+                  >
+                    {item.done
+                      ? t("writing_editor.checklist.complete")
+                      : t("writing_editor.checklist.pending")}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
