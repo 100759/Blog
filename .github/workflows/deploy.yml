@@ -207,10 +207,10 @@ jobs:
           export XDG_CONFIG_HOME="${RUNNER_TEMP}/xdg.config"
           mkdir -p "${XDG_CONFIG_HOME}/.wrangler/config"
           cat > "${XDG_CONFIG_HOME}/.wrangler/config/default.toml" <<EOF
-oauth_token = "${CLOUDFLARE_OAUTH_TOKEN}"
-expiration_time = "1970-01-01T00:00:00.000Z"
-refresh_token = "${CLOUDFLARE_OAUTH_REFRESH_TOKEN}"
-EOF
+          oauth_token = "${CLOUDFLARE_OAUTH_TOKEN}"
+          expiration_time = "1970-01-01T00:00:00.000Z"
+          refresh_token = "${CLOUDFLARE_OAUTH_REFRESH_TOKEN}"
+          EOF
           echo "XDG_CONFIG_HOME=${XDG_CONFIG_HOME}" >> "$GITHUB_ENV"
 
       - name: Deploy to Cloudflare
