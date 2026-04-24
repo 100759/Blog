@@ -320,6 +320,32 @@ describe('CacheImpl - 数据库持久化测试', () => {
         expect(rows).toHaveLength(0);
     });
 
+    it('deletePrefix should not wipe unrelated keys before the cache has loaded', async () => {
+        await cacheImpl.set('feeds_1', 'feed data');
+        await cacheImpl.set('site.name', 'Test Site');
+
+        const newCache = new CacheImpl(db as any, mockEnv, 'cache', 'database');
+        await newCache.deletePrefix('feeds_');
+
+        const remainingRows = await db.select().from(cache).where(eq(cache.type, 'cache'));
+        expect(remainingRows).toHaveLength(1);
+        expect(remainingRows[0].key).toBe('site.name');
+        expect(remainingRows[0].value).toBe('Test Site');
+    });
+
+    it('deleteSuffix should not wipe unrelated keys before the cache has loaded', async () => {
+        await cacheImpl.set('feed_1_previous_feed', 'previous feed');
+        await cacheImpl.set('site.name', 'Test Site');
+
+        const newCache = new CacheImpl(db as any, mockEnv, 'cache', 'database');
+        await newCache.deleteSuffix('_previous_feed');
+
+        const remainingRows = await db.select().from(cache).where(eq(cache.type, 'cache'));
+        expect(remainingRows).toHaveLength(1);
+        expect(remainingRows[0].key).toBe('site.name');
+        expect(remainingRows[0].value).toBe('Test Site');
+    });
+
     it('clear 应该清空数据库中的所有缓存项', async () => {
         await cacheImpl.set('key1', 'value1');
         await cacheImpl.set('key2', 'value2');

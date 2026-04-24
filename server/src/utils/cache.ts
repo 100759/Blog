@@ -341,23 +341,29 @@ export class CacheImpl {
     }
 
     async deletePrefix(prefix: string) {
-        for (let key of this.cache.keys()) {
+        if (!this.loaded)
+            await this.load();
+
+        const keysToDelete = Array.from(this.cache.keys()).filter((key) => key.startsWith(prefix));
+
+        for (let key of keysToDelete) {
             console.log('Cache key', key);
-            if (key.startsWith(prefix)) {
-                console.log('Cache delete', key);
-                await this.delete(key, false);
-            }
+            console.log('Cache delete', key);
+            await this.delete(key, false);
         }
         await this.save();
     }
 
     async deleteSuffix(suffix: string) {
-        for (let key of this.cache.keys()) {
+        if (!this.loaded)
+            await this.load();
+
+        const keysToDelete = Array.from(this.cache.keys()).filter((key) => key.endsWith(suffix));
+
+        for (let key of keysToDelete) {
             console.log("Cache key", key);
-            if (key.endsWith(suffix)) {
-                console.log("Cache delete", key);
-                await this.delete(key, false);
-            }
+            console.log("Cache delete", key);
+            await this.delete(key, false);
         }
         await this.save();
     }
