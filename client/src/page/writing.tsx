@@ -1,5 +1,3 @@
-import _ from "lodash";
-import mermaid from "mermaid";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import Loading from "react-loading";
@@ -283,35 +281,6 @@ export function WritingPage({ id }: { id?: number }) {
     };
   }, [isDirty]);
 
-  const debouncedMermaid = useCallback(
-    _.debounce(() => {
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: "default",
-      });
-      mermaid
-        .run({
-          suppressErrors: true,
-          nodes: document.querySelectorAll("pre.mermaid_default"),
-        })
-        .then(() => {
-          mermaid.initialize({
-            startOnLoad: false,
-            theme: "dark",
-          });
-          return mermaid.run({
-            suppressErrors: true,
-            nodes: document.querySelectorAll("pre.mermaid_dark"),
-          });
-        });
-    }, 100),
-    [],
-  );
-
-  useEffect(() => {
-    debouncedMermaid();
-  }, [content, debouncedMermaid]);
-
   const persistEntry = useCallback(
       async ({
       intent,
@@ -511,7 +480,7 @@ export function WritingPage({ id }: { id?: number }) {
       <button
         type="button"
         onClick={onClick}
-        className={`inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+        className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
           variant === "primary"
             ? "bg-theme text-white hover:bg-theme-hover active:bg-theme-active"
             : "border border-black/10 bg-white/80 text-neutral-900 hover:border-black/20 dark:border-white/10 dark:bg-white/[0.05] dark:text-white dark:hover:border-white/20"
@@ -527,34 +496,21 @@ export function WritingPage({ id }: { id?: number }) {
   function MetaInput({ className }: { className?: string }) {
     return (
       <FlatPanel className={className}>
-        <div className="flex flex-col gap-4 border-b border-black/5 pb-5 dark:border-white/5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-            <div className="min-w-0 flex-1">
+        <div className="flex flex-col gap-3 border-b border-black/5 pb-4 dark:border-white/5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
               <p className="site-kicker">{t("writing")}</p>
-              <h2 className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">
-                {readingTitle}
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
+              <p className="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
                 {t("writing_editor.description")}
               </p>
             </div>
-            <div className="flex w-full flex-col gap-2 md:w-auto md:min-w-[15rem]">
-              <ActionButton onClick={() => void persistEntry({ intent: "continue" })} loading={publishing === "continue"}>
-                {t("writing_editor.save_continue")}
-              </ActionButton>
-              <ActionButton
-                onClick={() => void persistEntry({ intent: "publish", forcePublished: true })}
-                loading={publishing === "publish"}
-                variant="primary"
-              >
-                {t("writing_editor.publish_article")}
-              </ActionButton>
+            <div className="inline-flex items-center rounded-full border border-black/10 bg-white/70 px-3 py-1.5 text-xs text-neutral-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-neutral-300">
+              {saveStatusText}
             </div>
           </div>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">{saveStatusText}</p>
         </div>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <div className="lg:col-span-2">
             <Input
               id={id}
@@ -579,7 +535,7 @@ export function WritingPage({ id }: { id?: number }) {
           <Input id={id} value={tags} setValue={setTags} placeholder={t("tags")} variant="flat" className="lg:col-span-2" />
         </div>
 
-        <div className="mt-5 grid gap-2 sm:gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(18rem,2fr)]">
+        <div className="mt-4 grid gap-2 sm:gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(16rem,1.2fr)]">
           <FlatMetaRow
             className="cursor-pointer rounded-none border-0 bg-transparent px-0 py-2 sm:rounded-2xl sm:border sm:bg-secondary sm:px-4 sm:py-3"
             onClick={() => setDraft(!draft)}
@@ -608,8 +564,26 @@ export function WritingPage({ id }: { id?: number }) {
 
     return (
       <FlatPanel className="p-4 sm:p-5 md:p-6">
-        <div className="flex flex-col gap-6">
-          <div>
+        <div className="flex flex-col gap-5">
+          <div className="border-b border-black/5 pb-5 dark:border-white/5">
+            <p className="site-kicker">{t("writing_editor.snapshot")}</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+              <div className="rounded-[18px] border border-black/10 bg-white/60 px-3 py-3 dark:border-white/10 dark:bg-white/[0.04]">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">{t("writing_editor.stats.visibility")}</p>
+                <p className="mt-2 text-sm font-medium text-neutral-900 dark:text-white">{visibilityLabel}</p>
+              </div>
+              <div className="rounded-[18px] border border-black/10 bg-white/60 px-3 py-3 dark:border-white/10 dark:bg-white/[0.04]">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">{t("tags")}</p>
+                <p className="mt-2 text-sm font-medium text-neutral-900 dark:text-white">{tagList.length}</p>
+              </div>
+              <div className="rounded-[18px] border border-black/10 bg-white/60 px-3 py-3 dark:border-white/10 dark:bg-white/[0.04] sm:col-span-2 xl:col-span-1">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">{t("writing_editor.stats.images")}</p>
+                <p className="mt-2 text-sm font-medium text-neutral-900 dark:text-white">{imageCount}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-b border-black/5 pb-5 dark:border-white/5">
             <p className="site-kicker">{t("writing_editor.quick_actions")}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
@@ -670,7 +644,7 @@ export function WritingPage({ id }: { id?: number }) {
             </div>
           </div>
 
-          <div>
+          <div className="border-b border-black/5 pb-5 dark:border-white/5">
             <p className="site-kicker">{t("writing_editor.overview")}</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div className="rounded-[20px] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
@@ -690,24 +664,6 @@ export function WritingPage({ id }: { id?: number }) {
               <div className="rounded-[20px] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
                 <p className="text-xs uppercase tracking-[0.2em] text-neutral-400">{t("writing_editor.stats.characters")}</p>
                 <p className="mt-2 text-xl font-semibold text-neutral-900 dark:text-white">{characterCount}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-            <p className="site-kicker">{t("writing_editor.snapshot")}</p>
-            <div className="mt-3 flex flex-col gap-2 text-sm text-neutral-600 dark:text-neutral-300">
-              <div className="flex items-center justify-between gap-3">
-                <span>{t("writing_editor.stats.visibility")}</span>
-                <span className="font-medium text-neutral-900 dark:text-white">{visibilityLabel}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span>{t("writing_editor.stats.images")}</span>
-                <span className="font-medium text-neutral-900 dark:text-white">{imageCount}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span>{t("tags")}</span>
-                <span className="font-medium text-neutral-900 dark:text-white">{tagList.length}</span>
               </div>
             </div>
           </div>
@@ -746,56 +702,95 @@ export function WritingPage({ id }: { id?: number }) {
         <meta property="og:url" content={document.URL} />
       </Helmet>
       <div className="flex flex-col gap-6 t-primary">
-        <section className="site-panel rounded-[30px] px-5 py-5 md:px-6 md:py-6">
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-            <div>
+        <section className="site-panel rounded-[30px] px-5 py-5 md:px-6 md:py-5">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+            <div className="min-w-0">
               <p className="site-kicker">{t("writing")}</p>
-              <h1 className="site-display mt-3 text-[2.4rem] text-neutral-900 dark:text-white md:text-[3.2rem]">
+              <h1 className="mt-2 truncate text-[1.6rem] font-semibold text-neutral-900 dark:text-white md:text-[2rem]">
                 {readingTitle}
               </h1>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-neutral-600 dark:text-neutral-300">
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-500 dark:text-neutral-400">
                 {readingDescription}
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-              <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="site-kicker">{t("writing_editor.status.title")}</p>
-                <p className="mt-3 text-base font-semibold text-neutral-900 dark:text-white">{saveStatusText}</p>
+            <div className="flex flex-col gap-3 xl:min-w-[29rem]">
+              <div className="grid gap-2 sm:grid-cols-4">
+                <div className="rounded-[20px] border border-black/10 bg-white/55 px-3 py-3 dark:border-white/10 dark:bg-white/[0.04] sm:col-span-2">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">{t("writing_editor.status.title")}</p>
+                  <p className="mt-2 text-sm font-medium text-neutral-900 dark:text-white">{saveStatusText}</p>
+                </div>
+                <div className="rounded-[20px] border border-black/10 bg-white/55 px-3 py-3 dark:border-white/10 dark:bg-white/[0.04]">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">{t("writing_editor.stats.words")}</p>
+                  <p className="mt-2 text-sm font-medium text-neutral-900 dark:text-white">{wordCount}</p>
+                </div>
+                <div className="rounded-[20px] border border-black/10 bg-white/55 px-3 py-3 dark:border-white/10 dark:bg-white/[0.04]">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">{t("writing_editor.stats.reading_time")}</p>
+                  <p className="mt-2 text-sm font-medium text-neutral-900 dark:text-white">
+                    {t("writing_editor.reading_minutes", { count: readingMinutes })}
+                  </p>
+                </div>
               </div>
-              <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="site-kicker">{t("writing_editor.stats.words")}</p>
-                <p className="mt-3 text-lg font-semibold text-neutral-900 dark:text-white">{wordCount}</p>
-              </div>
-              <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="site-kicker">{t("writing_editor.stats.reading_time")}</p>
-                <p className="mt-3 text-lg font-semibold text-neutral-900 dark:text-white">
-                  {t("writing_editor.reading_minutes", { count: readingMinutes })}
-                </p>
-              </div>
-              <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="site-kicker">{t("writing_editor.stats.headings")}</p>
-                <p className="mt-3 text-lg font-semibold text-neutral-900 dark:text-white">{headingOutline.length}</p>
+              <div className="flex flex-wrap gap-2">
+                <ActionButton onClick={() => void persistEntry({ intent: "continue" })} loading={publishing === "continue"}>
+                  {t("writing_editor.save_continue")}
+                </ActionButton>
+                <ActionButton
+                  onClick={() => void persistEntry({ intent: "publish", forcePublished: true })}
+                  loading={publishing === "publish"}
+                  variant="primary"
+                >
+                  {t("writing_editor.publish_article")}
+                </ActionButton>
               </div>
             </div>
           </div>
         </section>
 
-        <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-          <div className="flex flex-col gap-6 xl:sticky xl:top-6 xl:self-start">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="flex min-w-0 flex-col gap-4">
             <MetaInput className="p-4 sm:p-5 md:p-6" />
-            <WritingInsights />
+
+            <FlatPanel className="overflow-hidden p-0">
+              <MarkdownEditor
+                content={content}
+                setContent={setContent}
+                height="clamp(34rem, 72vh, 58rem)"
+                onSave={() => {
+                  void persistEntry({ intent: "continue" });
+                }}
+              />
+            </FlatPanel>
           </div>
 
-          <FlatPanel className="overflow-hidden p-0">
-            <MarkdownEditor
-              content={content}
-              setContent={setContent}
-              height="760px"
-              onSave={() => {
-                void persistEntry({ intent: "continue" });
-              }}
-            />
-          </FlatPanel>
+          <div className="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
+            <WritingInsights />
+          </div>
+        </div>
+
+        <div className="sticky bottom-3 z-20 xl:hidden">
+          <div className="mx-auto flex max-w-[720px] items-center gap-3 rounded-[24px] border border-black/10 bg-white/92 px-4 py-3 shadow-[0_18px_36px_rgba(20,18,19,0.12)] backdrop-blur dark:border-white/10 dark:bg-[#161619]/92">
+            <div className="min-w-0 flex-1">
+              <p className="site-kicker">{t("writing_editor.status.title")}</p>
+              <p className="mt-1 truncate text-xs text-neutral-500 dark:text-neutral-400">{saveStatusText}</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <ActionButton
+                onClick={() => void persistEntry({ intent: "continue" })}
+                loading={publishing === "continue"}
+                className="px-4 py-2.5"
+              >
+                {t("writing_editor.save_continue")}
+              </ActionButton>
+              <ActionButton
+                onClick={() => void persistEntry({ intent: "publish", forcePublished: true })}
+                loading={publishing === "publish"}
+                variant="primary"
+                className="px-4 py-2.5"
+              >
+                {t("publish.title")}
+              </ActionButton>
+            </div>
+          </div>
         </div>
       </div>
       <AlertUI />

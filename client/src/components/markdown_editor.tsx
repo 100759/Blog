@@ -1,5 +1,5 @@
 import Editor from '@monaco-editor/react';
-import { editor, KeyCode, KeyMod } from 'monaco-editor';
+import type { editor } from 'monaco-editor';
 import React, { useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import Loading from 'react-loading';
@@ -237,7 +237,7 @@ export function MarkdownEditor({
       <button
         type="button"
         onClick={() => uploadRef.current?.click()}
-        className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-w px-3 py-2 text-sm t-primary transition-colors hover:border-black/20 dark:border-white/10 dark:hover:border-white/20"
+        className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-w px-3 py-1.5 text-sm t-primary transition-colors hover:border-black/20 dark:border-white/10 dark:hover:border-white/20"
       >
         <input
           ref={uploadRef}
@@ -252,11 +252,14 @@ export function MarkdownEditor({
     );
   }
 
-  const handleEditorMount = (editorInstance: editor.IStandaloneCodeEditor) => {
+  const handleEditorMount = (
+    editorInstance: editor.IStandaloneCodeEditor,
+    monaco: typeof import("monaco-editor"),
+  ) => {
     editorRef.current = editorInstance;
 
     if (onSaveRef.current) {
-      editorInstance.addCommand(KeyMod.CtrlCmd | KeyCode.KeyS, () => {
+      editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
         onSaveRef.current?.();
       });
     }
@@ -297,67 +300,71 @@ export function MarkdownEditor({
 
   return (
     <div className="flex flex-col gap-0 sm:gap-3">
-      <FlatInset className="flex flex-col gap-3 border-0 border-b border-black/10 rounded-none bg-transparent p-3 dark:border-white/10">
+      <FlatInset className="flex flex-col gap-3 border-0 border-b border-black/10 rounded-none bg-transparent p-3 sm:p-4 dark:border-white/10">
         <div className="flex flex-wrap items-center gap-2">
-          <FlatTabButton active={preview === 'edit'} onClick={() => setPreview('edit')}> {t("edit")} </FlatTabButton>
-          <FlatTabButton active={preview === 'preview'} onClick={() => setPreview('preview')}> {t("preview")} </FlatTabButton>
-          <FlatTabButton active={preview === 'comparison'} onClick={() => setPreview('comparison')}> {t("comparison")} </FlatTabButton>
+          <FlatTabButton active={preview === 'edit'} onClick={() => setPreview('edit')}>{t("edit")}</FlatTabButton>
+          <FlatTabButton active={preview === 'preview'} onClick={() => setPreview('preview')}>{t("preview")}</FlatTabButton>
+          <FlatTabButton active={preview === 'comparison'} onClick={() => setPreview('comparison')}>{t("comparison")}</FlatTabButton>
           <div className="flex-grow" />
           {onSave ? (
-            <span className="hidden text-xs uppercase tracking-[0.2em] text-neutral-400 lg:inline">
+            <span className="hidden text-xs uppercase tracking-[0.18em] text-neutral-400 xl:inline">
               {t("writing_editor.save_shortcut")}
             </span>
           ) : null}
-          <UploadImageButton />
-          {uploading &&
-            <div className="flex flex-row items-center space-x-2">
-              <Loading type="spin" color="#FC466B" height={16} width={16} />
-              <span className="text-sm text-neutral-500">{t('uploading')}</span>
-            </div>
-          }
         </div>
 
-        <div className="rounded-2xl border border-dashed border-black/10 bg-white/55 px-3 py-3 text-sm leading-6 text-neutral-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-neutral-300">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs uppercase tracking-[0.18em] text-neutral-400">{t("writing_editor.toolbar.common")}</span>
+          {quickActions.map((action) => (
+            <button
+              key={action.key}
+              type="button"
+              onClick={() => insertSnippet(action.apply)}
+              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-w px-3 py-1.5 text-sm t-primary transition-colors hover:border-black/20 dark:border-white/10 dark:hover:border-white/20"
+              title={action.label}
+              aria-label={action.label}
+            >
+              <i className={action.icon} />
+              <span className="hidden md:inline">{action.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs uppercase tracking-[0.18em] text-neutral-400">{t("writing_editor.toolbar.advanced")}</span>
+          {advancedActions.map((action) => (
+            <button
+              key={action.key}
+              type="button"
+              onClick={() => insertSnippet(action.apply)}
+              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-w px-3 py-1.5 text-sm t-primary transition-colors hover:border-black/20 dark:border-white/10 dark:hover:border-white/20"
+              title={action.label}
+              aria-label={action.label}
+            >
+              <i className={action.icon} />
+              <span className="hidden md:inline">{action.label}</span>
+            </button>
+          ))}
+          <div className="ml-auto flex items-center gap-2">
+            <UploadImageButton />
+            {uploading ? (
+              <div className="flex flex-row items-center gap-2 rounded-full border border-black/10 bg-white/70 px-3 py-1.5 text-sm text-neutral-500 dark:border-white/10 dark:bg-white/[0.05] dark:text-neutral-300">
+                <Loading type="spin" color="#FC466B" height={14} width={14} />
+                <span>{t('uploading')}</span>
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <p className="text-xs leading-5 text-neutral-500 dark:text-neutral-400">
           {t("writing_editor.toolbar.help")}
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs uppercase tracking-[0.2em] text-neutral-400">{t("writing_editor.toolbar.common")}</span>
-            {quickActions.map((action) => (
-              <button
-                key={action.key}
-                type="button"
-                onClick={() => insertSnippet(action.apply)}
-                className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-w px-3 py-2 text-sm t-primary transition-colors hover:border-black/20 dark:border-white/10 dark:hover:border-white/20"
-                title={action.label}
-                aria-label={action.label}
-              >
-                <i className={action.icon} />
-                <span className="hidden sm:inline">{action.label}</span>
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs uppercase tracking-[0.2em] text-neutral-400">{t("writing_editor.toolbar.advanced")}</span>
-            {advancedActions.map((action) => (
-              <button
-                key={action.key}
-                type="button"
-                onClick={() => insertSnippet(action.apply)}
-                className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-w px-3 py-2 text-sm t-primary transition-colors hover:border-black/20 dark:border-white/10 dark:hover:border-white/20"
-                title={action.label}
-                aria-label={action.label}
-              >
-                <i className={action.icon} />
-                <span className="hidden sm:inline">{action.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        </p>
       </FlatInset>
       <div className={`grid grid-cols-1 gap-0 sm:gap-4 ${preview === 'comparison' ? "lg:grid-cols-2" : ""}`}>
         <div className={"flex min-w-0 flex-col " + (preview === 'preview' ? "hidden" : "")}>
+          <div className="border-b border-black/10 px-4 py-3 text-xs uppercase tracking-[0.18em] text-neutral-400 dark:border-white/10">
+            {t("edit")}
+          </div>
           <div
             className={"relative min-h-0 overflow-hidden rounded-none border-0 bg-w"}
             onDrop={(event) => {
@@ -401,10 +408,15 @@ export function MarkdownEditor({
           </div>
         </div>
         <div
-          className={"min-h-0 overflow-y-auto rounded-none border-0 bg-w px-4 py-4 border-t sm:border-none " + (preview === 'edit' ? "hidden" : "")}
+          className={"min-h-0 overflow-y-auto rounded-none border-0 bg-w " + (preview === 'edit' ? "hidden" : "")}
           style={{ height: height }}
         >
-          <Markdown content={content ? content : previewPlaceholder} />
+          <div className="border-b border-black/10 px-4 py-3 text-xs uppercase tracking-[0.18em] text-neutral-400 dark:border-white/10">
+            {t("preview")}
+          </div>
+          <div className="px-4 py-4">
+            <Markdown content={content ? content : previewPlaceholder} />
+          </div>
         </div>
       </div>
       <AlertUI />

@@ -67,6 +67,11 @@
     },
     "search": {
       "placeholder": "Please enter keywords",
+      "summary": "Find articles by title and summary, then continue reading from the results.",
+      "page": "Page {{page}}",
+      "result_hint": "Results are sorted into the article list below.",
+      "empty_title": "No matching articles yet",
+      "empty_description": "Try another keyword, or search by a title fragment or tag.",
       "title": "Search",
       "title$keyword": "Search: {{keyword}}"
     },

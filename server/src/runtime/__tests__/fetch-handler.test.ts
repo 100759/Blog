@@ -53,4 +53,25 @@ describe("handleFetch", () => {
     expect(assetFetch).toHaveBeenCalledTimes(0);
     expect(new URL(getAppFetch.mock.calls[0][0].url).pathname).toBe("/blob/images/test.txt");
   });
+
+  it("returns 404 when a static asset is missing", async () => {
+    getAppFetch.mockResolvedValue(new Response("app-body", { status: 200 }));
+
+    const { handleFetch } = await import("../fetch-handler");
+    const assetFetch = mock(async () => new Response("missing", { status: 404 }));
+
+    const response = await handleFetch(
+      new Request("http://localhost/assets/missing-chunk.js"),
+      {
+        ASSETS: {
+          fetch: assetFetch,
+        },
+      } as unknown as Env,
+    );
+
+    expect(response.status).toBe(404);
+    expect(await response.text()).toBe("Not Found");
+    expect(assetFetch).toHaveBeenCalledTimes(1);
+    expect(getAppFetch).toHaveBeenCalledTimes(0);
+  });
 });

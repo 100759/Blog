@@ -9,12 +9,12 @@ export const classicLayoutDefinition: HeaderLayoutDefinition = {
   renderDesktop({ children, profile, siteConfig }) {
     return (
       <div className="hidden w-full md:block">
-        <div className="site-panel grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 rounded-[30px] px-5 py-3">
+        <div className="site-panel grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-[24px] px-4 py-2.5">
           <BrandLink siteConfig={siteConfig} className="hidden min-w-0 flex-row items-center md:flex" />
           <div className="flex min-w-0 flex-1 items-center justify-center">
-            <div className="scrollbar-none min-w-0 max-w-full overflow-x-auto rounded-full border border-black/5 bg-white/70 px-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] t-primary dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="scrollbar-none min-w-0 max-w-full overflow-x-auto rounded-full border border-black/5 bg-white/55 px-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] t-primary dark:border-white/10 dark:bg-white/[0.03]">
               <div className="flex min-w-max flex-row items-center whitespace-nowrap">
-                <NavBar menu={false} itemClassName="whitespace-nowrap px-3 py-3 md:p-3 text-[14px] font-medium tracking-[0.01em] text-neutral-700 dark:text-neutral-200" />
+                <NavBar menu={false} itemClassName="whitespace-nowrap text-[13px] tracking-[0.01em]" />
               </div>
             </div>
           </div>

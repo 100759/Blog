@@ -19,7 +19,6 @@ import { useSiteConfig } from "../hooks/useSiteConfig";
 import { siteName } from "../utils/constants";
 import { stripImageUrlMetadata } from "../utils/image-upload";
 import { timeago } from "../utils/timeago";
-import mermaid from "mermaid";
 
 function extractFirstMarkdownImageUrl(content: string) {
   const match = /!\[.*?\]\((\S+?)(?:\s+"[^"]*")?\)/.exec(content);
@@ -29,6 +28,14 @@ function extractFirstMarkdownImageUrl(content: string) {
 
   return stripImageUrlMetadata(match[1]);
 }
+
+function buildArticleExcerpt(content: string, fallback?: string | null) {
+  const trimmed = fallback?.trim() || content.replace(/[#>*`[\]()!-]/g, " ").replace(/\s+/g, " ").trim();
+  if (!trimmed) return "";
+  return trimmed.length > 220 ? `${trimmed.slice(0, 220)}...` : trimmed;
+}
+
+void buildExcerpt;
 
 function buildExcerpt(content: string, fallback?: string | null) {
   const trimmed = fallback?.trim() || content.replace(/[#>*`[\]()!-]/g, " ").replace(/\s+/g, " ").trim();
@@ -113,29 +120,7 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
     ref.current = id;
   }, [clean, id]);
 
-  useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: "default",
-    });
-    mermaid
-      .run({
-        suppressErrors: true,
-        nodes: document.querySelectorAll("pre.mermaid_default"),
-      })
-      .then(() => {
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: "dark",
-        });
-        mermaid.run({
-          suppressErrors: true,
-          nodes: document.querySelectorAll("pre.mermaid_dark"),
-        });
-      });
-  }, [feed]);
-
-  const excerpt = feed ? buildExcerpt(feed.content) : "";
+  const excerpt = feed ? buildArticleExcerpt(feed.content) : "";
   const createdAt = feed ? new Date(feed.createdAt) : undefined;
   const updatedAt = feed ? new Date(feed.updatedAt) : undefined;
   const showHeroImage = headImage || siteConfig.avatar;
@@ -172,97 +157,95 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
 
       {feed && !error ? (
         <div className="wauto ani-show py-8">
-          <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_232px] 2xl:grid-cols-[minmax(0,1fr)_248px]">
             <div className="min-w-0">
-              <article className="site-panel overflow-hidden rounded-[30px] md:rounded-[36px]" aria-label={feed.title ?? "Unnamed"}>
-                <div className="grid gap-0 lg:grid-cols-[minmax(0,1.12fr)_minmax(260px,0.88fr)]">
-                  <div className="px-5 py-6 md:px-8 md:py-9">
-                    <div className="flex flex-wrap items-center gap-2 text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
-                      {top > 0 ? <span className="rounded-full bg-theme/10 px-3 py-1 text-theme">{t("article.top.title")}</span> : null}
-                    </div>
-
-                    <h1 className="site-display mt-4 break-words text-[2.35rem] text-neutral-900 dark:text-white sm:text-[3rem] md:text-[4.2rem]">
-                      {feed.title}
-                    </h1>
-
-                    {excerpt ? (
-                      <p className="mt-5 max-w-3xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300 md:text-[16px] md:leading-8">{excerpt}</p>
-                    ) : null}
-
-                    <div className="site-rule mt-6 w-full max-w-2xl" />
-
-                    <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] font-medium uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400">
-                      {createdAt ? (
-                        <span title={createdAt.toLocaleString()}>
-                          {createdAt.getTime() === updatedAt?.getTime()
-                            ? timeago(createdAt)
-                            : t("feed_card.published$time", { time: timeago(createdAt) })}
-                        </span>
-                      ) : null}
-                      {createdAt && updatedAt && createdAt.getTime() !== updatedAt.getTime() ? (
-                        <span title={updatedAt.toLocaleString()}>{t("feed_card.updated$time", { time: timeago(updatedAt) })}</span>
-                      ) : null}
-                      {counterEnabled ? (
-                        <>
-                          <span>{t("count.pv")} {feed.pv}</span>
-                          <span>{t("count.uv")} {feed.uv}</span>
-                        </>
-                      ) : null}
-                    </div>
-
-                    {feed.hashtags.length > 0 ? (
-                      <div className="mt-5 flex flex-wrap gap-2">
-                        {feed.hashtags.map(({ id: tagId, name }) => (
-                          <HashTag key={tagId} name={name} />
-                        ))}
-                      </div>
-                    ) : null}
-
-                    <div className="mt-7 flex flex-wrap items-center gap-3">
-                      {profile?.permission ? (
-                        <>
-                          <button
-                            aria-label={top > 0 ? t("untop.title") : t("top.title")}
-                            onClick={topFeed}
-                            className={`min-h-11 rounded-full px-4 py-2 text-sm font-medium transition ${
-                              top > 0
-                                ? "bg-theme text-white shadow-[0_16px_28px_rgba(var(--theme-rgb),0.22)]"
-                                : "border border-black/10 bg-white/55 text-neutral-700 hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
-                            }`}
-                          >
-                            {top > 0 ? t("article.untop.title") : t("article.top.title")}
-                          </button>
-                          <Link
-                            aria-label={t("edit")}
-                            href={`/admin/writing/${feed.id}`}
-                            className="inline-flex min-h-11 items-center justify-center rounded-full border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
-                          >
-                            {t("edit")}
-                          </Link>
-                          <button
-                            aria-label={t("delete.title")}
-                            onClick={deleteFeed}
-                            className="min-h-11 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300"
-                          >
-                            {t("delete.title")}
-                          </button>
-                        </>
-                      ) : null}
-                    </div>
+              <article className="site-panel overflow-hidden rounded-[28px] md:rounded-[32px]" aria-label={feed.title ?? "Unnamed"}>
+                <div className="px-5 py-6 md:px-7 md:py-7">
+                  <div className="flex max-w-2xl flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400">
+                    {top > 0 ? <span className="rounded-full bg-theme/10 px-3 py-1 text-theme">{t("article.top.title")}</span> : null}
                   </div>
 
-                  <div className="border-t border-black/5 bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.05),rgba(255,255,255,0.18))] p-4 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.08),rgba(255,255,255,0.03))] lg:border-l lg:border-t-0 lg:p-5">
+                  <h1 className="site-display mt-4 max-w-3xl break-words text-[1.9rem] leading-tight text-neutral-900 dark:text-white sm:text-[2.35rem] md:text-[2.9rem]">
+                    {feed.title}
+                  </h1>
+
+                  {excerpt ? (
+                    <p className="mt-4 max-w-2xl text-[14px] leading-7 text-neutral-600 dark:text-neutral-300 md:text-[15px]">{excerpt}</p>
+                  ) : null}
+
+                  <div className="site-rule mt-5 w-full max-w-lg opacity-75" />
+
+                  <div className="mt-4 flex max-w-2xl flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-neutral-500 dark:text-neutral-400">
+                    {createdAt ? (
+                      <span title={createdAt.toLocaleString()}>
+                        {createdAt.getTime() === updatedAt?.getTime()
+                          ? timeago(createdAt)
+                          : t("feed_card.published$time", { time: timeago(createdAt) })}
+                      </span>
+                    ) : null}
+                    {createdAt && updatedAt && createdAt.getTime() !== updatedAt.getTime() ? (
+                      <span title={updatedAt.toLocaleString()}>{t("feed_card.updated$time", { time: timeago(updatedAt) })}</span>
+                    ) : null}
+                    {counterEnabled ? (
+                      <>
+                        <span>{t("count.pv")} {feed.pv}</span>
+                        <span>{t("count.uv")} {feed.uv}</span>
+                      </>
+                    ) : null}
+                  </div>
+
+                  {feed.hashtags.length > 0 ? (
+                    <div className="mt-4 flex max-w-2xl flex-wrap gap-1.5">
+                      {feed.hashtags.map(({ id: tagId, name }) => (
+                        <HashTag key={tagId} name={name} />
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-5 flex flex-wrap items-center gap-3">
+                    {profile?.permission ? (
+                      <>
+                        <button
+                          aria-label={top > 0 ? t("untop.title") : t("top.title")}
+                          onClick={topFeed}
+                          className={`min-h-10 rounded-full px-4 py-2 text-sm font-medium transition ${
+                            top > 0
+                              ? "bg-theme text-white shadow-[0_16px_28px_rgba(var(--theme-rgb),0.22)]"
+                              : "border border-black/10 bg-white/55 text-neutral-700 hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
+                          }`}
+                        >
+                          {top > 0 ? t("article.untop.title") : t("article.top.title")}
+                        </button>
+                        <Link
+                          aria-label={t("edit")}
+                          href={`/admin/writing/${feed.id}`}
+                          className="inline-flex min-h-10 items-center justify-center rounded-full border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
+                        >
+                          {t("edit")}
+                        </Link>
+                        <button
+                          aria-label={t("delete.title")}
+                          onClick={deleteFeed}
+                          className="min-h-10 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300"
+                        >
+                          {t("delete.title")}
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-6">
                     {showHeroImage ? (
                       <img
                         src={stripImageUrlMetadata(showHeroImage)}
                         alt=""
-                        className="h-full min-h-[220px] w-full rounded-[22px] object-cover shadow-[0_14px_30px_rgba(36,24,19,0.12)] lg:min-h-[280px] lg:rounded-[28px]"
+                        className="h-[190px] w-full rounded-[20px] object-cover shadow-[0_10px_24px_rgba(36,24,19,0.08)] md:h-[220px] md:max-w-3xl md:rounded-[22px]"
                       />
                     ) : (
-                      <div className="flex h-full min-h-[220px] w-full items-end rounded-[22px] border border-dashed border-black/10 bg-white/55 p-5 dark:border-white/10 dark:bg-white/[0.04] lg:min-h-[280px] lg:rounded-[28px] lg:p-6">
+                      <div className="flex min-h-[150px] w-full items-end rounded-[20px] border border-dashed border-black/10 bg-white/55 p-5 dark:border-white/10 dark:bg-white/[0.04] md:max-w-3xl md:rounded-[22px]">
                         <div>
                           <p className="site-kicker">{feed.user.username}</p>
-                          <p className="site-display mt-4 text-[2.2rem] text-neutral-900 dark:text-white">{siteConfig.name}</p>
+                          <p className="site-display mt-4 text-[1.8rem] text-neutral-900 dark:text-white">{siteConfig.name}</p>
                         </div>
                       </div>
                     )}
@@ -270,20 +253,20 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
                 </div>
 
                 {showAISummaryState || hasAISummary ? (
-                  <div className="border-t border-black/5 px-5 py-5 dark:border-white/10 md:px-8 md:py-6">
-                    <div className="rounded-[22px] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04] md:rounded-[24px] md:px-5 md:py-5">
+                  <div className="border-t border-black/5 px-5 py-5 dark:border-white/10 md:px-7 md:py-5">
+                    <div className="max-w-[760px] rounded-r-[18px] border-l-[3px] border-theme/35 bg-black/[0.02] px-4 py-4 dark:bg-white/[0.03] md:px-5">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <i className="ri-file-list-3-line text-theme" />
                           <span className="site-kicker">{t("ai_summary.title")}</span>
                         </div>
                         {showAISummaryState ? (
-                          <span className="rounded-full bg-white/70 px-3 py-1 text-[12px] font-medium uppercase tracking-[0.12em] text-neutral-700 dark:bg-white/[0.08] dark:text-neutral-200">
+                          <span className="rounded-full bg-white/70 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.1em] text-neutral-700 dark:bg-white/[0.08] dark:text-neutral-200">
                             {t(`ai_summary.status.${feed.ai_summary_status}`)}
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-3 whitespace-pre-wrap text-[15px] leading-7 text-neutral-700 dark:text-neutral-300">
+                      <p className="mt-3 max-w-3xl whitespace-pre-wrap text-[14px] leading-7 text-neutral-700 dark:text-neutral-300">
                         {hasAISummary ? feed.ai_summary : t(`ai_summary.message.${feed.ai_summary_status}`)}
                       </p>
                       {feed.ai_summary_status === "failed" && feed.ai_summary_error ? (
@@ -293,13 +276,13 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
                   </div>
                 ) : null}
 
-                <div className="border-t border-black/5 px-5 py-7 dark:border-white/10 md:px-8 md:py-9">
-                  <div className="min-w-0 text-[16px] leading-8 text-neutral-700 dark:text-neutral-300">
+                <div className="border-t border-black/5 px-5 py-7 dark:border-white/10 md:px-7 md:py-8">
+                  <div className="mx-auto min-w-0 w-full max-w-[720px] text-[16px] leading-8 text-neutral-700 dark:text-neutral-300">
                     <Markdown content={feed.content} />
                   </div>
                 </div>
 
-                <div className="border-t border-black/5 px-5 py-5 dark:border-white/10 md:px-8 md:py-6">
+                <div className="border-t border-black/5 px-5 py-5 dark:border-white/10 md:px-7 md:py-6">
                   <div className="flex flex-wrap items-center gap-4">
                     {feed.user.avatar ? (
                       <img src={feed.user.avatar} className="h-12 w-12 rounded-[18px] object-cover shadow-[0_12px_24px_rgba(36,24,19,0.14)]" />
@@ -327,8 +310,8 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
 
             <aside className="hidden xl:block">
               <div className="sticky top-[6rem]">
-                <div className="site-panel overflow-hidden rounded-[28px] p-5">
-                  <p className="site-kicker mb-4">Outline</p>
+                <div className="site-panel overflow-hidden rounded-[22px] p-3.5">
+                  <p className="site-kicker mb-3">Outline</p>
                   <TOC />
                 </div>
               </div>

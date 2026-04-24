@@ -25,8 +25,8 @@ export function MobileTopHeader({
   return (
     <div className="lg:hidden">
       <div
-        className={`site-panel flex w-full items-center justify-between gap-3 rounded-[20px] px-3 py-2 ${
-          isAtTop ? "bg-white/72 shadow-none dark:bg-[rgba(20,18,19,0.72)]" : ""
+        className={`site-panel flex w-full items-center justify-between gap-3 rounded-[18px] px-3 py-1.5 ${
+          isAtTop ? "bg-white/58 shadow-none dark:bg-[rgba(20,18,19,0.62)]" : ""
         }`}
       >
         <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -40,7 +40,7 @@ export function MobileTopHeader({
           {showInlineNav ? (
             <div className="hidden min-w-0 flex-1 items-center sm:flex">
               <div className="flex min-w-max items-center overflow-x-auto">
-                <NavBar menu={false} itemClassName="px-0 py-1 pr-3 md:p-0 md:pr-3 text-sm text-neutral-600 dark:text-neutral-300" />
+                <NavBar menu={false} itemClassName="px-0 py-1 pr-2 text-[12px]" />
               </div>
             </div>
           ) : null}

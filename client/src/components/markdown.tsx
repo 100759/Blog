@@ -1,26 +1,50 @@
 import "katex/dist/katex.min.css";
-import React, { cloneElement, isValidElement, useEffect, useMemo, useRef } from "react";
+import React, { Suspense, cloneElement, isValidElement, lazy, useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  base16AteliersulphurpoolLight,
-  vscDarkPlus,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
-import rehypeKatex from "rehype-katex";
-import rehypeRaw from "rehype-raw";
 import gfm from "remark-gfm";
 import remarkMermaid from "../remark/remarkMermaid";
-import { remarkAlert } from "remark-github-blockquote-alert";
-import remarkMath from "remark-math";
-import Lightbox, { SlideImage } from "yet-another-react-lightbox";
-import Counter from "yet-another-react-lightbox/plugins/counter";
-import Download from "yet-another-react-lightbox/plugins/download";
-import Zoom from "yet-another-react-lightbox/plugins/zoom";
-import "yet-another-react-lightbox/styles.css";
+import type { SlideImage } from "yet-another-react-lightbox";
+import type { Pluggable } from "unified";
 import { drawBlurhashToCanvas } from "../utils/blurhash";
 import { useColorMode } from "../utils/darkModeUtils";
 import { parseImageUrlMetadata } from "../utils/image-upload";
+import { renderMermaidBlocks } from "../utils/mermaid";
 import { useImageLoadState } from "../utils/use-image-load-state";
+
+const MarkdownCodeBlock = lazy(() =>
+  import("./markdown-code-block").then((module) => ({ default: module.MarkdownCodeBlock })),
+);
+const MarkdownLightbox = lazy(() =>
+  import("./markdown-lightbox").then((module) => ({ default: module.MarkdownLightbox })),
+);
+
+const optionalMarkdownPluginCache: {
+  remarkAlert: Pluggable | null;
+  remarkMath: Pluggable | null;
+  rehypeKatex: Pluggable | null;
+  rehypeRaw: Pluggable | null;
+} = {
+  remarkAlert: null,
+  remarkMath: null,
+  rehypeKatex: null,
+  rehypeRaw: null,
+};
+
+let remarkAlertPromise: Promise<Pluggable> | null = null;
+let mathPluginPromise: Promise<{ remarkMath: Pluggable; rehypeKatex: Pluggable }> | null = null;
+let rehypeRawPromise: Promise<Pluggable> | null = null;
+
+function hasMathSyntax(content: string) {
+  return /\$\$[\s\S]+?\$\$|\\\(|\\\[|(^|[^\\])\$[^$\n]+\$/m.test(content);
+}
+
+function hasRawHtmlSyntax(content: string) {
+  return /<([a-z][\w-]*)(\s[^>]*)?>/i.test(content);
+}
+
+function hasGithubAlertSyntax(content: string) {
+  return /^>\s*\[!/m.test(content);
+}
 
 
 const countNewlinesBeforeNode = (text: string, offset: number) => {
@@ -115,20 +139,108 @@ function MarkdownImage({
 export function Markdown({ content }: { content: string }) {
   const colorMode = useColorMode();
   const [index, setIndex] = React.useState(-1);
+  const [optionalPlugins, setOptionalPlugins] = React.useState<{
+    remarkAlert: Pluggable | null;
+    remarkMath: Pluggable | null;
+    rehypeKatex: Pluggable | null;
+    rehypeRaw: Pluggable | null;
+  }>({ ...optionalMarkdownPluginCache });
+  const contentRef = useRef<HTMLDivElement>(null);
   const slides = useRef<SlideImage[]>();
+  const needsMath = hasMathSyntax(content);
+  const needsRawHtml = hasRawHtmlSyntax(content);
+  const needsAlert = hasGithubAlertSyntax(content);
 
   useEffect(() => {
     slides.current = undefined;
   }, [content]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setOptionalPlugins({ ...optionalMarkdownPluginCache });
+
+    void (async () => {
+      const pending: Promise<unknown>[] = [];
+
+      if (needsAlert && !optionalMarkdownPluginCache.remarkAlert) {
+        remarkAlertPromise ??= import("remark-github-blockquote-alert").then((module) => {
+          optionalMarkdownPluginCache.remarkAlert = module.remarkAlert;
+          return module.remarkAlert;
+        });
+        pending.push(remarkAlertPromise);
+      }
+
+      if (needsMath && (!optionalMarkdownPluginCache.remarkMath || !optionalMarkdownPluginCache.rehypeKatex)) {
+        mathPluginPromise ??= Promise.all([
+          import("remark-math"),
+          import("rehype-katex"),
+        ]).then(([remarkMathModule, rehypeKatexModule]) => {
+          optionalMarkdownPluginCache.remarkMath = remarkMathModule.default;
+          optionalMarkdownPluginCache.rehypeKatex = rehypeKatexModule.default;
+          return {
+            remarkMath: remarkMathModule.default,
+            rehypeKatex: rehypeKatexModule.default,
+          };
+        });
+        pending.push(mathPluginPromise);
+      }
+
+      if (needsRawHtml && !optionalMarkdownPluginCache.rehypeRaw) {
+        rehypeRawPromise ??= import("rehype-raw").then((module) => {
+          optionalMarkdownPluginCache.rehypeRaw = module.default;
+          return module.default;
+        });
+        pending.push(rehypeRawPromise);
+      }
+
+      if (pending.length > 0) {
+        await Promise.all(pending);
+      }
+
+      if (!cancelled) {
+        setOptionalPlugins({ ...optionalMarkdownPluginCache });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [needsAlert, needsMath, needsRawHtml]);
+
+  useEffect(() => {
+    void renderMermaidBlocks(content, contentRef.current);
+  }, [content]);
+
+  const remarkPlugins = useMemo(() => {
+    const plugins: Pluggable[] = [gfm, remarkMermaid];
+    if (optionalPlugins.remarkMath) {
+      plugins.push(optionalPlugins.remarkMath);
+    }
+    if (optionalPlugins.remarkAlert) {
+      plugins.push(optionalPlugins.remarkAlert);
+    }
+    return plugins;
+  }, [optionalPlugins.remarkAlert, optionalPlugins.remarkMath]);
+
+  const rehypePlugins = useMemo(() => {
+    const plugins: Pluggable[] = [];
+    if (optionalPlugins.rehypeKatex) {
+      plugins.push(optionalPlugins.rehypeKatex);
+    }
+    if (optionalPlugins.rehypeRaw) {
+      plugins.push(optionalPlugins.rehypeRaw);
+    }
+    return plugins;
+  }, [optionalPlugins.rehypeKatex, optionalPlugins.rehypeRaw]);
+
 
 
   const Content = useMemo(() => (
     <ReactMarkdown
-      className="toc-content text-[16px] leading-8 text-neutral-700 dark:text-neutral-300"
-      remarkPlugins={[gfm, remarkMermaid, remarkMath, remarkAlert]}
+      className="toc-content text-[16px] leading-[1.95] text-neutral-700 dark:text-neutral-300 md:text-[17px]"
+      remarkPlugins={remarkPlugins}
       children={content}
-      rehypePlugins={[rehypeKatex, rehypeRaw]}
+      rehypePlugins={rehypePlugins}
       components={{
         img({ node, src, ...props }) {
           const offset = node!.position!.start.offset!;
@@ -172,61 +284,38 @@ export function Markdown({ content }: { content: string }) {
           }
         },
         code(props) {
-          const [copied, setCopied] = React.useState(false);
           const { children, className, node, ...rest } = props;
-          const match = /language-(\w+)/.exec(className || "");
 
           const curContent = content.slice(node?.position?.start.offset || 0);
           const isCodeBlock = curContent.trimStart().startsWith("```");
 
-          const codeBlockStyle = {
+          const inlineCodeStyle = {
             fontFamily: 'ui-monospace, "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
-            fontSize: "14px",
+            fontSize: "13px",
             fontVariantLigatures: "normal",
             WebkitFontFeatureSettings: '"liga" 1',
             fontFeatureSettings: '"liga" 1',
           };
 
-          const inlineCodeStyle = {
-            ...codeBlockStyle,
-            fontSize: "13px",
-          };
-
-          const language = match ? match[1] : "";
-
           if (isCodeBlock) {
             return (
-              <div className="relative group">
-                <SyntaxHighlighter
-                  PreTag="div"
-                  className="rounded"
-                  language={language}
-                  style={
-                    colorMode === "dark"
-                      ? vscDarkPlus
-                      : base16AteliersulphurpoolLight
-                  }
-                  wrapLongLines={true}
-                  codeTagProps={{ style: codeBlockStyle }}
-                >
-                  {String(children).replace(/\n$/, "")}
-                </SyntaxHighlighter>
-                <button className="absolute top-1 right-1 px-2 py-1 bg-w rounded-md text-sm bg-hover select-none invisible group-hover:visible"
-                  onClick={() => {
-                    navigator.clipboard.writeText(String(children));
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                >
-                  {copied ? "Copied!" : "Copy"}
-                </button>
-              </div>
+              <Suspense
+                fallback={
+                  <pre className="my-6 overflow-x-auto rounded-[18px] border border-black/8 bg-[#f6f4ef] px-4 py-4 text-[14px] leading-7 text-neutral-700 dark:border-white/10 dark:bg-[#18181c] dark:text-neutral-200">
+                    <code>{String(children).replace(/\n$/, "")}</code>
+                  </pre>
+                }
+              >
+                <MarkdownCodeBlock className={className} colorMode={colorMode}>
+                  {children}
+                </MarkdownCodeBlock>
+              </Suspense>
             );
           } else {
             return (
               <code
                 {...rest}
-                className={`bg-[#eff1f3] dark:bg-[#4a5061] h-[24px] px-[4px] rounded-md mx-[2px] py-[2px] text-neutral-800 dark:text-neutral-300 ${className || ""
+                className={`mx-[2px] rounded-md border border-black/6 bg-[#f1eee8] px-[5px] py-[2px] text-neutral-800 dark:border-white/8 dark:bg-[#3e4352] dark:text-neutral-300 ${className || ""
                   }`}
                 style={inlineCodeStyle}
               >
@@ -238,7 +327,7 @@ export function Markdown({ content }: { content: string }) {
         blockquote({ children, ...props }) {
           return (
             <blockquote
-              className="my-6 rounded-r-[20px] border-l-4 border-theme/40 bg-black/[0.03] px-5 py-4 italic text-neutral-600 dark:bg-white/[0.04] dark:text-neutral-300"
+              className="my-8 rounded-r-[18px] border-l-[3px] border-theme/40 bg-black/[0.025] px-5 py-4 text-[15px] leading-7 text-neutral-600 dark:bg-white/[0.035] dark:text-neutral-300 md:text-[16px]"
               {...props}
             >
               {children}
@@ -263,7 +352,7 @@ export function Markdown({ content }: { content: string }) {
         ul({ children, className, ...props }) {
           const listClass = className?.includes("contains-task-list")
             ? "list-none pl-5"
-            : "list-disc pl-5 mt-2";
+            : "mt-4 list-disc pl-6";
           return (
             <ul className={listClass} {...props}>
               {children}
@@ -272,14 +361,14 @@ export function Markdown({ content }: { content: string }) {
         },
         ol({ children, ...props }) {
           return (
-            <ol className="list-decimal pl-5" {...props}>
+            <ol className="mt-4 list-decimal pl-6" {...props}>
               {children}
             </ol>
           );
         },
         li({ children, ...props }) {
           return (
-            <li className="pl-2 py-1" {...props}>
+            <li className="pl-2 py-1.5 text-[16px] leading-8 text-neutral-700 dark:text-neutral-300 md:text-[17px]" {...props}>
               {children}
             </li>
           );
@@ -299,7 +388,7 @@ export function Markdown({ content }: { content: string }) {
             <h1
               id={children?.toString()}
               {...props}
-              className={`${props.className || ""} site-display mt-12 text-[2.5rem] font-semibold text-neutral-900 dark:text-white`.trim()}
+              className={`${props.className || ""} site-display mt-14 text-[2.05rem] font-semibold leading-tight text-neutral-900 dark:text-white md:text-[2.35rem]`.trim()}
               style={{ ...props.style, scrollMarginTop: "var(--header-scroll-offset, 7rem)" }}
             >
               {children}
@@ -311,7 +400,7 @@ export function Markdown({ content }: { content: string }) {
             <h2
               id={children?.toString()}
               {...props}
-              className={`${props.className || ""} site-display mt-10 text-[2.1rem] font-semibold text-neutral-900 dark:text-white`.trim()}
+              className={`${props.className || ""} site-display mt-12 text-[1.75rem] font-semibold leading-tight text-neutral-900 dark:text-white md:text-[2rem]`.trim()}
               style={{ ...props.style, scrollMarginTop: "var(--header-scroll-offset, 7rem)" }}
             >
               {children}
@@ -323,7 +412,7 @@ export function Markdown({ content }: { content: string }) {
             <h3
               id={children?.toString()}
               {...props}
-              className={`${props.className || ""} mt-8 text-[1.35rem] font-semibold text-neutral-900 dark:text-white`.trim()}
+              className={`${props.className || ""} mt-10 text-[1.32rem] font-semibold leading-snug text-neutral-900 dark:text-white md:text-[1.42rem]`.trim()}
               style={{ ...props.style, scrollMarginTop: "var(--header-scroll-offset, 7rem)" }}
             >
               {children}
@@ -335,7 +424,7 @@ export function Markdown({ content }: { content: string }) {
             <h4
               id={children?.toString()}
               {...props}
-              className={`${props.className || ""} mt-8 text-[1.1rem] font-semibold text-neutral-900 dark:text-white`.trim()}
+              className={`${props.className || ""} mt-8 text-[1.08rem] font-semibold text-neutral-900 dark:text-white md:text-[1.14rem]`.trim()}
               style={{ ...props.style, scrollMarginTop: "var(--header-scroll-offset, 7rem)" }}
             >
               {children}
@@ -368,13 +457,13 @@ export function Markdown({ content }: { content: string }) {
         },
         p({ children, node, ...props }) {
           return (
-            <p className="mt-3 py-1 text-[16px] leading-8 text-neutral-700 dark:text-neutral-300" {...props}>
+            <p className="mt-4 text-[16px] leading-[1.95] text-neutral-700 dark:text-neutral-300 md:text-[17px]" {...props}>
               {children}
             </p>
           );
         },
         hr({ children, ...props }) {
-          return <hr className="my-8 border-none site-rule" {...props} />;
+          return <hr className="my-10 border-none site-rule opacity-70" {...props} />;
         },
         table: ({ node, ...props }) => <table className="table" {...props} />,
         th: ({ node, ...props }) => (
@@ -412,14 +501,15 @@ export function Markdown({ content }: { content: string }) {
           return <div {...props}>{children}</div>;
         },
       }}
-    />), [content])
+    />
+    ), [colorMode, content, rehypePlugins, remarkPlugins])
 
 
 
   const show = (src: string | undefined) => {
     let slidesLocal = slides.current;
     if (!slidesLocal) {
-      const parent = document.getElementsByClassName("toc-content")[0];
+      const parent = contentRef.current;
       if (!parent) return;
       const images = parent.querySelectorAll("img");
       slidesLocal = Array.from(images)
@@ -446,14 +536,17 @@ export function Markdown({ content }: { content: string }) {
 
   return (
     <>
-      {Content}
-      <Lightbox
-        plugins={[Download, Zoom, Counter]}
-        index={index}
-        slides={slides.current}
-        open={index >= 0}
-        close={() => setIndex(-1)}
-      />
+      <div ref={contentRef}>{Content}</div>
+      {index >= 0 ? (
+        <Suspense fallback={null}>
+          <MarkdownLightbox
+            index={index}
+            slides={slides.current}
+            open={index >= 0}
+            close={() => setIndex(-1)}
+          />
+        </Suspense>
+      ) : null}
     </>
   );
 }

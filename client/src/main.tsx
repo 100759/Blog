@@ -8,7 +8,7 @@ import './components.css'
 import { GlobalErrorBoundary } from './components/error-boundary.tsx'
 import { bootstrapApp } from './app/bootstrap'
 
-bootstrapApp()
+void bootstrapApp()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -17,4 +17,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </GlobalErrorBoundary>
   </React.StrictMode>
 )
+
 Modal.setAppElement('#root');

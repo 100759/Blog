@@ -67,6 +67,11 @@
     },
     "search": {
       "placeholder": "請輸入關鍵字",
+      "summary": "依標題與摘要查找文章，結果會直接回到正文列表中。",
+      "page": "第 {{page}} 頁",
+      "result_hint": "符合的結果已整理在下方文章列表中。",
+      "empty_title": "暫時沒有符合的文章",
+      "empty_description": "換個關鍵字試試，也可以直接搜尋標題片段或標籤。",
       "title": "搜尋",
       "title$keyword": "搜尋：{{keyword}}"
     },

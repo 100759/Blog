@@ -67,6 +67,11 @@
     },
     "search": {
       "placeholder": "请输入关键字",
+      "summary": "按标题和摘要查找文章，结果会直接回到正文列表里。",
+      "page": "第 {{page}} 页",
+      "result_hint": "匹配结果已经整理在下方文章列表中。",
+      "empty_title": "暂时没有匹配的文章",
+      "empty_description": "换个关键词试试，也可以直接搜标题片段或标签。",
       "title": "搜索",
       "title$keyword": "搜索：{{keyword}}"
     },

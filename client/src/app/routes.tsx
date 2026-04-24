@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { useContext } from "react";
+import type { ComponentType, ReactNode } from "react";
+import { lazy, Suspense, useContext } from "react";
 import type { DefaultParams, PathPattern } from "wouter";
 import { Route, Switch } from "wouter";
 import { AdminLayout } from "../components/admin-layout";
@@ -10,26 +10,48 @@ import { getHeaderLayoutDefinition } from "../components/site-header/layout-regi
 import { Tips, TipsPage } from "../components/tips";
 import useTableOfContents from "../hooks/useTableOfContents";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-import { CallbackPage } from "../page/callback";
-import { CompatTasksPage } from "../page/compat-tasks";
 import { ErrorPage } from "../page/error";
-import { FeedPage, TOCHeader } from "../page/feed";
-import { FeedsPage } from "../page/feeds";
-import { FriendsPage } from "../page/friends";
-import { HealthPage } from "../page/health";
-import { HashtagPage } from "../page/hashtag";
-import { HashtagsPage } from "../page/hashtags";
-import { LoginPage } from "../page/login";
-import { MomentsPage } from "../page/moments";
-import { ProfilePage } from "../page/profile";
-import { QueueStatusPage } from "../page/queue-status";
-import { SearchPage } from "../page/search";
-import { Settings } from "../page/settings";
-import { TimelinePage } from "../page/timeline";
-import { WritingPage } from "../page/writing";
 import { ProfileContext } from "../state/profile";
 import { tryInt } from "../utils/int";
 import { useTranslation } from "react-i18next";
+
+const FeedsPage = lazyNamed(() => import("../page/feeds"), "FeedsPage");
+const TimelinePage = lazyNamed(() => import("../page/timeline"), "TimelinePage");
+const MomentsPage = lazyNamed(() => import("../page/moments"), "MomentsPage");
+const FriendsPage = lazyNamed(() => import("../page/friends"), "FriendsPage");
+const HashtagsPage = lazyNamed(() => import("../page/hashtags"), "HashtagsPage");
+const HashtagPage = lazyNamed(() => import("../page/hashtag"), "HashtagPage");
+const SearchPage = lazyNamed(() => import("../page/search"), "SearchPage");
+const Settings = lazyNamed(() => import("../page/settings"), "Settings");
+const HealthPage = lazyNamed(() => import("../page/health"), "HealthPage");
+const QueueStatusPage = lazyNamed(() => import("../page/queue-status"), "QueueStatusPage");
+const CompatTasksPage = lazyNamed(() => import("../page/compat-tasks"), "CompatTasksPage");
+const WritingPage = lazyNamed(() => import("../page/writing"), "WritingPage");
+const CallbackPage = lazyNamed(() => import("../page/callback"), "CallbackPage");
+const LoginPage = lazyNamed(() => import("../page/login"), "LoginPage");
+const ProfilePage = lazyNamed(() => import("../page/profile"), "ProfilePage");
+const FeedPage = lazyNamed(() => import("../page/feed"), "FeedPage");
+const TOCHeader = lazyNamed(() => import("../page/feed"), "TOCHeader");
+
+function lazyNamed<T extends Record<string, ComponentType<any>>>(
+  loader: () => Promise<T>,
+  key: keyof T,
+) {
+  return lazy(async () => {
+    const module = await loader();
+    return { default: module[key] };
+  });
+}
+
+function RoutePending() {
+  return (
+    <div className="wauto py-10">
+      <div className="site-panel rounded-[28px] px-6 py-10 text-center text-sm text-neutral-500 dark:text-neutral-300">
+        Loading...
+      </div>
+    </div>
+  );
+}
 
 export function AppRoutes() {
   const { t } = useTranslation();
@@ -80,11 +102,11 @@ export function AppRoutes() {
         <CompatTasksPage />
       </AdminRoute>
 
-      <AdminRoute path="/admin/writing" requirePermission title={t("writing")} description={t("admin.writing_description")}>
+      <AdminRoute path="/admin/writing" requirePermission title={t("writing")} description={t("admin.writing_description")} compact>
         <WritingPage />
       </AdminRoute>
 
-      <AdminRoute path="/admin/writing/:id" requirePermission title={t("writing")} description={t("admin.writing_description")}>
+      <AdminRoute path="/admin/writing/:id" requirePermission title={t("writing")} description={t("admin.writing_description")} compact>
         {({ id }) => <WritingPage id={tryInt(0, id)} />}
       </AdminRoute>
 
@@ -162,8 +184,16 @@ function AppRoute({
         return (
           <div className="site-shell">
             {layoutDefinition.renderRouteShell({
-              header: <Header>{headerComponent}</Header>,
-              content: <Padding className={paddingClassName}>{resolvedContent}</Padding>,
+              header: (
+                <Suspense fallback={<Header />}>
+                  <Header>{headerComponent}</Header>
+                </Suspense>
+              ),
+              content: (
+                <Padding className={paddingClassName}>
+                  <Suspense fallback={<RoutePending />}>{resolvedContent}</Suspense>
+                </Padding>
+              ),
               footer: <Footer />,
               paddingClassName,
             })}
@@ -180,12 +210,14 @@ function AdminRoute({
   requirePermission,
   title,
   description,
+  compact,
 }: {
   path: PathPattern;
   children: ReactNode | ((params: DefaultParams) => ReactNode);
   requirePermission?: boolean;
   title: string;
   description: string;
+  compact?: boolean;
 }) {
   const profile = useContext(ProfileContext);
   const { t } = useTranslation();
@@ -195,8 +227,10 @@ function AdminRoute({
   return (
     <Route path={path}>
       {(params) => (
-        <AdminLayout title={title} description={description}>
-          {typeof content === "function" ? content(params) : content}
+        <AdminLayout title={title} description={description} compact={compact}>
+          <Suspense fallback={<RoutePending />}>
+            {typeof content === "function" ? content(params) : content}
+          </Suspense>
         </AdminLayout>
       )}
     </Route>
@@ -213,7 +247,7 @@ function TocRoute({
   const { TOC, cleanup } = useTableOfContents(".toc-content");
 
   return (
-    <AppRoute path={path} headerComponent={TOCHeader({ TOC })} paddingClassName="mx-4">
+    <AppRoute path={path} headerComponent={<TOCHeader TOC={TOC} />} paddingClassName="mx-4">
       {(params) => children(params, TOC, cleanup)}
     </AppRoute>
   );

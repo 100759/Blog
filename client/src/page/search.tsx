@@ -35,6 +35,7 @@ export function SearchPage({ keyword }: { keyword: string }) {
     const limit = tryInt(siteConfig.pageSize, query.get("limit"));
     const feedListClass = siteConfig.feedLayout === "masonry" ? "columns-1 gap-5 md:columns-2 [&>*]:mb-5" : "grid gap-5 lg:grid-cols-2";
     const ref = useRef("");
+    const hasResults = (feeds?.data?.length || 0) > 0;
 
     function fetchFeeds() {
         if (!keyword) return;
@@ -73,53 +74,68 @@ export function SearchPage({ keyword }: { keyword: string }) {
             </Helmet>
             <Waiting for={status === "idle"}>
                 <main className="wauto ani-show pb-14 pt-8">
-                    <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]">
-                        <div className="site-panel site-panel-muted rounded-[32px] px-6 py-8 md:px-8 md:py-10">
+                    <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(240px,0.38fr)]">
+                        <div className="site-panel site-panel-muted rounded-[28px] px-6 py-7 md:px-8 md:py-8">
                             <p className="site-kicker">{t("article.search.title")}</p>
-                            <h1 className="site-display mt-4 text-[3rem] text-neutral-900 dark:text-white md:text-[4.6rem]">
+                            <h1 className="site-display mt-4 text-[2.2rem] leading-tight text-neutral-900 dark:text-white md:text-[3rem]">
                                 {keyword}
                             </h1>
-                            <p className="mt-5 max-w-2xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
-                                Search results across writing titles and summaries.
+                            <p className="mt-4 max-w-2xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
+                                {t("article.search.summary")}
                             </p>
-                            <div className="site-rule mt-8 w-full max-w-xl" />
-                            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                                <SearchStat label={t("article.total$count", { count: feeds?.size || 0 })} value={feeds?.size || 0} />
-                                <SearchStat label={t("article.search.title")} value={page} />
-                                <SearchStat label={siteConfig.feedLayout} value={siteConfig.feedLayout} />
+                            <div className="site-rule mt-5 w-full max-w-xl opacity-75" />
+                            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-neutral-500 dark:text-neutral-400">
+                                <span>{t("article.total$count", { count: feeds?.size || 0 })}</span>
+                                <span>{t("article.search.page", { page })}</span>
+                                <span>{siteConfig.feedLayout}</span>
                             </div>
                         </div>
 
-                        <div className="site-panel rounded-[32px] px-6 py-8 md:px-7 md:py-8">
+                        <div className="site-panel rounded-[24px] px-5 py-6 md:px-6 md:py-6">
                             <p className="site-kicker">{t("article.search.title")}</p>
-                            <h2 className="site-display mt-3 text-[2.2rem] text-neutral-900 dark:text-white">
+                            <h2 className="site-display mt-3 text-[1.75rem] text-neutral-900 dark:text-white">
                                 {t("article.total$count", { count: feeds?.size || 0 })}
                             </h2>
                             <p className="mt-4 text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
-                                Query: <span className="font-medium text-neutral-900 dark:text-white">{keyword}</span>
+                                <span className="font-medium text-neutral-900 dark:text-white">{keyword}</span>
+                            </p>
+                            <p className="mt-3 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
+                                {hasResults ? t("article.search.result_hint") : t("article.search.empty_description")}
                             </p>
                         </div>
                     </section>
 
-                    <section className="mt-8">
+                    <section className="mt-7">
                         <Waiting for={status === "idle"}>
-                            <div className={feedListClass}>
-                                {feeds?.data.map(({ id, ...feed }) => (
-                                    <FeedCard
-                                        key={id}
-                                        id={String(id)}
-                                        {...feed}
-                                        title={feed.title || t("unlisted")}
-                                        avatar={feed.avatar || undefined}
-                                        createdAt={new Date(feed.createdAt)}
-                                        updatedAt={new Date(feed.updatedAt)}
-                                        draft={0}
-                                        listed={1}
-                                        top={0}
-                                        variant="editorial"
-                                    />
-                                ))}
-                            </div>
+                            {hasResults ? (
+                                <div className={feedListClass}>
+                                    {feeds?.data.map(({ id, ...feed }) => (
+                                        <FeedCard
+                                            key={id}
+                                            id={String(id)}
+                                            {...feed}
+                                            title={feed.title || t("unlisted")}
+                                            avatar={feed.avatar || undefined}
+                                            createdAt={new Date(feed.createdAt)}
+                                            updatedAt={new Date(feed.updatedAt)}
+                                            draft={0}
+                                            listed={1}
+                                            top={0}
+                                            variant="editorial"
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="site-panel rounded-[28px] px-6 py-10 text-center md:px-8">
+                                    <p className="site-kicker">{t("article.search.title")}</p>
+                                    <h2 className="site-display mt-4 text-[2rem] text-neutral-900 dark:text-white">
+                                        {t("article.search.empty_title")}
+                                    </h2>
+                                    <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
+                                        {t("article.search.empty_description")}
+                                    </p>
+                                </div>
+                            )}
                             <div className="mt-8 flex items-center justify-between gap-4">
                                 {page > 1 ? (
                                     <Link href={`?page=${page - 1}&limit=${limit}`} className="site-panel rounded-full px-5 py-3 text-sm font-medium t-primary">
@@ -139,14 +155,5 @@ export function SearchPage({ keyword }: { keyword: string }) {
                 </main>
             </Waiting>
         </>
-    );
-}
-
-function SearchStat({ label, value }: { label: string; value: number | string }) {
-    return (
-        <div className="rounded-[22px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">{label}</p>
-            <p className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">{value}</p>
-        </div>
     );
 }

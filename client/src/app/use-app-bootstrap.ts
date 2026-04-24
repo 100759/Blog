@@ -3,6 +3,7 @@ import { ConfigWrapper } from "@rin/config";
 import type { Profile } from "../state/profile";
 import { defaultClientConfig } from "../state/config";
 import { applySiteTheme } from "../utils/theme-color";
+import { CLIENT_CONFIG_READY_EVENT } from "./bootstrap";
 import { readBootstrappedClientConfig } from "./bootstrap-config";
 import { client } from "./runtime";
 
@@ -45,6 +46,13 @@ export function useAppBootstrap() {
       }
     });
 
+    const syncBootstrappedConfig = () => {
+      const nextConfig = readBootstrappedClientConfig();
+      if (nextConfig) {
+        updateClientConfig(nextConfig);
+      }
+    };
+
     const cachedConfig = sessionStorage.getItem("config");
     const bootstrappedConfig = readBootstrappedClientConfig();
 
@@ -59,7 +67,13 @@ export function useAppBootstrap() {
       });
     }
 
+    window.addEventListener(CLIENT_CONFIG_READY_EVENT, syncBootstrappedConfig);
+
     initializedRef.current = true;
+
+    return () => {
+      window.removeEventListener(CLIENT_CONFIG_READY_EVENT, syncBootstrappedConfig);
+    };
   }, []);
 
   return { config, profile };

@@ -10,10 +10,10 @@ export const compactLayoutDefinition: HeaderLayoutDefinition = {
     return (
       <div className="hidden w-full lg:block">
         <div
-          className={`site-panel flex items-center justify-between gap-8 rounded-[26px] px-4 py-3 transition-all ${
+          className={`site-panel flex items-center justify-between gap-6 rounded-[22px] px-4 py-2.5 transition-all ${
             isAtTop
-              ? "bg-white/55 shadow-[0_18px_45px_rgba(36,24,19,0.08)] dark:bg-[rgba(20,18,19,0.64)]"
-              : "bg-white/72 shadow-[0_22px_52px_rgba(36,24,19,0.12)] dark:bg-[rgba(20,18,19,0.8)]"
+              ? "bg-white/5 shadow-[0_10px_24px_rgba(36,24,19,0.04)] dark:bg-[rgba(20,18,19,0.36)]"
+              : "bg-white/62 shadow-[0_16px_36px_rgba(36,24,19,0.08)] dark:bg-[rgba(20,18,19,0.7)]"
           }`}
         >
           <BrandLink
@@ -26,7 +26,7 @@ export const compactLayoutDefinition: HeaderLayoutDefinition = {
           />
           <div className="flex min-w-0 flex-1 items-center justify-end">
             <div className="flex min-w-0 flex-row items-center justify-end text-sm t-primary">
-              <NavBar menu={false} itemClassName="px-0 py-1 pr-3 md:p-0 md:pr-3 text-sm font-medium text-neutral-700 dark:text-neutral-200" />
+              <NavBar menu={false} itemClassName="px-0 py-1 pr-2.5 text-[13px]" />
             </div>
             <div className="flex shrink-0 flex-row items-center gap-3">
               {children ? <div className="flex items-center text-sm t-primary">{children}</div> : null}

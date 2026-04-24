@@ -67,6 +67,11 @@
     },
     "search": {
       "placeholder": "キーワードを入力してください",
+      "summary": "タイトルと要約から記事を探し、そのまま下の一覧から読み進められます。",
+      "page": "{{page}}ページ",
+      "result_hint": "一致した結果は下の記事一覧にまとめています。",
+      "empty_title": "一致する記事はまだありません",
+      "empty_description": "別のキーワードを試すか、タイトルの一部やタグで検索してください。",
       "title": "検索",
       "title$keyword": "検索: {{keyword}}"
     },

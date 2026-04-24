@@ -78,6 +78,8 @@ export async function handleFetch(request: Request, env: Env): Promise<Response>
     if (asset) {
       return asset;
     }
+
+    return new Response("Not Found", { status: 404 });
   }
 
   const indexResponse = await serveSpaEntry(request, env);
