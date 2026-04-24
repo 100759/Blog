@@ -61,56 +61,39 @@ export function HashtagsPage() {
             </Helmet>
             <Waiting for={hashtags}>
                 <main className="wauto ani-show pb-14 pt-8">
-                    <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]">
-                        <div className="site-panel site-panel-muted rounded-[32px] px-6 py-8 md:px-8 md:py-10">
-                            <p className="site-kicker">{t("hashtags")}</p>
-                            <h1 className="site-display mt-4 text-[3rem] text-neutral-900 dark:text-white md:text-[4.6rem]">
-                                {t("hashtags")}
-                            </h1>
-                            <p className="mt-5 max-w-2xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
-                                Topic clusters for browsing the archive by theme instead of chronology.
-                            </p>
-                            <div className="site-rule mt-8 w-full max-w-xl" />
-                            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                                <HashtagStat label={t("total_tags", { count: sortedHashtags.length })} value={sortedHashtags.length} />
-                                <HashtagStat label={t("sort_latest")} value={sortBy === "latest" ? "On" : "Off"} />
-                                <HashtagStat label={t("sort_popular")} value={sortBy === "popular" ? "On" : "Off"} />
+                    <section>
+                        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p className="site-kicker">{t("hashtags")}</p>
+                                <h1 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.02em] text-neutral-900 dark:text-white">
+                                    {t("total_tags", { count: sortedHashtags.length })}
+                                </h1>
                             </div>
-                        </div>
-
-                        <div className="site-panel rounded-[32px] px-6 py-8 md:px-7 md:py-8">
-                            <p className="site-kicker">{t("hashtags")}</p>
-                            <h2 className="site-display mt-3 text-[2.2rem] text-neutral-900 dark:text-white">
-                                {t("total_tags", { count: sortedHashtags.length })}
-                            </h2>
-                            <p className="mt-4 text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
-                                Switch between latest-first and most-used tags.
-                            </p>
-                            <div className="mt-6 flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-2">
                                 <SortToggle active={sortBy === "latest"} label={t("sort_latest")} onClick={() => setSortBy("latest")} />
                                 <SortToggle active={sortBy === "popular"} label={t("sort_popular")} onClick={() => setSortBy("popular")} />
                             </div>
                         </div>
-                    </section>
 
-                    <section className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        {sortedHashtags.map((hashtag) => (
-                            <Link
-                                key={hashtag.id}
-                                href={`/hashtag/${hashtag.name}`}
-                                className="site-panel flex items-center justify-between gap-4 rounded-[28px] px-5 py-5 transition hover:-translate-y-1"
-                            >
-                                <div className="min-w-0">
-                                    <HashTag name={hashtag.name} />
-                                    <p className="mt-3 text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
-                                        {new Date(hashtag.createdAt).toLocaleDateString()}
-                                    </p>
-                                </div>
-                                <div className="rounded-full border border-black/10 bg-white/55 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300">
-                                    {t("article.total_short$count", { count: hashtag.feeds })}
-                                </div>
-                            </Link>
-                        ))}
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            {sortedHashtags.map((hashtag) => (
+                                <Link
+                                    key={hashtag.id}
+                                    href={`/hashtag/${hashtag.name}`}
+                                    className="site-panel flex items-center justify-between gap-4 rounded-[28px] px-5 py-5 transition hover:-translate-y-1"
+                                >
+                                    <div className="min-w-0">
+                                        <HashTag name={hashtag.name} />
+                                        <p className="mt-3 text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
+                                            {new Date(hashtag.createdAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-full border border-black/10 bg-white/55 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300">
+                                        {t("article.total_short$count", { count: hashtag.feeds })}
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
                     </section>
                 </main>
             </Waiting>
@@ -130,14 +113,5 @@ function SortToggle({ active, label, onClick }: { active: boolean; label: string
         >
             {label}
         </button>
-    );
-}
-
-function HashtagStat({ label, value }: { label: string; value: number | string }) {
-    return (
-        <div className="rounded-[22px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">{label}</p>
-            <p className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">{value}</p>
-        </div>
     );
 }

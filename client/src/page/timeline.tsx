@@ -15,7 +15,6 @@ interface FeedItemRecord {
 
 export function TimelinePage() {
     const [feeds, setFeeds] = useState<Partial<Record<number, FeedItemRecord[]>>>();
-    const [length, setLength] = useState(0);
     const ref = useRef(false);
     const { t } = useTranslation();
     const siteConfig = useSiteConfig();
@@ -25,7 +24,6 @@ export function TimelinePage() {
             .then(({ data }) => {
                 if (data) {
                     const arr = Array.isArray(data) ? data : [];
-                    setLength(arr.length);
                     const groups = (Object.groupBy
                         ? Object.groupBy(arr, ({ createdAt }) => new Date(createdAt).getFullYear())
                         : arr.reduce<Record<number, FeedItemRecord[]>>((acc, item) => {
@@ -65,35 +63,7 @@ export function TimelinePage() {
             </Helmet>
             <Waiting for={feeds}>
                 <main className="wauto ani-show pb-14 pt-8">
-                    <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]">
-                        <div className="site-panel site-panel-muted rounded-[32px] px-6 py-8 md:px-8 md:py-10">
-                            <p className="site-kicker">{t("timeline")}</p>
-                            <h1 className="site-display mt-4 text-[3rem] text-neutral-900 dark:text-white md:text-[4.6rem]">
-                                {t("timeline")}
-                            </h1>
-                            <p className="mt-5 max-w-2xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
-                                A chronological index of published writing, grouped by year instead of category.
-                            </p>
-                            <div className="site-rule mt-8 w-full max-w-xl" />
-                            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                                <TimelineStat label={t("article.total$count", { count: length })} value={length} />
-                                <TimelineStat label={t("timeline")} value={years.length} />
-                                <TimelineStat label={siteConfig.name} value={years[0] || "Now"} />
-                            </div>
-                        </div>
-
-                        <div className="site-panel rounded-[32px] px-6 py-8 md:px-7 md:py-8">
-                            <p className="site-kicker">{t("timeline")}</p>
-                            <h2 className="site-display mt-3 text-[2.2rem] text-neutral-900 dark:text-white">
-                                {years[0] || ""}
-                            </h2>
-                            <p className="mt-4 text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
-                                Scan the archive by year and jump directly into individual entries.
-                            </p>
-                        </div>
-                    </section>
-
-                    <section className="mt-8 space-y-6">
+                    <section className="space-y-6">
                         {years.map((year) => (
                             <div key={year} className="site-panel rounded-[32px] px-6 py-7 md:px-8">
                                 <div className="flex flex-wrap items-end justify-between gap-4">
@@ -142,14 +112,5 @@ function TimelineFeedItem({ id, title, createdAt }: { id: string; title: string;
             </div>
             <h3 className="site-display text-[1.8rem] text-neutral-900 dark:text-white">{title}</h3>
         </Link>
-    );
-}
-
-function TimelineStat({ label, value }: { label: string; value: number | string }) {
-    return (
-        <div className="rounded-[22px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">{label}</p>
-            <p className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">{value}</p>
-        </div>
     );
 }

@@ -175,43 +175,23 @@ export function MomentsPage() {
             </Helmet>
             <Waiting for={!loading}>
                 <main className="wauto ani-show pb-14 pt-8">
-                    <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]">
-                        <div className="site-panel site-panel-muted rounded-[32px] px-6 py-8 md:px-8 md:py-10">
-                            <p className="site-kicker">{t("moments.title")}</p>
-                            <h1 className="site-display mt-4 text-[3rem] text-neutral-900 dark:text-white md:text-[4.6rem]">
-                                {t("moments.title")}
-                            </h1>
-                            <p className="mt-5 max-w-2xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
-                                {siteConfig.description || t("moments.total$count", { count: length })}
-                            </p>
-                            <div className="site-rule mt-8 w-full max-w-xl" />
-                            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                                <MomentStat label={t("moments.total$count", { count: length })} value={length} />
-                                <MomentStat label={t("load_more")} value={hasNextPage ? currentPage + 1 : currentPage} />
-                                <MomentStat label={t("writing")} value={moments.length} />
+                    <section>
+                        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p className="site-kicker">{t("moments.title")}</p>
+                                <h1 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.02em] text-neutral-900 dark:text-white">
+                                    {t("moments.total$count", { count: length })}
+                                </h1>
                             </div>
-                        </div>
-
-                        <div className="site-panel rounded-[32px] px-6 py-8 md:px-7 md:py-8">
-                            <p className="site-kicker">{t("moments.title")}</p>
-                            <h2 className="site-display mt-3 text-[2.2rem] text-neutral-900 dark:text-white">
-                                {t("moments.total$count", { count: length })}
-                            </h2>
-                            <p className="mt-4 text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
-                                Stream-like notes, status updates, and short-form entries.
-                            </p>
                             {profile?.permission ? (
                                 <button
                                     onClick={openCreateModal}
-                                    className="mt-6 rounded-full bg-theme px-5 py-3 text-sm font-medium text-white shadow-[0_18px_30px_rgba(var(--theme-rgb),0.24)]"
+                                    className="rounded-full bg-theme px-5 py-3 text-sm font-medium text-white shadow-[0_18px_30px_rgba(var(--theme-rgb),0.24)]"
                                 >
                                     {t("publish.title")}
                                 </button>
                             ) : null}
                         </div>
-                    </section>
-
-                    <section className="mt-8">
                         <div className="space-y-5">
                             {moments.map((moment) => (
                                 <MomentItem
@@ -300,14 +280,5 @@ export function MomentsPage() {
             <AlertUI />
             <ConfirmUI />
         </>
-    );
-}
-
-function MomentStat({ label, value }: { label: string; value: number | string }) {
-    return (
-        <div className="rounded-[22px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">{label}</p>
-            <p className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">{value}</p>
-        </div>
     );
 }

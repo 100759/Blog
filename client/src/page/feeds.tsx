@@ -105,7 +105,6 @@ export function FeedsPage() {
     const visibleFeeds = featuredFeed ? remainingFeeds : allFeeds;
     const listTitle = listState === "draft" ? t("draft_bin") : listState === "normal" ? t("article.title") : t("unlisted");
     const listDescription = siteConfig.description || t("article.total$count", { count: currentFeedSet.size });
-    const totalVisible = remainingFeeds.length + (featuredFeed ? 1 : 0);
     const feedListClass =
         siteConfig.feedLayout === "masonry"
             ? "columns-1 gap-5 md:columns-2 [&>*]:mb-5"
@@ -125,23 +124,20 @@ export function FeedsPage() {
                 <main className="w-full pb-14">
                     <section className="wauto ani-show pt-4 md:pt-8">
                         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.34fr)]">
-                            <div className="site-panel site-panel-muted overflow-hidden rounded-[28px] px-5 py-6 md:rounded-[32px] md:px-7 md:py-7">
+                            <div className="site-panel site-panel-muted overflow-hidden rounded-[26px] px-5 py-5 md:rounded-[28px] md:px-6 md:py-6">
                                 <p className="site-kicker">{listTitle}</p>
-                                <h1 className="site-display mt-4 max-w-3xl text-[1.95rem] leading-tight text-neutral-900 dark:text-white sm:text-[2.35rem] md:text-[2.85rem]">
+                                <h1 className="site-display mt-3 max-w-3xl text-[1.8rem] leading-tight text-neutral-900 dark:text-white sm:text-[2.15rem] md:text-[2.45rem]">
                                     {siteConfig.name}
                                 </h1>
-                                <p className="mt-4 max-w-xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
+                                <p className="mt-3 max-w-xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
                                     {listDescription}
                                 </p>
-                                <div className="site-rule mt-5 w-full max-w-lg opacity-75" />
-                                <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-neutral-500 dark:text-neutral-400">
+                                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-neutral-500 dark:text-neutral-400">
                                     <span>{t("article.total$count", { count: currentFeedSet.size })}</span>
-                                    <span>{t("article.search.title")} / {siteConfig.feedLayout}</span>
-                                    <span>{t("index.title")} {page}</span>
                                 </div>
                             </div>
 
-                            <div className="site-panel overflow-hidden rounded-[22px] px-4 py-4 md:rounded-[24px] md:px-4.5 md:py-4.5">
+                            <div className="site-panel overflow-hidden rounded-[22px] px-4 py-4 md:rounded-[24px]">
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
                                         <p className="site-kicker">{t("article.total$count", { count: currentFeedSet.size })}</p>
@@ -166,21 +162,6 @@ export function FeedsPage() {
                                             <TypeToggle href="/?type=unlisted" active={listState === "unlisted"} label={t("unlisted")} />
                                         </>
                                     ) : null}
-                                </div>
-
-                                <div className="site-rule mt-4 w-full opacity-75" />
-
-                                <div className="mt-3 flex flex-wrap gap-2 text-[12px] text-neutral-500 dark:text-neutral-400">
-                                    <span>{t("article.total$count", { count: totalVisible })}</span>
-                                    <span>{siteConfig.feedLayout}</span>
-                                </div>
-
-                                <div className="mt-4 grid gap-1.5">
-                                    <SectionLink href="/" label={t("article.title")} icon="ri-article-line" />
-                                    <SectionLink href="/timeline" label={t("timeline")} icon="ri-time-line" />
-                                    <SectionLink href="/moments" label={t("moments.title")} icon="ri-quill-pen-line" />
-                                    <SectionLink href="/hashtags" label={t("hashtags")} icon="ri-hashtag" />
-                                    <SectionLink href="/friends" label={t("friends.title")} icon="ri-group-line" />
                                 </div>
                             </div>
                         </div>
@@ -304,20 +285,6 @@ function FeaturedFeedLead({ feed }: { feed: FeedRecord }) {
     );
 }
 
-function SectionLink({ href, label, icon }: { href: string; label: string; icon: string }) {
-    return (
-        <Link
-            href={href}
-            className="flex min-h-9 items-center justify-between rounded-[15px] border border-black/10 bg-white/45 px-3 py-2 text-[13px] font-medium text-neutral-700 transition-colors hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.03] dark:text-neutral-200 dark:hover:bg-theme/15"
-        >
-            <span className="flex items-center gap-3">
-                <i className={`${icon} text-[14px]`} />
-                {label}
-            </span>
-            <i className="ri-arrow-right-up-line text-[14px] opacity-50" />
-        </Link>
-    );
-}
 
 function TypeToggle({ href, active, label }: { href: string; active: boolean; label: string }) {
     return (
