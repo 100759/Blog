@@ -39,17 +39,6 @@ function stripMarkdown(value: string) {
     .trim();
 }
 
-function buildSummaryFromContent(content: string, fallbackTitle: string) {
-  const plain = stripMarkdown(content);
-  const source = plain || fallbackTitle.trim();
-
-  if (source.length <= 140) {
-    return source;
-  }
-
-  return `${source.slice(0, 137).trimEnd()}...`;
-}
-
 function computeWordCount(value: string) {
   const latinWords = value.split(/\s+/).filter(Boolean).length;
   const cjkChars = (value.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu) ?? []).length;
@@ -153,56 +142,9 @@ export function WritingPage({ id }: { id?: number }) {
 
   const readingTitle = title.trim() || t("writing_editor.untitled");
   const readingDescription = summary.trim() || siteConfig.description || t("content.empty");
-  const contentText = useMemo(() => stripMarkdown(content), [content]);
-  const plainText = useMemo(() => stripMarkdown(`${title}\n${content}`), [content, title]);
+  const plainText = useMemo(() => stripMarkdown(content), [content]);
   const wordCount = useMemo(() => computeWordCount(plainText), [plainText]);
-  const characterCount = plainText.length;
-  const readingMinutes = Math.max(1, Math.ceil(wordCount / 220));
-  const headingOutline = useMemo(
-    () =>
-      Array.from(content.matchAll(/^(#{1,6})\s+(.+)$/gm)).map((match) => ({
-        level: match[1].length,
-        text: match[2].trim(),
-      })),
-    [content],
-  );
-  const imageCount = useMemo(() => (content.match(/!\[.*?\]\(.*?\)/g) ?? []).length, [content]);
-  const publishChecklist = useMemo(
-    () => [
-      {
-        key: "title",
-        done: title.trim().length > 0,
-        label: t("writing_editor.checklist.title"),
-        hint: t("writing_editor.checklist.title_hint"),
-      },
-      {
-        key: "content",
-        done: contentText.length >= 120,
-        label: t("writing_editor.checklist.content"),
-        hint: t("writing_editor.checklist.content_hint", { count: 120 }),
-      },
-      {
-        key: "summary",
-        done: summary.trim().length >= 40,
-        label: t("writing_editor.checklist.summary"),
-        hint: t("writing_editor.checklist.summary_hint", { count: 40 }),
-      },
-      {
-        key: "alias",
-        done: alias.trim().length > 0,
-        label: t("writing_editor.checklist.alias"),
-        hint: t("writing_editor.checklist.alias_hint"),
-      },
-      {
-        key: "tags",
-        done: tagList.length > 0,
-        label: t("writing_editor.checklist.tags"),
-        hint: t("writing_editor.checklist.tags_hint"),
-      },
-    ],
-    [alias, contentText.length, summary, t, tagList.length, title],
-  );
-  const checklistDone = publishChecklist.filter((item) => item.done).length;
+  const readingMinutes = Math.max(1, Math.ceil(Math.max(wordCount, 1) / 320));
   const isDirty = hydratedRef.current && persistedSnapshot !== lastPersistedSnapshotRef.current;
 
   const applyFetchedSnapshot = useCallback((data: any) => {
@@ -454,15 +396,6 @@ export function WritingPage({ id }: { id?: number }) {
     return t("writing_editor.status.unsaved");
   }, [id, isDirty, lastSavedAt, loadingFeed, saveState, t]);
 
-  const syncAliasFromTitle = useCallback(() => {
-    aliasTouchedRef.current = true;
-    setAlias(normalizeAlias(title));
-  }, [setAlias, title]);
-
-  const autofillSummary = useCallback(() => {
-    setSummary(buildSummaryFromContent(content, title));
-  }, [content, setSummary, title]);
-
   function ActionButton({
     onClick,
     loading,
@@ -559,138 +492,6 @@ export function WritingPage({ id }: { id?: number }) {
     );
   }
 
-  function WritingInsights() {
-    const visibilityLabel = draft ? t("draft") : listed ? t("listed") : t("unlisted");
-
-    return (
-      <FlatPanel className="p-4 sm:p-5 md:p-6">
-        <div className="flex flex-col gap-5">
-          <div className="border-b border-black/5 pb-5 dark:border-white/5">
-            <p className="site-kicker">{t("writing_editor.snapshot")}</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-              <div className="rounded-[18px] border border-black/10 bg-white/60 px-3 py-3 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">{t("writing_editor.stats.visibility")}</p>
-                <p className="mt-2 text-sm font-medium text-neutral-900 dark:text-white">{visibilityLabel}</p>
-              </div>
-              <div className="rounded-[18px] border border-black/10 bg-white/60 px-3 py-3 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">{t("tags")}</p>
-                <p className="mt-2 text-sm font-medium text-neutral-900 dark:text-white">{tagList.length}</p>
-              </div>
-              <div className="rounded-[18px] border border-black/10 bg-white/60 px-3 py-3 dark:border-white/10 dark:bg-white/[0.04] sm:col-span-2 xl:col-span-1">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">{t("writing_editor.stats.images")}</p>
-                <p className="mt-2 text-sm font-medium text-neutral-900 dark:text-white">{imageCount}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-b border-black/5 pb-5 dark:border-white/5">
-            <p className="site-kicker">{t("writing_editor.quick_actions")}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={autofillSummary}
-                className="rounded-full border border-black/10 px-3 py-2 text-sm text-neutral-700 transition-colors hover:border-black/20 dark:border-white/10 dark:text-neutral-200 dark:hover:border-white/20"
-              >
-                {t("writing_editor.actions.summary")}
-              </button>
-              <button
-                type="button"
-                onClick={syncAliasFromTitle}
-                className="rounded-full border border-black/10 px-3 py-2 text-sm text-neutral-700 transition-colors hover:border-black/20 dark:border-white/10 dark:text-neutral-200 dark:hover:border-white/20"
-              >
-                {t("writing_editor.actions.alias")}
-              </button>
-            </div>
-          </div>
-
-          <div className="rounded-[24px] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="site-kicker">{t("writing_editor.checklist.heading")}</p>
-                <p className="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
-                  {t("writing_editor.checklist.description")}
-                </p>
-              </div>
-              <div className="rounded-full border border-black/10 px-3 py-1 text-xs font-medium text-neutral-600 dark:border-white/10 dark:text-neutral-300">
-                {t("writing_editor.checklist.progress", {
-                  done: checklistDone,
-                  total: publishChecklist.length,
-                })}
-              </div>
-            </div>
-            <div className="mt-4 space-y-2">
-              {publishChecklist.map((item) => (
-                <div
-                  key={item.key}
-                  className="flex items-start justify-between gap-3 rounded-2xl border border-black/10 bg-white/70 px-3 py-3 dark:border-white/10 dark:bg-white/[0.03]"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-neutral-900 dark:text-white">{item.label}</p>
-                    <p className="mt-1 text-xs leading-5 text-neutral-500 dark:text-neutral-400">{item.hint}</p>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                      item.done
-                        ? "bg-emerald-500/12 text-emerald-700 dark:bg-emerald-500/18 dark:text-emerald-300"
-                        : "bg-amber-500/12 text-amber-700 dark:bg-amber-500/18 dark:text-amber-300"
-                    }`}
-                  >
-                    {item.done
-                      ? t("writing_editor.checklist.complete")
-                      : t("writing_editor.checklist.pending")}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="border-b border-black/5 pb-5 dark:border-white/5">
-            <p className="site-kicker">{t("writing_editor.overview")}</p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-[20px] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="text-xs uppercase tracking-[0.2em] text-neutral-400">{t("writing_editor.stats.words")}</p>
-                <p className="mt-2 text-xl font-semibold text-neutral-900 dark:text-white">{wordCount}</p>
-              </div>
-              <div className="rounded-[20px] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="text-xs uppercase tracking-[0.2em] text-neutral-400">{t("writing_editor.stats.reading_time")}</p>
-                <p className="mt-2 text-xl font-semibold text-neutral-900 dark:text-white">
-                  {t("writing_editor.reading_minutes", { count: readingMinutes })}
-                </p>
-              </div>
-              <div className="rounded-[20px] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="text-xs uppercase tracking-[0.2em] text-neutral-400">{t("writing_editor.stats.headings")}</p>
-                <p className="mt-2 text-xl font-semibold text-neutral-900 dark:text-white">{headingOutline.length}</p>
-              </div>
-              <div className="rounded-[20px] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="text-xs uppercase tracking-[0.2em] text-neutral-400">{t("writing_editor.stats.characters")}</p>
-                <p className="mt-2 text-xl font-semibold text-neutral-900 dark:text-white">{characterCount}</p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <p className="site-kicker">{t("writing_editor.outline")}</p>
-            <div className="mt-3 space-y-2">
-              {headingOutline.length > 0 ? (
-                headingOutline.map((item, index) => (
-                  <div
-                    key={`${item.text}-${index}`}
-                    className="rounded-2xl border border-black/10 bg-white/60 px-3 py-3 text-sm text-neutral-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200"
-                    style={{ paddingLeft: `${item.level * 0.85}rem` }}
-                  >
-                    {item.text}
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm leading-6 text-neutral-500 dark:text-neutral-400">{t("writing_editor.outline_empty")}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </FlatPanel>
-    );
-  }
-
   return (
     <>
       <Helmet>
@@ -746,7 +547,7 @@ export function WritingPage({ id }: { id?: number }) {
           </div>
         </section>
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-6">
           <div className="flex min-w-0 flex-col gap-4">
             <MetaInput className="p-4 sm:p-5 md:p-6" />
 
@@ -760,10 +561,6 @@ export function WritingPage({ id }: { id?: number }) {
                 }}
               />
             </FlatPanel>
-          </div>
-
-          <div className="flex flex-col gap-4 xl:sticky xl:top-6 xl:self-start">
-            <WritingInsights />
           </div>
         </div>
 
