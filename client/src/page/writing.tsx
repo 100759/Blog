@@ -426,72 +426,6 @@ export function WritingPage({ id }: { id?: number }) {
     );
   }
 
-  function MetaInput({ className }: { className?: string }) {
-    return (
-      <FlatPanel className={className}>
-        <div className="flex flex-col gap-3 border-b border-black/5 pb-4 dark:border-white/5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="site-kicker">{t("writing")}</p>
-              <p className="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
-                {t("writing_editor.description")}
-              </p>
-            </div>
-            <div className="inline-flex items-center rounded-full border border-black/10 bg-white/70 px-3 py-1.5 text-xs text-neutral-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-neutral-300">
-              {saveStatusText}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <div className="lg:col-span-2">
-            <Input
-              id={id}
-              value={title}
-              setValue={setTitle}
-              placeholder={t("title")}
-              variant="flat"
-              className="text-base"
-            />
-          </div>
-          <Input id={id} value={summary} setValue={setSummary} placeholder={t("summary")} variant="flat" />
-          <Input
-            id={id}
-            value={alias}
-            setValue={(value) => {
-              aliasTouchedRef.current = true;
-              setAlias(value);
-            }}
-            placeholder={t("alias")}
-            variant="flat"
-          />
-          <Input id={id} value={tags} setValue={setTags} placeholder={t("tags")} variant="flat" className="lg:col-span-2" />
-        </div>
-
-        <div className="mt-4 grid gap-2 sm:gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(16rem,1.2fr)]">
-          <FlatMetaRow
-            className="cursor-pointer rounded-none border-0 bg-transparent px-0 py-2 sm:rounded-2xl sm:border sm:bg-secondary sm:px-4 sm:py-3"
-            onClick={() => setDraft(!draft)}
-          >
-            <p>{t("visible.self_only")}</p>
-            <Checkbox id="draft" value={draft} setValue={setDraft} placeholder={t("draft")} />
-          </FlatMetaRow>
-          <FlatMetaRow
-            className="cursor-pointer rounded-none border-0 bg-transparent px-0 py-2 sm:rounded-2xl sm:border sm:bg-secondary sm:px-4 sm:py-3"
-            onClick={() => setListed(!listed)}
-          >
-            <p>{t("listed")}</p>
-            <Checkbox id="listed" value={listed} setValue={setListed} placeholder={t("listed")} />
-          </FlatMetaRow>
-          <FlatMetaRow className="gap-3 rounded-none border-0 bg-transparent px-0 py-2 sm:rounded-2xl sm:border sm:bg-secondary sm:px-4 sm:py-3 xl:col-span-1">
-            <p className="mr-2 whitespace-nowrap">{t("created_at")}</p>
-            <DateTimeInput value={createdAt} onChange={setCreatedAt} className="w-full max-w-[16rem]" />
-          </FlatMetaRow>
-        </div>
-      </FlatPanel>
-    );
-  }
-
   return (
     <>
       <Helmet>
@@ -549,7 +483,74 @@ export function WritingPage({ id }: { id?: number }) {
 
         <div className="grid gap-6">
           <div className="flex min-w-0 flex-col gap-4">
-            <MetaInput className="p-4 sm:p-5 md:p-6" />
+            <FlatPanel className="p-4 sm:p-5 md:p-6">
+              <div className="flex flex-col gap-3 border-b border-black/5 pb-4 dark:border-white/5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="site-kicker">{t("writing")}</p>
+                    <p className="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
+                      {t("writing_editor.description")}
+                    </p>
+                  </div>
+                  <div className="inline-flex items-center rounded-full border border-black/10 bg-white/70 px-3 py-1.5 text-xs text-neutral-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-neutral-300">
+                    {saveStatusText}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                <div className="lg:col-span-2">
+                  <Input
+                    id={id}
+                    value={title}
+                    setValue={setTitle}
+                    placeholder={t("title")}
+                    variant="flat"
+                    className="text-base"
+                  />
+                </div>
+                <Input id={id} value={summary} setValue={setSummary} placeholder={t("summary")} variant="flat" />
+                <Input
+                  id={id}
+                  value={alias}
+                  setValue={(value) => {
+                    aliasTouchedRef.current = true;
+                    setAlias(value);
+                  }}
+                  placeholder={t("alias")}
+                  variant="flat"
+                />
+                <Input
+                  id={id}
+                  value={tags}
+                  setValue={setTags}
+                  placeholder={t("tags")}
+                  variant="flat"
+                  className="lg:col-span-2"
+                />
+              </div>
+
+              <div className="mt-4 grid gap-2 sm:gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(16rem,1.2fr)]">
+                <FlatMetaRow
+                  className="cursor-pointer rounded-none border-0 bg-transparent px-0 py-2 sm:rounded-2xl sm:border sm:bg-secondary sm:px-4 sm:py-3"
+                  onClick={() => setDraft(!draft)}
+                >
+                  <p>{t("visible.self_only")}</p>
+                  <Checkbox id="draft" value={draft} setValue={setDraft} placeholder={t("draft")} />
+                </FlatMetaRow>
+                <FlatMetaRow
+                  className="cursor-pointer rounded-none border-0 bg-transparent px-0 py-2 sm:rounded-2xl sm:border sm:bg-secondary sm:px-4 sm:py-3"
+                  onClick={() => setListed(!listed)}
+                >
+                  <p>{t("listed")}</p>
+                  <Checkbox id="listed" value={listed} setValue={setListed} placeholder={t("listed")} />
+                </FlatMetaRow>
+                <FlatMetaRow className="gap-3 rounded-none border-0 bg-transparent px-0 py-2 sm:rounded-2xl sm:border sm:bg-secondary sm:px-4 sm:py-3 xl:col-span-1">
+                  <p className="mr-2 whitespace-nowrap">{t("created_at")}</p>
+                  <DateTimeInput value={createdAt} onChange={setCreatedAt} className="w-full max-w-[16rem]" />
+                </FlatMetaRow>
+              </div>
+            </FlatPanel>
 
             <FlatPanel className="overflow-hidden p-0">
               <MarkdownEditor
