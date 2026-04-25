@@ -14,22 +14,44 @@ export function Header({ children }: { children?: React.ReactNode }) {
   const [isRevealed, setIsRevealed] = useState(true);
   const [isAtTop, setIsAtTop] = useState(true);
   const headerRef = useRef<HTMLDivElement | null>(null);
+  const frameRef = useRef<number | null>(null);
+  const revealedRef = useRef(true);
+  const atTopRef = useRef(true);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
     const onScroll = () => {
-      const currentScrollY = window.scrollY;
-      const nearTop = currentScrollY <= 24;
-      const scrollingUp = currentScrollY < lastScrollY;
-      setIsAtTop(nearTop);
-      setIsRevealed(headerBehavior !== "reveal" || nearTop || scrollingUp);
-      lastScrollY = currentScrollY;
+      if (frameRef.current !== null) {
+        return;
+      }
+
+      frameRef.current = window.requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY;
+        const nearTop = currentScrollY <= 24;
+        const nextRevealed = headerBehavior !== "reveal" || nearTop || currentScrollY < lastScrollY;
+
+        if (atTopRef.current !== nearTop) {
+          atTopRef.current = nearTop;
+          setIsAtTop(nearTop);
+        }
+
+        if (revealedRef.current !== nextRevealed) {
+          revealedRef.current = nextRevealed;
+          setIsRevealed(nextRevealed);
+        }
+
+        lastScrollY = currentScrollY;
+        frameRef.current = null;
+      });
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
 
     return () => {
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+      }
       window.removeEventListener("scroll", onScroll);
     };
   }, [headerBehavior]);

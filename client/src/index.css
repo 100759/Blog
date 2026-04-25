@@ -77,7 +77,7 @@ textarea:focus {
   inset: auto;
   pointer-events: none;
   z-index: -1;
-  filter: blur(10px);
+  filter: blur(6px);
 }
 
 .site-shell::before {
@@ -106,7 +106,7 @@ textarea:focus {
   background: rgb(var(--site-paper-rgb) / 0.9);
   border: 1px solid rgb(28 20 15 / 0.08);
   box-shadow: 0 14px 34px rgb(40 28 20 / 0.06);
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
 }
 
 [data-color-mode="dark"] .site-panel {
@@ -174,7 +174,7 @@ textarea:focus {
   }
 
   .site-panel {
-    backdrop-filter: blur(8px);
+    backdrop-filter: none;
   }
 
   .site-display {
@@ -185,6 +185,12 @@ textarea:focus {
   .site-kicker {
     font-size: 0.68rem;
     letter-spacing: 0.14em;
+  }
+}
+
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .site-panel {
+    backdrop-filter: blur(8px);
   }
 }
 
@@ -288,6 +294,18 @@ ul {
 
 .ani-show-fast {
   animation: anvil 0.3s cubic-bezier(0.38, 0.1, 0.36, 0.9) forwards;
+}
+
+@media (prefers-reduced-motion: reduce), (hover: none) and (pointer: coarse) {
+  .popup-content,
+  .ani-show,
+  .ani-show-fast {
+    animation: none;
+  }
+
+  .is-collapsible {
+    transition: none;
+  }
 }
 
 .table {

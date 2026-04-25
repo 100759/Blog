@@ -149,6 +149,8 @@ export function FeedsPage() {
                                         <img
                                             src={stripImageUrlMetadata(siteConfig.avatar)}
                                             alt={siteConfig.name}
+                                            loading="lazy"
+                                            decoding="async"
                                             className="h-10 w-10 rounded-[14px] border border-black/10 object-cover shadow-[0_8px_16px_rgba(36,24,19,0.06)] dark:border-white/10 sm:h-11 sm:w-11"
                                         />
                                     ) : null}
@@ -268,6 +270,8 @@ function FeaturedFeedLead({ feed }: { feed: FeedRecord }) {
                             <img
                                 src={stripImageUrlMetadata(feed.avatar)}
                                 alt=""
+                                loading="eager"
+                                decoding="async"
                                 className="h-full min-h-[180px] w-full rounded-[20px] object-cover shadow-[0_12px_24px_rgba(36,24,19,0.1)] lg:min-h-[220px] lg:rounded-[24px]"
                             />
                         ) : (
