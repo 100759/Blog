@@ -30,7 +30,7 @@ export function MomentItem({
     const updatedAt = new Date(moment.updatedAt);
 
     return (
-        <article className="site-panel overflow-hidden rounded-[10px] px-4 py-4 md:px-5">
+        <article className="site-panel moment-card overflow-hidden rounded-[10px] px-4 py-4 md:px-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <img
@@ -74,7 +74,7 @@ export function MomentItem({
                 ) : null}
             </div>
             <div className="mt-4 text-[15px] leading-7 text-neutral-800 dark:text-neutral-200">
-                <Markdown content={moment.content} />
+                <Markdown content={moment.content} variant="moment" />
             </div>
         </article>
     );

@@ -136,7 +136,9 @@ function MarkdownImage({
   );
 }
 
-export function Markdown({ content }: { content: string }) {
+type MarkdownVariant = "article" | "moment";
+
+export function Markdown({ content, variant = "article" }: { content: string; variant?: MarkdownVariant }) {
   const colorMode = useColorMode();
   const [index, setIndex] = React.useState(-1);
   const [optionalPlugins, setOptionalPlugins] = React.useState<{
@@ -237,7 +239,11 @@ export function Markdown({ content }: { content: string }) {
 
   const Content = useMemo(() => (
     <ReactMarkdown
-      className="toc-content text-[16px] leading-[1.95] text-neutral-700 dark:text-neutral-300 md:text-[17px]"
+      className={`toc-content text-neutral-700 dark:text-neutral-300 ${
+        variant === "moment"
+          ? "moment-markdown text-[15px] leading-[1.85] md:text-[15px]"
+          : "text-[16px] leading-[1.95] md:text-[17px]"
+      }`}
       remarkPlugins={remarkPlugins}
       children={content}
       rehypePlugins={rehypePlugins}
@@ -270,6 +276,14 @@ export function Markdown({ content }: { content: string }) {
             previousContent.trim().length === 0 ||
             isMarkdownImageLinkAtEnd(previousContent)
           ) {
+            if (variant === "moment") {
+              return (
+                <span className="moment-image-frame">
+                  <Image scale="1" rounded={true} />
+                </span>
+              );
+            }
+
             return (
               <span className="block w-full text-center my-4">
                 <Image scale="0.75" rounded={true} />
@@ -277,8 +291,8 @@ export function Markdown({ content }: { content: string }) {
             );
           } else {
             return (
-              <span className="inline-block align-middle mx-1 ">
-                <Image scale="0.5" rounded={false} />
+              <span className={variant === "moment" ? "moment-inline-image" : "inline-block align-middle mx-1 "}>
+                <Image scale={variant === "moment" ? "1" : "0.5"} rounded={variant === "moment"} />
               </span>
             );
           }
@@ -457,7 +471,14 @@ export function Markdown({ content }: { content: string }) {
         },
         p({ children, node, ...props }) {
           return (
-            <p className="mt-4 text-[16px] leading-[1.95] text-neutral-700 dark:text-neutral-300 md:text-[17px]" {...props}>
+            <p
+              className={
+                variant === "moment"
+                  ? "mt-3 text-[15px] leading-[1.85] text-neutral-700 dark:text-neutral-300"
+                  : "mt-4 text-[16px] leading-[1.95] text-neutral-700 dark:text-neutral-300 md:text-[17px]"
+              }
+              {...props}
+            >
               {children}
             </p>
           );
@@ -502,7 +523,7 @@ export function Markdown({ content }: { content: string }) {
         },
       }}
     />
-    ), [colorMode, content, rehypePlugins, remarkPlugins])
+    ), [colorMode, content, rehypePlugins, remarkPlugins, variant])
 
 
 
