@@ -19,6 +19,8 @@ const FeedsPage = lazyNamed(() => import("../page/feeds"), "FeedsPage");
 const TimelinePage = lazyNamed(() => import("../page/timeline"), "TimelinePage");
 const MomentsPage = lazyNamed(() => import("../page/moments"), "MomentsPage");
 const FriendsPage = lazyNamed(() => import("../page/friends"), "FriendsPage");
+const WorksPage = lazyNamed(() => import("../page/works"), "WorksPage");
+const SitesPage = lazyNamed(() => import("../page/sites"), "SitesPage");
 const HashtagsPage = lazyNamed(() => import("../page/hashtags"), "HashtagsPage");
 const HashtagPage = lazyNamed(() => import("../page/hashtag"), "HashtagPage");
 const SearchPage = lazyNamed(() => import("../page/search"), "SearchPage");
@@ -39,6 +41,8 @@ const routePreloaders = {
   "/timeline": () => import("../page/timeline"),
   "/moments": () => import("../page/moments"),
   "/friends": () => import("../page/friends"),
+  "/works": () => import("../page/works"),
+  "/sites": () => import("../page/sites"),
   "/hashtags": () => import("../page/hashtags"),
   "/search": () => import("../page/search"),
   "/feed": () => import("../page/feed"),
@@ -119,6 +123,8 @@ export function AppRoutes() {
       preloadRoute("/timeline");
       preloadRoute("/moments");
       preloadRoute("/friends");
+      preloadRoute("/works");
+      preloadRoute("/sites");
       preloadRoute("/hashtags");
     };
 
@@ -158,6 +164,14 @@ export function AppRoutes() {
 
       <AppRoute path="/friends">
         <FriendsPage />
+      </AppRoute>
+
+      <AppRoute path="/works">
+        <WorksPage />
+      </AppRoute>
+
+      <AppRoute path="/sites">
+        <SitesPage />
       </AppRoute>
 
       <AppRoute path="/hashtags">
