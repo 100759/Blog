@@ -33,13 +33,44 @@ const ProfilePage = lazyNamed(() => import("../page/profile"), "ProfilePage");
 const FeedPage = lazyNamed(() => import("../page/feed"), "FeedPage");
 const TOCHeader = lazyNamed(() => import("../page/feed"), "TOCHeader");
 
+const DYNAMIC_IMPORT_RELOAD_KEY = "rin:dynamic-import-reload";
+
+function isDynamicImportError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return /Failed to fetch dynamically imported module|Importing a module script failed/i.test(error.message);
+}
+
 function lazyNamed<T extends Record<string, ComponentType<any>>>(
   loader: () => Promise<T>,
   key: keyof T,
 ) {
   return lazy(async () => {
-    const module = await loader();
-    return { default: module[key] };
+    try {
+      const module = await loader();
+
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(DYNAMIC_IMPORT_RELOAD_KEY);
+      }
+
+      return { default: module[key] };
+    } catch (error) {
+      if (typeof window !== "undefined" && isDynamicImportError(error)) {
+        const reloaded = window.sessionStorage.getItem(DYNAMIC_IMPORT_RELOAD_KEY);
+
+        if (!reloaded) {
+          window.sessionStorage.setItem(DYNAMIC_IMPORT_RELOAD_KEY, "1");
+          window.location.reload();
+          return new Promise<never>(() => {});
+        }
+
+        window.sessionStorage.removeItem(DYNAMIC_IMPORT_RELOAD_KEY);
+      }
+
+      throw error;
+    }
   });
 }
 
