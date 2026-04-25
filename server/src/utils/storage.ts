@@ -15,8 +15,36 @@ type StorageTarget =
       publicBaseUrl: string;
     };
 
+export class StorageConfigurationError extends Error {
+  statusCode = 503;
+
+  constructor(public missingKeys: string[]) {
+    super(`Object storage is not configured. Missing: ${missingKeys.join(", ")}`);
+    this.name = "StorageConfigurationError";
+  }
+}
+
 function trimTrailingSlash(value: string) {
   return value.endsWith("/") ? value.slice(0, -1) : value;
+}
+
+export function getMissingStorageConfig(env: Env) {
+  if (env.R2_BUCKET) {
+    return [];
+  }
+
+  return [
+    ["S3_ENDPOINT", env.S3_ENDPOINT],
+    ["S3_BUCKET", env.S3_BUCKET],
+    ["S3_ACCESS_KEY_ID", env.S3_ACCESS_KEY_ID],
+    ["S3_SECRET_ACCESS_KEY", env.S3_SECRET_ACCESS_KEY],
+  ]
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+}
+
+export function isStorageConfigured(env: Env) {
+  return getMissingStorageConfig(env).length === 0;
 }
 
 export function resolveStorageTarget(env: Env): StorageTarget {
@@ -32,17 +60,9 @@ export function resolveStorageTarget(env: Env): StorageTarget {
     };
   }
 
-  if (!env.S3_ENDPOINT) {
-    throw new Error("S3_ENDPOINT is not defined");
-  }
-  if (!env.S3_ACCESS_KEY_ID) {
-    throw new Error("S3_ACCESS_KEY_ID is not defined");
-  }
-  if (!env.S3_SECRET_ACCESS_KEY) {
-    throw new Error("S3_SECRET_ACCESS_KEY is not defined");
-  }
-  if (!env.S3_BUCKET) {
-    throw new Error("S3_BUCKET is not defined");
+  const missingKeys = getMissingStorageConfig(env);
+  if (missingKeys.length > 0) {
+    throw new StorageConfigurationError(missingKeys);
   }
 
   return {
@@ -103,6 +123,10 @@ export async function getStorageObject(env: Env, storageKey: string): Promise<Re
     return createStorageResponse(object, object.body);
   }
 
+  if (!isStorageConfigured(env)) {
+    return null;
+  }
+
   const client = createS3Client(env);
   const response = await client.fetch(buildS3ObjectUrl(env, storageKey), {
     method: "GET",
@@ -126,6 +150,10 @@ export async function headStorageObject(env: Env, storageKey: string): Promise<R
       return null;
     }
     return createStorageResponse(object);
+  }
+
+  if (!isStorageConfigured(env)) {
+    return null;
   }
 
   const client = createS3Client(env);
@@ -177,6 +205,11 @@ export async function putStorageObjectAtKey(
       httpMetadata: contentType ? { contentType } : undefined,
     });
   } else {
+    const missingKeys = getMissingStorageConfig(env);
+    if (missingKeys.length > 0) {
+      throw new StorageConfigurationError(missingKeys);
+    }
+
     const client = createS3Client(env);
     await putS3Object(client, env, storageKey, body, contentType);
   }

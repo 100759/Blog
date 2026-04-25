@@ -24,6 +24,10 @@ export function StorageService(): Hono {
         if (!uid) {
             return c.text('Unauthorized', 401);
         }
+
+        if (!key || !file) {
+            return c.text('File and key are required', 400);
+        }
         
         const suffix = key.includes(".") ? key.split('.').pop() : "";
         const fileBuffer = await profileAsync(c, 'storage_file_buffer', () => file.arrayBuffer());
@@ -39,7 +43,7 @@ export function StorageService(): Hono {
             return c.json({ url: result.url });
         } catch (e: any) {
             console.error(e.message);
-            const status = e.message?.includes('is not defined') ? 500 : 400;
+            const status = e.statusCode || 400;
             return c.text(e.message, status);
         }
     });

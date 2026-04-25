@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { AppContext } from "../core/hono-types";
 import { profileAsync } from "../core/server-timing";
 import { path_join } from "../utils/path";
-import { getStorageObject, getStoragePublicUrl, putStorageObjectAtKey } from "../utils/storage";
+import { getStorageObject, getStoragePublicUrl, putStorageObjectAtKey, StorageConfigurationError } from "../utils/storage";
 
 // @see https://developers.cloudflare.com/images/url-format#supported-formats-and-limitations
 export const FAVICON_ALLOWED_TYPES: { [key: string]: string } = {
@@ -39,12 +39,18 @@ async function buildFaviconFromSource(c: AppContext, sourceUrl: string, faviconK
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    await putStorageObjectAtKey(
-        env,
-        faviconKey,
-        new Uint8Array(arrayBuffer),
-        "image/webp",
-    );
+    try {
+        await putStorageObjectAtKey(
+            env,
+            faviconKey,
+            new Uint8Array(arrayBuffer),
+            "image/webp",
+        );
+    } catch (error) {
+        if (!(error instanceof StorageConfigurationError)) {
+            throw error;
+        }
+    }
 
     return new Response(arrayBuffer, {
         status: 200,
@@ -201,7 +207,7 @@ export function FaviconService(): Hono {
             return c.json({ url: getStoragePublicUrl(env, faviconKey, new URL(c.req.url).origin) });
         } catch (error) {
             if (error instanceof Error) {
-                c.status(500);
+                c.status(error instanceof StorageConfigurationError ? 503 : 500);
                 console.error("Error processing favicon:", error);
                 return c.text(`Error processing favicon: ${error.message}`);
             }

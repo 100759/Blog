@@ -235,7 +235,7 @@ describe('StorageService', () => {
             expect(payload.url).toMatch(/^http:\/\/localhost\/api\/blob\/images\/[a-f0-9]+\.txt$/);
         });
 
-        it('should return 500 when S3_ENDPOINT is not defined without R2 binding', async () => {
+        it('should return a storage configuration error when S3_ENDPOINT is not defined without R2 binding', async () => {
             const envNoS3 = createMockEnv({
                 S3_ENDPOINT: '' as any,
             });
@@ -250,11 +250,13 @@ describe('StorageService', () => {
                 body: formData,
             }, envNoS3);
 
-            expect(res.status).toBe(500);
-            expect(await res.text()).toBe('S3_ENDPOINT is not defined');
+            expect(res.status).toBe(503);
+            const message = await res.text();
+            expect(message).toContain('Object storage is not configured');
+            expect(message).toContain('S3_ENDPOINT');
         });
 
-        it('should return error when S3_ACCESS_KEY_ID is not defined without R2 binding', async () => {
+        it('should return a storage configuration error when S3_ACCESS_KEY_ID is not defined without R2 binding', async () => {
             const envNoKey = createMockEnv({
                 S3_ACCESS_KEY_ID: '',
             });
@@ -269,8 +271,10 @@ describe('StorageService', () => {
                 body: formData,
             }, envNoKey);
 
-            expect(res.status).toBe(500);
-            expect(await res.text()).toBe('S3_ACCESS_KEY_ID is not defined');
+            expect(res.status).toBe(503);
+            const message = await res.text();
+            expect(message).toContain('Object storage is not configured');
+            expect(message).toContain('S3_ACCESS_KEY_ID');
         });
     });
 
