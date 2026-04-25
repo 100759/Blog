@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { client } from "../app/runtime";
 import { timeago } from "../utils/timeago.ts";
+import { preloadRoute } from "../app/routes";
 
 export function AdjacentSection({ id, setError }: { id: string; setError: (error: string) => void }) {
     const [adjacentFeeds, setAdjacentFeeds] = useState<AdjacentFeedResponse>();
@@ -49,6 +50,8 @@ export function AdjacentCard({ data, type }: { data: AdjacentFeed | null | undef
             href={`/feed/${data.id}`}
             target="_blank"
             className={`site-panel flex min-h-[180px] flex-col justify-between rounded-[28px] px-6 py-6 transition hover:-translate-y-1 ${direction}`}
+            onMouseEnter={() => preloadRoute("/feed")}
+            onTouchStart={() => preloadRoute("/feed")}
         >
             <p className="site-kicker">{type === "previous" ? "Previous" : "Next"}</p>
             <div>

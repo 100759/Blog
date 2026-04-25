@@ -8,6 +8,7 @@ import { parseImageUrlMetadata } from "../utils/image-upload";
 import { useImageLoadState } from "../utils/use-image-load-state";
 import { type FeedCardVariant, normalizeFeedCardVariant } from "./feed-card-options";
 import { useSiteConfig } from "../hooks/useSiteConfig";
+import { preloadRoute } from "../app/routes";
 
 function FeedCardImage({ src, variant }: { src: string; variant: FeedCardVariant }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -147,5 +148,15 @@ export function FeedCard({ id, title, avatar, draft, listed, top, summary, hasht
         </div>
     );
 
-    return preview ? body : <Link href={`/feed/${id}`} target="_blank" className="block w-full">{body}</Link>;
+    return preview ? body : (
+        <Link
+            href={`/feed/${id}`}
+            target="_blank"
+            className="block w-full"
+            onMouseEnter={() => preloadRoute("/feed")}
+            onTouchStart={() => preloadRoute("/feed")}
+        >
+            {body}
+        </Link>
+    );
 }

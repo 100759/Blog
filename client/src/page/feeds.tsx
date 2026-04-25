@@ -5,6 +5,7 @@ import { FeedCard } from "../components/feed_card";
 import { HashTag } from "../components/hashtag";
 import { Waiting } from "../components/loading";
 import { client } from "../app/runtime";
+import { preloadRoute } from "../app/routes";
 import { ProfileContext } from "../state/profile";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { stripImageUrlMetadata } from "../utils/image-upload";
@@ -230,7 +231,13 @@ function FeaturedFeedLead({ feed }: { feed: FeedRecord }) {
     const updatedAt = new Date(feed.updatedAt);
 
     return (
-        <Link href={`/feed/${feed.id}`} target="_blank" className="block">
+        <Link
+            href={`/feed/${feed.id}`}
+            target="_blank"
+            className="block"
+            onMouseEnter={() => preloadRoute("/feed")}
+            onTouchStart={() => preloadRoute("/feed")}
+        >
             <article className="site-panel overflow-hidden rounded-[30px] md:rounded-[36px]">
                 <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.56fr)]">
                     <div className="px-5 py-6 md:px-7 md:py-8">
