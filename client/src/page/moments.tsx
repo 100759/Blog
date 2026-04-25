@@ -174,34 +174,55 @@ export function MomentsPage() {
                 <meta property="og:url" content={document.URL} />
             </Helmet>
             <Waiting for={!loading}>
-                <main className="wauto ani-show pb-14 pt-6 md:pt-8">
-                    <section>
-                        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-black/8 pb-4 dark:border-white/10">
-                            <div>
+                <main className="wauto ani-show pb-14 pt-4 md:pt-7">
+                    <section className="moments-page">
+                        <div className="moment-hero mb-6 flex flex-col gap-4 rounded-[18px] px-4 py-5 sm:flex-row sm:items-end sm:justify-between md:px-6 md:py-6">
+                            <div className="max-w-[34rem]">
                                 <p className="site-kicker">{t("moments.title")}</p>
-                                <h1 className="mt-2 text-[1.1rem] font-semibold text-neutral-900 dark:text-white md:text-[1.25rem]">
-                                    {t("moments.total$count", { count: length })}
+                                <h1 className="site-display mt-2 text-[1.9rem] font-semibold text-neutral-950 dark:text-white md:text-[2.35rem]">
+                                    随手记
                                 </h1>
+                                <p className="mt-2 text-[14px] leading-7 text-neutral-600 dark:text-neutral-300 md:text-[15px]">
+                                    碎片、现场、灵感和一些没有被整理成文章的日常。
+                                </p>
+                                <div className="mt-4 flex flex-wrap gap-2 text-[12px] font-medium text-neutral-500 dark:text-neutral-400">
+                                    <span className="moment-pill">{t("moments.total$count", { count: length })}</span>
+                                    <span className="moment-pill">轻量更新</span>
+                                    <span className="moment-pill">图片已优化展示</span>
+                                </div>
                             </div>
                             {profile?.permission ? (
                                 <button
                                     onClick={openCreateModal}
-                                    className="rounded-[8px] bg-theme px-4 py-2.5 text-sm font-medium text-white"
+                                    className="moment-publish-button rounded-full bg-theme px-5 py-3 text-sm font-semibold text-white"
                                 >
-                                    {t("publish.title")}
+                                    写一条动态
                                 </button>
                             ) : null}
                         </div>
-                        <div className="space-y-5">
-                            {moments.map((moment) => (
-                                <MomentItem
-                                    key={moment.id}
-                                    moment={moment}
-                                    onDelete={handleDelete}
-                                    onEdit={handleEdit}
-                                    canManage={profile?.permission || false}
-                                />
-                            ))}
+
+                        <div className="moment-stream">
+                            {moments.length > 0 ? (
+                                moments.map((moment) => (
+                                    <MomentItem
+                                        key={moment.id}
+                                        moment={moment}
+                                        onDelete={handleDelete}
+                                        onEdit={handleEdit}
+                                        canManage={profile?.permission || false}
+                                    />
+                                ))
+                            ) : (
+                                <div className="moment-empty site-panel rounded-[18px] px-5 py-10 text-center">
+                                    <p className="site-kicker">Empty</p>
+                                    <p className="site-display mt-3 text-[1.5rem] font-semibold text-neutral-900 dark:text-white">
+                                        还没有动态
+                                    </p>
+                                    <p className="mx-auto mt-3 max-w-[24rem] text-sm leading-7 text-neutral-500 dark:text-neutral-400">
+                                        后续的碎片记录会出现在这里，像一条更轻松的时间线。
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         <Waiting for={!loadingMore}>
