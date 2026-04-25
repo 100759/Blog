@@ -105,7 +105,7 @@ textarea:focus {
 .site-panel {
   background: rgb(var(--site-paper-rgb) / 0.9);
   border: 1px solid rgb(28 20 15 / 0.08);
-  box-shadow: 0 14px 34px rgb(40 28 20 / 0.06);
+  box-shadow: 0 10px 24px rgb(40 28 20 / 0.045);
   backdrop-filter: none;
 }
 
@@ -117,7 +117,7 @@ textarea:focus {
 
 .site-panel-muted {
   background:
-    linear-gradient(180deg, rgb(var(--theme-rgb) / 0.05), transparent 42%),
+    linear-gradient(180deg, rgb(var(--theme-rgb) / 0.04), transparent 42%),
     rgb(var(--site-paper-rgb) / 0.88);
 }
 
@@ -174,7 +174,16 @@ textarea:focus {
   }
 
   .site-panel {
+    background: rgb(var(--site-paper-rgb) / 0.72);
+    border-color: rgb(28 20 15 / 0.06);
+    box-shadow: 0 3px 12px rgb(40 28 20 / 0.025);
     backdrop-filter: none;
+  }
+
+  .site-panel-muted {
+    background:
+      linear-gradient(180deg, rgb(var(--theme-rgb) / 0.025), transparent 36%),
+      rgb(var(--site-paper-rgb) / 0.76);
   }
 
   .site-display {
@@ -184,7 +193,7 @@ textarea:focus {
 
   .site-kicker {
     font-size: 0.68rem;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
   }
 }
 

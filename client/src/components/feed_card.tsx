@@ -71,18 +71,18 @@ const FEED_CARD_STYLES: Record<
     }
 > = {
     default: {
-        card: "group my-3 inline-block w-full break-inside-avoid overflow-hidden rounded-[20px] border border-black/8 bg-[rgba(255,252,248,0.76)] p-4 shadow-[0_6px_18px_rgba(38,24,18,0.04)] transition-colors hover:border-black/12 hover:bg-[rgba(255,252,248,0.9)] dark:border-white/10 dark:bg-[rgba(20,18,19,0.72)] dark:hover:bg-[rgba(20,18,19,0.84)]",
+        card: "group my-2 inline-block w-full break-inside-avoid overflow-hidden rounded-[16px] border border-black/7 bg-[rgba(255,252,248,0.7)] p-3.5 shadow-[0_4px_12px_rgba(38,24,18,0.035)] transition-colors hover:border-black/10 hover:bg-[rgba(255,252,248,0.86)] dark:border-white/10 dark:bg-[rgba(20,18,19,0.66)] dark:hover:bg-[rgba(20,18,19,0.8)] sm:rounded-[18px] sm:p-4",
         imageWrap: "",
         meta: "text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400",
-        summary: "line-clamp-3 text-pretty overflow-hidden text-[15px] leading-7 text-neutral-600 dark:text-neutral-300",
-        title: "site-display text-[1.45rem] sm:text-[1.58rem] font-semibold text-neutral-900 dark:text-white text-pretty overflow-hidden",
+        summary: "line-clamp-3 text-pretty overflow-hidden text-[14px] leading-6 text-neutral-600 dark:text-neutral-300 sm:text-[15px] sm:leading-7",
+        title: "site-display text-[1.18rem] sm:text-[1.42rem] font-semibold text-neutral-900 dark:text-white text-pretty overflow-hidden",
     },
     editorial: {
-        card: "group my-3 inline-block w-full break-inside-avoid overflow-hidden rounded-[22px] border border-black/8 bg-[rgba(255,252,248,0.82)] p-3 shadow-[0_8px_22px_rgba(38,24,18,0.05)] transition-colors hover:border-black/12 hover:bg-[rgba(255,252,248,0.94)] dark:border-white/10 dark:bg-[rgba(20,18,19,0.76)] dark:hover:bg-[rgba(20,18,19,0.88)]",
-        imageWrap: "mb-3 overflow-hidden rounded-[18px] border border-black/5 dark:border-white/10",
+        card: "group my-2 inline-block w-full break-inside-avoid overflow-hidden rounded-[16px] border border-black/7 bg-[rgba(255,252,248,0.74)] p-3 shadow-[0_5px_14px_rgba(38,24,18,0.04)] transition-colors hover:border-black/10 hover:bg-[rgba(255,252,248,0.88)] dark:border-white/10 dark:bg-[rgba(20,18,19,0.68)] dark:hover:bg-[rgba(20,18,19,0.82)] sm:rounded-[18px]",
+        imageWrap: "mb-3 overflow-hidden rounded-[14px] border border-black/5 dark:border-white/10 sm:rounded-[16px]",
         meta: "text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400",
-        summary: "line-clamp-4 text-pretty text-[15px] leading-7 text-neutral-600 dark:text-neutral-300",
-        title: "site-display text-[1.55rem] sm:text-[1.72rem] font-semibold tracking-[-0.015em] text-neutral-900 dark:text-white text-pretty overflow-hidden",
+        summary: "line-clamp-4 text-pretty text-[14px] leading-6 text-neutral-600 dark:text-neutral-300 sm:text-[15px] sm:leading-7",
+        title: "site-display text-[1.22rem] sm:text-[1.56rem] font-semibold tracking-[-0.015em] text-neutral-900 dark:text-white text-pretty overflow-hidden",
     },
 };
 

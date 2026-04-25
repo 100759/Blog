@@ -124,25 +124,25 @@ export function FeedsPage() {
             <Waiting for={feeds.draft.size + feeds.normal.size + feeds.unlisted.size > 0 || status === "idle"}>
                 <main className="w-full pb-14">
                     <section className="wauto ani-show pt-4 md:pt-8">
-                        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.34fr)]">
-                            <div className="site-panel site-panel-muted overflow-hidden rounded-[26px] px-5 py-5 md:rounded-[28px] md:px-6 md:py-6">
+                        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.34fr)]">
+                            <div className="site-panel site-panel-muted overflow-hidden rounded-[18px] px-4 py-4 sm:rounded-[22px] sm:px-5 sm:py-5 md:rounded-[28px] md:px-6 md:py-6">
                                 <p className="site-kicker">{listTitle}</p>
-                                <h1 className="site-display mt-3 max-w-3xl text-[1.8rem] leading-tight text-neutral-900 dark:text-white sm:text-[2.15rem] md:text-[2.45rem]">
+                                <h1 className="site-display mt-2.5 max-w-3xl text-[1.4rem] leading-tight text-neutral-900 dark:text-white sm:mt-3 sm:text-[1.85rem] md:text-[2.3rem]">
                                     {siteConfig.name}
                                 </h1>
-                                <p className="mt-3 max-w-xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
+                                <p className="mt-2.5 max-w-xl text-[13px] leading-6 text-neutral-600 dark:text-neutral-300 sm:mt-3 sm:text-[14px]">
                                     {listDescription}
                                 </p>
-                                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-neutral-500 dark:text-neutral-400">
+                                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[12px] text-neutral-500 dark:text-neutral-400 sm:mt-4 sm:gap-x-5">
                                     <span>{t("article.total$count", { count: currentFeedSet.size })}</span>
                                 </div>
                             </div>
 
-                            <div className="site-panel overflow-hidden rounded-[22px] px-4 py-4 md:rounded-[24px]">
+                            <div className="site-panel overflow-hidden rounded-[18px] px-4 py-4 sm:rounded-[20px] md:rounded-[24px]">
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
                                         <p className="site-kicker">{t("article.total$count", { count: currentFeedSet.size })}</p>
-                                        <h2 className="mt-2 text-[1.05rem] font-semibold tracking-[-0.02em] text-neutral-900 dark:text-white sm:text-[1.18rem]">
+                                        <h2 className="mt-2 text-[0.98rem] font-semibold tracking-[-0.02em] text-neutral-900 dark:text-white sm:text-[1.12rem]">
                                             {listTitle}
                                         </h2>
                                     </div>
@@ -176,11 +176,11 @@ export function FeedsPage() {
                         </section>
                     ) : null}
 
-                    <section className="wauto ani-show mt-7">
-                        <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+                    <section className="wauto ani-show mt-6 sm:mt-7">
+                        <div className="mb-4 flex flex-wrap items-end justify-between gap-3 sm:mb-5 sm:gap-4">
                             <div>
                                 <p className="site-kicker">{listTitle}</p>
-                                <h2 className="mt-3 text-[1.2rem] font-semibold tracking-[-0.02em] text-neutral-900 dark:text-white sm:text-[1.35rem]">
+                                <h2 className="mt-2.5 text-[1.05rem] font-semibold tracking-[-0.02em] text-neutral-900 dark:text-white sm:mt-3 sm:text-[1.3rem]">
                                     {t("article.total$count", { count: currentFeedSet.size })}
                                 </h2>
                             </div>
@@ -238,22 +238,22 @@ function FeaturedFeedLead({ feed }: { feed: FeedRecord }) {
             onMouseEnter={() => preloadRoute("/feed")}
             onTouchStart={() => preloadRoute("/feed")}
         >
-            <article className="site-panel overflow-hidden rounded-[30px] md:rounded-[36px]">
+            <article className="site-panel overflow-hidden rounded-[18px] sm:rounded-[24px] md:rounded-[36px]">
                 <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.56fr)]">
-                    <div className="px-5 py-6 md:px-7 md:py-8">
+                    <div className="px-4 py-4 sm:px-5 sm:py-6 md:px-7 md:py-8">
                         <div className="flex flex-wrap items-center gap-2 text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
                             {feed.top === 1 ? <span className="rounded-full bg-theme/10 px-2 py-1 text-theme">{t("article.top.title")}</span> : null}
                             {feed.draft === 1 ? <span>{t("draft")}</span> : null}
                             {feed.listed === 0 ? <span>{t("unlisted")}</span> : null}
                         </div>
-                        <h2 className="site-display mt-4 text-[1.85rem] text-neutral-900 dark:text-white sm:text-[2.3rem] md:text-[2.95rem]">
+                        <h2 className="site-display mt-3 text-[1.45rem] text-neutral-900 dark:text-white sm:mt-4 sm:text-[2rem] md:text-[2.7rem]">
                             {feed.title}
                         </h2>
-                        <p className="mt-4 max-w-2xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
+                        <p className="mt-3 max-w-2xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300 sm:mt-4 sm:text-[15px] sm:leading-7">
                             {feed.summary}
                         </p>
-                        <div className="site-rule mt-4 w-full max-w-xl" />
-                        <div className="mt-4 flex flex-wrap items-center gap-4 text-[12px] font-medium uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400">
+                        <div className="site-rule mt-3 w-full max-w-xl sm:mt-4" />
+                        <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-500 dark:text-neutral-400 sm:mt-4 sm:gap-4 sm:text-[12px]">
                             <span title={createdAt.toLocaleString()}>
                                 {createdAt.getTime() === updatedAt.getTime() ? timeago(createdAt) : t("feed_card.published$time", { time: timeago(createdAt) })}
                             </span>
@@ -264,7 +264,7 @@ function FeaturedFeedLead({ feed }: { feed: FeedRecord }) {
                             ) : null}
                         </div>
                         {feed.hashtags.length > 0 ? (
-                            <div className="mt-6 flex flex-wrap gap-2">
+                            <div className="mt-4 flex flex-wrap gap-2 sm:mt-6">
                                 {feed.hashtags.map(({ id, name }) => (
                                     <HashTag key={id} name={name} />
                                 ))}
@@ -272,20 +272,20 @@ function FeaturedFeedLead({ feed }: { feed: FeedRecord }) {
                         ) : null}
                     </div>
 
-                    <div className="min-h-[180px] border-t border-black/5 bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.04),rgba(255,255,255,0.16))] p-3 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.06),rgba(255,255,255,0.02))] lg:min-h-full lg:border-l lg:border-t-0 lg:p-4">
+                    <div className="min-h-[140px] border-t border-black/5 bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.03),rgba(255,255,255,0.1))] p-2.5 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.05),rgba(255,255,255,0.02))] sm:min-h-[180px] sm:p-3 lg:min-h-full lg:border-l lg:border-t-0 lg:p-4">
                         {feed.avatar ? (
                             <img
                                 src={stripImageUrlMetadata(feed.avatar)}
                                 alt=""
                                 loading="eager"
                                 decoding="async"
-                                className="h-full min-h-[180px] w-full rounded-[20px] object-cover shadow-[0_12px_24px_rgba(36,24,19,0.1)] lg:min-h-[220px] lg:rounded-[24px]"
+                                className="h-full min-h-[140px] w-full rounded-[14px] object-cover shadow-[0_8px_18px_rgba(36,24,19,0.08)] sm:min-h-[180px] sm:rounded-[18px] lg:min-h-[220px] lg:rounded-[24px]"
                             />
                         ) : (
-                            <div className="flex h-full min-h-[180px] w-full items-end rounded-[20px] border border-dashed border-black/10 bg-white/55 p-5 dark:border-white/10 dark:bg-white/[0.04] lg:min-h-[220px] lg:rounded-[24px]">
+                            <div className="flex h-full min-h-[140px] w-full items-end rounded-[14px] border border-dashed border-black/10 bg-white/55 p-4 dark:border-white/10 dark:bg-white/[0.04] sm:min-h-[180px] sm:rounded-[18px] sm:p-5 lg:min-h-[220px] lg:rounded-[24px]">
                                 <div>
                                     <p className="site-kicker">{t("article.title")}</p>
-                                    <p className="site-display mt-3 text-[1.5rem] text-neutral-900 dark:text-white">{feed.title}</p>
+                                    <p className="site-display mt-2 text-[1.2rem] text-neutral-900 dark:text-white sm:mt-3 sm:text-[1.5rem]">{feed.title}</p>
                                 </div>
                             </div>
                         )}
