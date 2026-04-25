@@ -273,6 +273,26 @@ export function normalizeRichHtml(content: string) {
   doc.querySelectorAll<HTMLImageElement>("img").forEach((image) => {
     image.loading = "lazy";
     image.decoding = "async";
+    if (
+      !image.classList.contains("image-size-compact") &&
+      !image.classList.contains("image-size-default") &&
+      !image.classList.contains("image-size-wide")
+    ) {
+      image.classList.add("image-size-default");
+    }
+  });
+
+  doc.querySelectorAll("hr").forEach((rule) => {
+    const parent = rule.parentElement;
+    if (parent?.classList.contains("rich-divider")) {
+      return;
+    }
+
+    const wrapper = doc.createElement("div");
+    wrapper.className = "rich-divider";
+    wrapper.setAttribute("data-rich-divider", "true");
+    rule.replaceWith(wrapper);
+    wrapper.appendChild(rule);
   });
 
   return doc.body.innerHTML.trim();

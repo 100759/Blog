@@ -3,11 +3,11 @@ import { Helmet } from "react-helmet";
 import Loading from "react-loading";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
-import { DateTimeInput, FlatMetaRow, FlatPanel } from "@rin/ui";
+import { DateTimeInput, FlatPanel } from "@rin/ui";
 import { client } from "../app/runtime";
 import { RichTextEditor } from "../components/rich_text_editor";
 import { useAlert } from "../components/dialog";
-import { Checkbox, Input } from "../components/input";
+import { Input } from "../components/input";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { Cache } from "../utils/cache";
 import { convertStoredContentToEditorHtml, hasMeaningfulContent, stripContentToPlainText } from "../utils/rich-content";
@@ -30,6 +30,12 @@ function computeWordCount(value: string) {
   const latinWords = value.split(/\s+/).filter(Boolean).length;
   const cjkChars = (value.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu) ?? []).length;
   return latinWords + cjkChars;
+}
+
+function buildSuggestedSummary(value: string) {
+  const plain = stripContentToPlainText(value).replace(/\s+/g, " ").trim();
+  if (!plain) return "";
+  return plain.length > 96 ? `${plain.slice(0, 96)}...` : plain;
 }
 
 function buildPersistedSnapshot({
@@ -73,7 +79,7 @@ export function WritingPage({ id }: { id?: number }) {
   const [tags, setTags] = cache.useCache("tags", "");
   const [alias, setAlias] = cache.useCache("alias", "");
   const [draft, setDraft] = useState(id === undefined);
-  const [listed, setListed] = useState(true);
+  const listed = true;
   const [cachedContent, setContent] = cache.useCache("content", "");
   const [createdAt, setCreatedAt] = useState<Date | undefined>(new Date());
   const [publishing, setPublishing] = useState<SaveIntent | null>(null);
@@ -132,6 +138,7 @@ export function WritingPage({ id }: { id?: number }) {
   const readingTitle = title.trim() || t("writing_editor.untitled");
   const readingDescription = summary.trim() || siteConfig.description || t("content.empty");
   const plainText = useMemo(() => stripContentToPlainText(content), [content]);
+  const suggestedSummary = useMemo(() => buildSuggestedSummary(content), [content]);
   const wordCount = useMemo(() => computeWordCount(plainText), [plainText]);
   const readingMinutes = Math.max(1, Math.ceil(Math.max(wordCount, 1) / 320));
   const isDirty = hydratedRef.current && persistedSnapshot !== lastPersistedSnapshotRef.current;
@@ -144,7 +151,7 @@ export function WritingPage({ id }: { id?: number }) {
       summary: data.summary ?? "",
       tags: (data.hashtags ?? []).map(({ name }: { name: string }) => name),
       draft: data.draft === 1,
-      listed: data.listed === 1,
+      listed: true,
       createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
     });
     setLastSavedAt(data.updatedAt ? new Date(data.updatedAt) : data.createdAt ? new Date(data.createdAt) : undefined);
@@ -173,7 +180,6 @@ export function WritingPage({ id }: { id?: number }) {
       if (title !== "" || cachedContent !== "" || summary !== "" || tags !== "" || alias !== "") {
         aliasTouchedRef.current = alias.trim().length > 0;
       }
-      setListed((data as any).listed === 1);
       setDraft((data as any).draft === 1);
       setCreatedAt(new Date(data.createdAt));
       applyFetchedSnapshot(data);
@@ -218,7 +224,7 @@ export function WritingPage({ id }: { id?: number }) {
   }, [isDirty]);
 
   const persistEntry = useCallback(
-      async ({
+    async ({
       intent,
       silent = false,
       forcePublished = false,
@@ -230,7 +236,7 @@ export function WritingPage({ id }: { id?: number }) {
       if (publishing) return;
 
       const trimmedTitle = title.trim();
-      const trimmedSummary = summary.trim();
+      const trimmedSummary = summary.trim() || buildSuggestedSummary(content);
       const trimmedAlias = alias.trim();
       const effectiveDraft = forcePublished ? false : draft;
 
@@ -335,7 +341,7 @@ export function WritingPage({ id }: { id?: number }) {
         setPublishing(null);
       }
     },
-    [alias, content, createdAt, draft, id, listed, publishing, setLocation, showAlert, summary, t, tagList, title],
+    [alias, content, createdAt, draft, id, publishing, setLocation, showAlert, summary, t, tagList, title],
   );
 
   useEffect(() => {
@@ -503,7 +509,26 @@ export function WritingPage({ id }: { id?: number }) {
                     className="text-base"
                   />
                 </div>
-                <Input id={id} value={summary} setValue={setSummary} placeholder={t("summary")} variant="flat" />
+                <div className="lg:col-span-2">
+                  <div className="rounded-[18px] border border-black/10 bg-white/45 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="site-kicker">{t("summary")}</p>
+                        <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">可留空，发布时会自动从正文提炼一段摘要。</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSummary(suggestedSummary)}
+                        className="inline-flex items-center rounded-full border border-black/10 px-3 py-2 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:text-neutral-200 dark:hover:bg-theme/15"
+                      >
+                        一键生成摘要
+                      </button>
+                    </div>
+                    <div className="mt-3">
+                      <Input id={id} value={summary} setValue={setSummary} placeholder={t("summary")} variant="flat" />
+                    </div>
+                  </div>
+                </div>
                 <Input
                   id={id}
                   value={alias}
@@ -524,25 +549,35 @@ export function WritingPage({ id }: { id?: number }) {
                 />
               </div>
 
-              <div className="mt-4 grid gap-2 sm:gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(16rem,1.2fr)]">
-                <FlatMetaRow
-                  className="cursor-pointer rounded-none border-0 bg-transparent px-0 py-2 sm:rounded-2xl sm:border sm:bg-secondary sm:px-4 sm:py-3"
-                  onClick={() => setDraft(!draft)}
-                >
-                  <p>{t("visible.self_only")}</p>
-                  <Checkbox id="draft" value={draft} setValue={setDraft} placeholder={t("draft")} />
-                </FlatMetaRow>
-                <FlatMetaRow
-                  className="cursor-pointer rounded-none border-0 bg-transparent px-0 py-2 sm:rounded-2xl sm:border sm:bg-secondary sm:px-4 sm:py-3"
-                  onClick={() => setListed(!listed)}
-                >
-                  <p>{t("listed")}</p>
-                  <Checkbox id="listed" value={listed} setValue={setListed} placeholder={t("listed")} />
-                </FlatMetaRow>
-                <FlatMetaRow className="gap-3 rounded-none border-0 bg-transparent px-0 py-2 sm:rounded-2xl sm:border sm:bg-secondary sm:px-4 sm:py-3 xl:col-span-1">
-                  <p className="mr-2 whitespace-nowrap">{t("created_at")}</p>
+              <div className="mt-4 rounded-[18px] border border-black/10 bg-white/40 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="site-kicker">{t("created_at")}</p>
+                    <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">需要的话可以调整文章发布时间。</p>
+                  </div>
                   <DateTimeInput value={createdAt} onChange={setCreatedAt} className="w-full max-w-[16rem]" />
-                </FlatMetaRow>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 lg:grid-cols-3">
+                <div className="rounded-[18px] border border-black/10 bg-white/40 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+                  <p className="site-kicker">标题</p>
+                  <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                    {title.trim() ? "标题已填写，可直接发布。" : "建议先写一个清楚的标题。"}
+                  </p>
+                </div>
+                <div className="rounded-[18px] border border-black/10 bg-white/40 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+                  <p className="site-kicker">摘要</p>
+                  <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                    {summary.trim() ? "摘要已填写。" : suggestedSummary ? "未填写时会自动生成摘要。" : "先写一点正文，摘要才能生成。"}
+                  </p>
+                </div>
+                <div className="rounded-[18px] border border-black/10 bg-white/40 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+                  <p className="site-kicker">别名</p>
+                  <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                    {alias.trim() ? `当前链接别名：/${alias.trim()}` : "默认会跟随标题自动生成。"}
+                  </p>
+                </div>
               </div>
             </FlatPanel>
 
