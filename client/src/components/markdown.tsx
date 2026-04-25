@@ -241,7 +241,7 @@ export function Markdown({ content, variant = "article" }: { content: string; va
     <ReactMarkdown
       className={`toc-content text-neutral-700 dark:text-neutral-300 ${
         variant === "moment"
-          ? "moment-markdown text-[15px] leading-[1.85] md:text-[15px]"
+          ? "moment-markdown text-[14px] leading-[1.68] md:text-[14px]"
           : "text-[16px] leading-[1.95] md:text-[17px]"
       }`}
       remarkPlugins={remarkPlugins}
@@ -474,7 +474,7 @@ export function Markdown({ content, variant = "article" }: { content: string; va
             <p
               className={
                 variant === "moment"
-                  ? "mt-3 text-[15px] leading-[1.85] text-neutral-700 dark:text-neutral-300"
+                  ? "mt-2 text-[14px] leading-[1.68] text-neutral-700 dark:text-neutral-300"
                   : "mt-4 text-[16px] leading-[1.95] text-neutral-700 dark:text-neutral-300 md:text-[17px]"
               }
               {...props}

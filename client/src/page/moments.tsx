@@ -174,18 +174,18 @@ export function MomentsPage() {
                 <meta property="og:url" content={document.URL} />
             </Helmet>
             <Waiting for={!loading}>
-                <main className="wauto ani-show pb-14 pt-4 md:pt-7">
+                <main className="wauto ani-show pb-12 pt-3 md:pt-5">
                     <section className="moments-page">
-                        <div className="moment-hero mb-6 flex flex-col gap-4 rounded-[18px] px-4 py-5 sm:flex-row sm:items-end sm:justify-between md:px-6 md:py-6">
+                        <div className="moment-hero mb-4 flex flex-col gap-3 rounded-[16px] px-4 py-4 sm:flex-row sm:items-end sm:justify-between md:px-5 md:py-4">
                             <div className="max-w-[34rem]">
                                 <p className="site-kicker">{t("moments.title")}</p>
-                                <h1 className="site-display mt-2 text-[1.9rem] font-semibold text-neutral-950 dark:text-white md:text-[2.35rem]">
+                                <h1 className="site-display mt-1.5 text-[1.55rem] font-semibold text-neutral-950 dark:text-white md:text-[1.85rem]">
                                     随手记
                                 </h1>
-                                <p className="mt-2 text-[14px] leading-7 text-neutral-600 dark:text-neutral-300 md:text-[15px]">
+                                <p className="mt-1.5 text-[13px] leading-6 text-neutral-600 dark:text-neutral-300 md:text-[14px]">
                                     碎片、现场、灵感和一些没有被整理成文章的日常。
                                 </p>
-                                <div className="mt-4 flex flex-wrap gap-2 text-[12px] font-medium text-neutral-500 dark:text-neutral-400">
+                                <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
                                     <span className="moment-pill">{t("moments.total$count", { count: length })}</span>
                                     <span className="moment-pill">轻量更新</span>
                                     <span className="moment-pill">图片已优化展示</span>
@@ -194,7 +194,7 @@ export function MomentsPage() {
                             {profile?.permission ? (
                                 <button
                                     onClick={openCreateModal}
-                                    className="moment-publish-button rounded-full bg-theme px-5 py-3 text-sm font-semibold text-white"
+                                    className="moment-publish-button rounded-full bg-theme px-4 py-2.5 text-[13px] font-semibold text-white"
                                 >
                                     写一条动态
                                 </button>
