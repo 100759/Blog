@@ -72,31 +72,30 @@ export function LoginPage() {
       <Helmet>
         <title>{`${t("login.title")} - ${siteConfig.name}`}</title>
       </Helmet>
-      <main className="wauto ani-show pb-14 pt-8">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,380px)]">
-          <section className="site-panel relative overflow-hidden rounded-[34px] px-6 py-8 md:px-8 md:py-10">
-            <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-theme/40 to-transparent" />
+      <main className="wauto ani-show pb-14 pt-6 md:pt-8">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]">
+          <section className="border-b border-black/8 pb-5 dark:border-white/10 lg:border-b-0 lg:pr-8">
             <p className="site-kicker">{siteConfig.name}</p>
-            <h1 className="site-display mt-4 text-[2.6rem] text-neutral-900 dark:text-white md:text-[4rem]">
+            <h1 className="site-display mt-2 text-[1.55rem] font-semibold text-neutral-900 dark:text-white md:text-[2rem]">
               {t("login.title")}
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-600 dark:text-neutral-300 md:text-lg">
+            <p className="mt-2 max-w-2xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
               {siteConfig.description || t("login.required")}
             </p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-[8px] border border-black/10 bg-white/40 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
                 <p className="site-kicker">{t("login.username.placeholder")}</p>
                 <p className="mt-3 text-sm leading-6 text-neutral-600 dark:text-neutral-300">
                   {t("login.required")}
                 </p>
               </div>
-              <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+              <div className="rounded-[8px] border border-black/10 bg-white/40 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
                 <p className="site-kicker">{t("login.password.label")}</p>
                 <p className="mt-3 text-sm leading-6 text-neutral-600 dark:text-neutral-300">
                   {authStatus.password ? t("login.method.enabled") : t("login.method.disabled")}
                 </p>
               </div>
-              <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+              <div className="rounded-[8px] border border-black/10 bg-white/40 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
                 <p className="site-kicker">{t("login.github.label")}</p>
                 <p className="mt-3 text-sm leading-6 text-neutral-600 dark:text-neutral-300">
                   {authStatus.github ? t("login.method.enabled") : t("login.method.disabled")}
@@ -105,15 +104,15 @@ export function LoginPage() {
             </div>
           </section>
 
-          <section className="site-panel-muted rounded-[34px] px-5 py-5 md:px-6 md:py-6">
-            <div className="rounded-[28px] border border-black/10 bg-white/70 px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.05] dark:shadow-none">
+          <section className="site-panel-muted rounded-[10px] px-4 py-4 md:px-5 md:py-5">
+            <div className="rounded-[8px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.05]">
               <p className="site-kicker">{t("main_content")}</p>
-              <h2 className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">
+              <h2 className="site-display mt-2 text-[1.35rem] font-semibold text-neutral-900 dark:text-white">
                 {t("login.title")}
               </h2>
 
               {error ? (
-                <div className="mt-5 rounded-[20px] border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-200">
+                <div className="mt-5 rounded-[8px] border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-200">
                   {error}
                 </div>
               ) : null}
@@ -136,7 +135,7 @@ export function LoginPage() {
                           void handleLogin();
                         }
                       }}
-                      className="w-full rounded-[18px] border border-black/10 bg-white/80 px-4 py-3 text-base text-neutral-900 outline-none transition focus:border-theme/40 focus:bg-white dark:border-white/10 dark:bg-white/[0.06] dark:text-neutral-100 dark:focus:bg-white/[0.08]"
+                      className="w-full rounded-[8px] border border-black/10 bg-white/80 px-4 py-3 text-base text-neutral-900 outline-none transition focus:border-theme/40 focus:bg-white dark:border-white/10 dark:bg-white/[0.06] dark:text-neutral-100 dark:focus:bg-white/[0.08]"
                     />
                   </label>
                   <label className="block">
@@ -154,7 +153,7 @@ export function LoginPage() {
                           void handleLogin();
                         }
                       }}
-                      className="w-full rounded-[18px] border border-black/10 bg-white/80 px-4 py-3 text-base text-neutral-900 outline-none transition focus:border-theme/40 focus:bg-white dark:border-white/10 dark:bg-white/[0.06] dark:text-neutral-100 dark:focus:bg-white/[0.08]"
+                      className="w-full rounded-[8px] border border-black/10 bg-white/80 px-4 py-3 text-base text-neutral-900 outline-none transition focus:border-theme/40 focus:bg-white dark:border-white/10 dark:bg-white/[0.06] dark:text-neutral-100 dark:focus:bg-white/[0.08]"
                     />
                   </label>
                   <button
@@ -163,7 +162,7 @@ export function LoginPage() {
                       void handleLogin();
                     }}
                     disabled={isLoading}
-                    className="inline-flex w-full items-center justify-center rounded-full bg-theme px-5 py-3 text-sm font-semibold text-white transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex w-full items-center justify-center rounded-[8px] bg-theme px-5 py-3 text-sm font-semibold text-white transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isLoading ? t("login.loading") : t("login.title")}
                   </button>
@@ -184,7 +183,7 @@ export function LoginPage() {
                     onClick={() => {
                       window.location.href = oauth_url;
                     }}
-                    className="inline-flex w-full items-center justify-center gap-3 rounded-full border border-black/10 bg-white/80 px-5 py-3 text-sm font-semibold text-neutral-800 transition hover:border-black/20 hover:bg-white dark:border-white/10 dark:bg-white/[0.06] dark:text-neutral-100 dark:hover:bg-white/[0.08]"
+                    className="inline-flex w-full items-center justify-center gap-3 rounded-[8px] border border-black/10 bg-white/80 px-5 py-3 text-sm font-semibold text-neutral-800 transition hover:border-black/20 hover:bg-white dark:border-white/10 dark:bg-white/[0.06] dark:text-neutral-100 dark:hover:bg-white/[0.08]"
                   >
                     <i className="ri-github-line text-lg" aria-hidden="true" />
                     <span>{t("github_login")}</span>
@@ -193,7 +192,7 @@ export function LoginPage() {
               ) : null}
 
               {authReady && !hasAnyMethod ? (
-                <div className="mt-6 rounded-[20px] border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-200">
+                <div className="mt-6 rounded-[8px] border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-200">
                   {t("login.no_methods")}
                 </div>
               ) : null}

@@ -106,34 +106,25 @@ export function FriendsPage() {
                 <meta property="og:url" content={document.URL} />
             </Helmet>
             <Waiting for={friendsAvailable.length !== 0 || friendsUnavailable.length !== 0 || status === "idle"}>
-                <main className="wauto ani-show pb-14 pt-8 t-primary">
-                    <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]">
-                        <div className="site-panel site-panel-muted rounded-[32px] px-6 py-8 md:px-8 md:py-10">
+                <main className="wauto ani-show pb-14 pt-6 t-primary md:pt-8">
+                    <section className="border-b border-black/8 pb-5 dark:border-white/10">
+                        <div>
                             <p className="site-kicker">{t("friends.title")}</p>
-                            <h1 className="site-display mt-4 text-[3rem] text-neutral-900 dark:text-white md:text-[4.6rem]">
+                            <h1 className="site-display mt-2 text-[1.55rem] font-semibold text-neutral-900 dark:text-white md:text-[2rem]">
                                 {t("friends.title")}
                             </h1>
-                            <p className="mt-5 max-w-2xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
+                            <p className="mt-2 max-w-2xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
                                 Neighbors, adjacent blogs, and the outward links that make the site feel alive.
                             </p>
-                            <div className="site-rule mt-8 w-full max-w-xl" />
-                            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                            <div className="mt-4 grid gap-2 sm:grid-cols-3">
                                 <FriendStat label={t("friends.title")} value={friendsAvailable.length} />
                                 <FriendStat label={t("friends.left")} value={friendsUnavailable.length} />
                                 <FriendStat label={t("status")} value={totalCount} />
                             </div>
                         </div>
-
-                        <div className="site-panel rounded-[32px] px-6 py-8 md:px-7 md:py-8">
-                            <p className="site-kicker">{t("friends.title")}</p>
-                            <h2 className="site-display mt-3 text-[2.2rem] text-neutral-900 dark:text-white">{totalCount}</h2>
-                            <p className="mt-4 text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
-                                Curated site relationships, open applications, and broken links that still deserve attention.
-                            </p>
-                        </div>
                     </section>
 
-                    <section className="mt-8 space-y-8">
+                    <section className="mt-6 space-y-7 md:mt-8">
                         <FriendList title={t("friends.title")} show={friendsAvailable.length > 0} friends={friendsAvailable} />
                         <FriendList title={t("friends.left")} show={friendsUnavailable.length > 0} friends={friendsUnavailable} />
                         <FriendList title={t("friends.review.waiting")} show={waitList.length > 0} friends={waitList} />
@@ -143,9 +134,9 @@ export function FriendsPage() {
 
                     {profile && (profile.permission || config.get("friend_apply_enable")) ? (
                         <section className="mt-8">
-                            <div className="site-panel rounded-[32px] px-6 py-8 md:px-7">
+                            <div className="site-panel rounded-[10px] px-4 py-5 md:px-6">
                                 <p className="site-kicker">{profile.permission ? t("friends.create") : t("friends.apply")}</p>
-                                <h2 className="site-display mt-3 text-[2.2rem] text-neutral-900 dark:text-white">
+                                <h2 className="site-display mt-2 text-[1.35rem] font-semibold text-neutral-900 dark:text-white md:text-[1.6rem]">
                                     {profile.permission ? t("friends.create") : t("friends.apply")}
                                 </h2>
                                 <div className="mt-6 grid gap-3 md:grid-cols-2">
@@ -155,7 +146,7 @@ export function FriendsPage() {
                                     <Input value={avatar} setValue={setAvatar} placeholder={t("avatar.url")} variant="flat" className="md:col-span-2" />
                                 </div>
                                 <div className="mt-5 flex justify-end">
-                                    <button onClick={publishButton} className="rounded-full bg-theme px-5 py-3 text-sm font-medium text-white shadow-[0_18px_30px_rgba(var(--theme-rgb),0.24)]">
+                                    <button onClick={publishButton} className="rounded-[8px] bg-theme px-5 py-3 text-sm font-medium text-white">
                                         {t("create.title")}
                                     </button>
                                 </div>
@@ -177,10 +168,10 @@ function FriendList({ title, show, friends }: { title: string; show: boolean; fr
             <div className="mb-4 flex items-end justify-between gap-4">
                 <div>
                     <p className="site-kicker">{title}</p>
-                    <h2 className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">{friends.length}</h2>
+                    <h2 className="site-display mt-2 text-[1.25rem] font-semibold text-neutral-900 dark:text-white">{friends.length}</h2>
                 </div>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {friends.map((friend) => (
                     <Friend key={friend.id} friend={friend} />
                 ))}
@@ -249,11 +240,11 @@ function Friend({ friend }: { friend: FriendItem }) {
                 title={friend.name}
                 href={friend.url}
                 target="_blank"
-                className="site-panel group relative flex min-h-[230px] flex-col rounded-[28px] px-5 py-5 transition hover:-translate-y-1"
+                className="site-panel group relative flex min-h-[170px] flex-col rounded-[10px] px-4 py-4 transition hover:border-theme/30 md:px-5 md:py-5"
             >
                 <div className="flex items-start justify-between gap-3">
                     <img
-                        className={`h-14 w-14 rounded-[18px] object-cover shadow-[0_12px_24px_rgba(36,24,19,0.14)] ${friend.health.length > 0 ? "grayscale" : ""}`}
+                        className={`h-11 w-11 rounded-[8px] object-cover ${friend.health.length > 0 ? "grayscale" : ""}`}
                         src={friend.avatar}
                         alt={friend.name}
                     />
@@ -263,17 +254,17 @@ function Friend({ friend }: { friend: FriendItem }) {
                                 e.preventDefault();
                                 setIsOpen(true);
                             }}
-                            className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/55 text-neutral-500 transition hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300 dark:hover:bg-theme/15"
+                            className="flex h-9 w-9 items-center justify-center rounded-[8px] border border-black/10 bg-white/55 text-neutral-500 transition hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300 dark:hover:bg-theme/15"
                         >
                             <i className="ri-settings-line" />
                         </button>
                     ) : null}
                 </div>
-                <p className="mt-5 text-xl font-semibold text-neutral-900 dark:text-white">{friend.name}</p>
+                <p className="mt-4 text-base font-semibold text-neutral-900 dark:text-white md:text-lg">{friend.name}</p>
                 {friend.health.length === 0 ? (
-                    <p className="mt-3 text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">{friend.desc}</p>
+                    <p className="mt-2 text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">{friend.desc}</p>
                 ) : (
-                    <p className="mt-3 text-[15px] leading-7 text-neutral-500 dark:text-neutral-400">{errorHumanize(friend.health)}</p>
+                    <p className="mt-2 text-[14px] leading-6 text-neutral-500 dark:text-neutral-400">{errorHumanize(friend.health)}</p>
                 )}
                 {friend.accepted !== 1 ? (
                     <p className={`mt-4 text-[12px] font-medium uppercase tracking-[0.18em] ${friend.accepted === 0 ? "text-neutral-500 dark:text-neutral-300" : "text-theme"}`}>
@@ -310,18 +301,18 @@ function Friend({ friend }: { friend: FriendItem }) {
                 onRequestClose={() => setIsOpen(false)}
                 contentLabel={t("update$sth", { sth: friend.name })}
             >
-                <div className="site-panel w-full rounded-[32px] p-6">
+                <div className="site-panel w-full rounded-[10px] p-5">
                     <div className="flex items-center gap-4">
-                        <img className={`h-16 w-16 rounded-[20px] object-cover ${friend.health.length > 0 ? "grayscale" : ""}`} src={friend.avatar} alt={friend.name} />
+                        <img className={`h-14 w-14 rounded-[8px] object-cover ${friend.health.length > 0 ? "grayscale" : ""}`} src={friend.avatar} alt={friend.name} />
                         <div>
                             <p className="site-kicker">{t("friends.title")}</p>
-                            <h3 className="site-display mt-2 text-[2.2rem] text-neutral-900 dark:text-white">{friend.name}</h3>
+                            <h3 className="site-display mt-2 text-[1.5rem] font-semibold text-neutral-900 dark:text-white">{friend.name}</h3>
                         </div>
                     </div>
 
                     {profile?.permission ? (
                         <div className="mt-6 grid gap-3 md:grid-cols-2">
-                            <div className="rounded-[22px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+                            <div className="rounded-[8px] border border-black/10 bg-white/50 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
                                 <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">{t("status")}</p>
                                 <SearchableSelect
                                     value={String(status)}
@@ -339,7 +330,7 @@ function Friend({ friend }: { friend: FriendItem }) {
                                     searchPlaceholder={t("status")}
                                 />
                             </div>
-                            <div className="rounded-[22px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+                            <div className="rounded-[8px] border border-black/10 bg-white/50 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
                                 <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">{t("sort_order")}</p>
                                 <Input value={sortOrder.toString()} setValue={(val) => setSortOrder(parseInt(val, 10) || 0)} placeholder={t("sort_order")} variant="flat" />
                             </div>
@@ -354,10 +345,10 @@ function Friend({ friend }: { friend: FriendItem }) {
                     </div>
 
                     <div className="mt-6 flex justify-end gap-2">
-                        <button onClick={deleteFriend} className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
+                        <button onClick={deleteFriend} className="rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
                             {t("delete.title")}
                         </button>
-                        <button onClick={updateFriend} className="rounded-full bg-theme px-4 py-2 text-sm font-medium text-white">
+                        <button onClick={updateFriend} className="rounded-[8px] bg-theme px-4 py-2 text-sm font-medium text-white">
                             {t("save")}
                         </button>
                     </div>
@@ -371,9 +362,9 @@ function Friend({ friend }: { friend: FriendItem }) {
 
 function FriendStat({ label, value }: { label: string; value: number | string }) {
     return (
-        <div className="rounded-[22px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">{label}</p>
-            <p className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">{value}</p>
+        <div className="rounded-[8px] border border-black/10 bg-white/35 px-3 py-3 dark:border-white/10 dark:bg-white/[0.04]">
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-neutral-500 dark:text-neutral-400">{label}</p>
+            <p className="mt-2 text-base font-semibold text-neutral-900 dark:text-white">{value}</p>
         </div>
     );
 }

@@ -71,18 +71,18 @@ const FEED_CARD_STYLES: Record<
     }
 > = {
     default: {
-        card: "group my-2 inline-block w-full break-inside-avoid overflow-hidden rounded-[16px] border border-black/7 bg-[rgba(255,252,248,0.7)] p-3.5 shadow-[0_4px_12px_rgba(38,24,18,0.035)] transition-colors hover:border-black/10 hover:bg-[rgba(255,252,248,0.86)] dark:border-white/10 dark:bg-[rgba(20,18,19,0.66)] dark:hover:bg-[rgba(20,18,19,0.8)] sm:rounded-[18px] sm:p-4",
+        card: "group my-2 inline-block w-full break-inside-avoid overflow-hidden rounded-[10px] border border-black/7 bg-white/45 p-3.5 transition-colors hover:border-black/12 hover:bg-white/65 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.055] sm:p-4",
         imageWrap: "",
         meta: "text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400",
         summary: "line-clamp-3 text-pretty overflow-hidden text-[14px] leading-6 text-neutral-600 dark:text-neutral-300 sm:text-[15px] sm:leading-7",
-        title: "site-display text-[1.18rem] sm:text-[1.42rem] font-semibold text-neutral-900 dark:text-white text-pretty overflow-hidden",
+        title: "site-display text-[1.14rem] sm:text-[1.34rem] font-semibold text-neutral-900 dark:text-white text-pretty overflow-hidden",
     },
     editorial: {
-        card: "group my-2 inline-block w-full break-inside-avoid overflow-hidden rounded-[16px] border border-black/7 bg-[rgba(255,252,248,0.74)] p-3 shadow-[0_5px_14px_rgba(38,24,18,0.04)] transition-colors hover:border-black/10 hover:bg-[rgba(255,252,248,0.88)] dark:border-white/10 dark:bg-[rgba(20,18,19,0.68)] dark:hover:bg-[rgba(20,18,19,0.82)] sm:rounded-[18px]",
-        imageWrap: "mb-3 overflow-hidden rounded-[14px] border border-black/5 dark:border-white/10 sm:rounded-[16px]",
+        card: "group my-2 inline-block w-full break-inside-avoid overflow-hidden rounded-[10px] border border-black/7 bg-white/48 p-3 transition-colors hover:border-black/12 hover:bg-white/68 dark:border-white/10 dark:bg-white/[0.035] dark:hover:bg-white/[0.06]",
+        imageWrap: "mb-3 overflow-hidden rounded-[8px] border border-black/5 dark:border-white/10",
         meta: "text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400",
         summary: "line-clamp-4 text-pretty text-[14px] leading-6 text-neutral-600 dark:text-neutral-300 sm:text-[15px] sm:leading-7",
-        title: "site-display text-[1.22rem] sm:text-[1.56rem] font-semibold tracking-[-0.015em] text-neutral-900 dark:text-white text-pretty overflow-hidden",
+        title: "site-display text-[1.18rem] sm:text-[1.42rem] font-semibold text-neutral-900 dark:text-white text-pretty overflow-hidden",
     },
 };
 

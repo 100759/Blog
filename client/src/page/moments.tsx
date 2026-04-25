@@ -174,19 +174,19 @@ export function MomentsPage() {
                 <meta property="og:url" content={document.URL} />
             </Helmet>
             <Waiting for={!loading}>
-                <main className="wauto ani-show pb-14 pt-8">
+                <main className="wauto ani-show pb-14 pt-6 md:pt-8">
                     <section>
-                        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-black/8 pb-4 dark:border-white/10">
                             <div>
                                 <p className="site-kicker">{t("moments.title")}</p>
-                                <h1 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.02em] text-neutral-900 dark:text-white">
+                                <h1 className="mt-2 text-[1.1rem] font-semibold text-neutral-900 dark:text-white md:text-[1.25rem]">
                                     {t("moments.total$count", { count: length })}
                                 </h1>
                             </div>
                             {profile?.permission ? (
                                 <button
                                     onClick={openCreateModal}
-                                    className="rounded-full bg-theme px-5 py-3 text-sm font-medium text-white shadow-[0_18px_30px_rgba(var(--theme-rgb),0.24)]"
+                                    className="rounded-[8px] bg-theme px-4 py-2.5 text-sm font-medium text-white"
                                 >
                                     {t("publish.title")}
                                 </button>
@@ -211,7 +211,7 @@ export function MomentsPage() {
                                 ) : hasNextPage ? (
                                     <button
                                         onClick={loadMore}
-                                        className="rounded-full bg-theme px-5 py-3 text-sm font-medium text-white shadow-[0_18px_30px_rgba(var(--theme-rgb),0.24)]"
+                                        className="rounded-[8px] bg-theme px-5 py-3 text-sm font-medium text-white"
                                     >
                                         {t("load_more")}
                                     </button>
@@ -250,26 +250,26 @@ export function MomentsPage() {
                     },
                 }}
             >
-                <div className="site-panel w-full rounded-[32px] p-5 md:p-6">
-                    <h2 className="site-display text-[2.4rem] text-neutral-900 dark:text-white">
+                <div className="site-panel w-full rounded-[10px] p-4 md:p-5">
+                    <h2 className="site-display text-[1.5rem] font-semibold text-neutral-900 dark:text-white md:text-[1.75rem]">
                         {editingMoment ? t("moments.edit") : t("moments.publish")}
                     </h2>
 
-                    <div className="mt-5 rounded-[24px] border border-black/10 bg-white/55 p-2 dark:border-white/10 dark:bg-white/[0.04]">
+                    <div className="mt-5 rounded-[8px] border border-black/10 bg-white/50 p-2 dark:border-white/10 dark:bg-white/[0.04]">
                         <MarkdownEditor content={content} setContent={setContent} height="300px" />
                     </div>
 
                     <div className="mt-5 flex justify-end gap-2">
                         <button
                             onClick={() => setIsModalOpen(false)}
-                            className="rounded-full border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200"
+                            className="rounded-[8px] border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200"
                         >
                             {t("cancel")}
                         </button>
                         <button
                             onClick={handleSubmit}
                             disabled={loading || !content.trim()}
-                            className="rounded-full bg-theme px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                            className="rounded-[8px] bg-theme px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                         >
                             {loading ? t("saving") : editingMoment ? t("update.title") : t("publish.title")}
                         </button>

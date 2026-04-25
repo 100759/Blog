@@ -93,21 +93,21 @@ function Footer() {
                 <link rel="alternate" type="application/json" title={siteName} href="/rss.json" />
             </Helmet>
 
-            <div className="site-panel overflow-hidden rounded-[34px]">
-                <div className="grid gap-6 px-6 py-8 md:grid-cols-[minmax(0,1.3fr)_auto] md:px-8 md:py-9">
+            <div className="border-t border-black/8 pt-6 dark:border-white/10">
+                <div className="grid gap-5 md:grid-cols-[minmax(0,1.3fr)_auto]">
                     <div>
                         <p className="site-kicker">{siteTitle}</p>
-                        <h2 className="site-display mt-4 text-[2.6rem] text-neutral-900 dark:text-white md:text-[3.4rem]">
+                        <h2 className="site-display mt-2 text-[1.45rem] font-semibold text-neutral-900 dark:text-white md:text-[1.75rem]">
                             {siteTitle}
                         </h2>
-                        <p className="mt-4 max-w-2xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
+                        <p className="mt-2 max-w-2xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
                             {siteDescription}
                         </p>
                         <div className="mt-5 text-sm text-neutral-500 dark:text-neutral-400" ref={footerHtmlRef} />
                     </div>
 
                     <div className="flex flex-col items-start gap-4 md:items-end">
-                        <div className="inline-flex rounded-full border border-black/10 bg-white/60 p-[4px] backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04]">
+                        <div className="inline-flex rounded-[8px] border border-black/10 bg-white/40 p-[3px] dark:border-white/10 dark:bg-white/[0.04]">
                             <ThemeButton mode="light" current={modeState} label="Toggle light mode" icon="ri-sun-line" onClick={setMode} />
                             <ThemeButton mode="system" current={modeState} label="Toggle system mode" icon="ri-computer-line" onClick={setMode} />
                             <ThemeButton mode="dark" current={modeState} label="Toggle dark mode" icon="ri-moon-line" onClick={setMode} />
@@ -116,7 +116,7 @@ function Footer() {
                         {config.getBoolean("rss") ? (
                             <Popup
                                 trigger={
-                                    <button className="rounded-full border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15" type="button">
+                                    <button className="rounded-[8px] border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15" type="button">
                                         RSS
                                     </button>
                                 }
@@ -124,7 +124,7 @@ function Footer() {
                                 arrow={false}
                                 closeOnDocumentClick
                             >
-                                <div className="site-panel flex flex-col gap-2 rounded-[22px] p-4 text-sm t-primary">
+                                <div className="site-panel flex flex-col gap-2 rounded-[10px] p-4 text-sm t-primary">
                                     <p className="site-kicker">{t("footer.rss")}</p>
                                     <div className="flex flex-wrap gap-3">
                                         <a href="/rss.xml">RSS</a>
@@ -137,7 +137,7 @@ function Footer() {
                     </div>
                 </div>
 
-                <div className="border-t border-black/5 px-6 py-4 dark:border-white/10 md:px-8">
+                <div className="mt-6 border-t border-black/5 py-4 dark:border-white/10">
                     <div className="flex flex-col gap-3 text-sm text-neutral-500 dark:text-neutral-400 md:flex-row md:items-center md:justify-between">
                         <p
                             onDoubleClick={() => {
@@ -173,9 +173,9 @@ function ThemeButton({ current, mode, label, icon, onClick }: { current: ThemeMo
             aria-label={label}
             type="button"
             onClick={() => onClick(mode)}
-            className={`inline-flex h-[36px] w-[36px] items-center justify-center rounded-full border-0 transition-colors ${
+            className={`inline-flex h-[34px] w-[34px] items-center justify-center rounded-[6px] border-0 transition-colors ${
                 current === mode
-                    ? "bg-theme text-white shadow-[0_14px_24px_rgba(var(--theme-rgb),0.28)]"
+                    ? "bg-theme text-white"
                     : "text-neutral-500 hover:bg-black/5 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-white/10 dark:hover:text-neutral-100"
             }`}
         >

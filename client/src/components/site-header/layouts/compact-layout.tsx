@@ -10,18 +10,18 @@ export const compactLayoutDefinition: HeaderLayoutDefinition = {
     return (
       <div className="hidden w-full lg:block">
         <div
-          className={`site-panel flex items-center justify-between gap-6 rounded-[22px] px-4 py-2.5 transition-all ${
+          className={`site-panel flex items-center justify-between gap-6 rounded-[10px] px-4 py-2.5 transition-all ${
             isAtTop
-              ? "bg-white/5 shadow-[0_10px_24px_rgba(36,24,19,0.04)] dark:bg-[rgba(20,18,19,0.36)]"
-              : "bg-white/62 shadow-[0_16px_36px_rgba(36,24,19,0.08)] dark:bg-[rgba(20,18,19,0.7)]"
+              ? "bg-white/30 dark:bg-[rgba(20,18,19,0.36)]"
+              : "bg-white/72 dark:bg-[rgba(20,18,19,0.7)]"
           }`}
         >
           <BrandLink
             siteConfig={siteConfig}
             compact
             className="min-w-0 flex items-center"
-            avatarClassName="h-10 w-10 rounded-[14px]"
-            titleClassName="text-base font-bold tracking-tight text-neutral-900 dark:text-neutral-50"
+            avatarClassName="h-10 w-10 rounded-[8px]"
+            titleClassName="text-base font-bold text-neutral-900 dark:text-neutral-50"
             showDescription={false}
           />
           <div className="flex min-w-0 flex-1 items-center justify-end">

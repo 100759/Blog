@@ -1,14 +1,14 @@
 @import "./base.css";
 
 :root {
-  --theme-rgb: 252 70 107;
-  --theme-hover-rgb: 177 48 73;
-  --theme-active-rgb: 151 32 56;
-  --site-paper-rgb: 255 250 245;
-  --site-surface-rgb: 247 240 232;
-  --site-ink-rgb: 33 24 20;
-  --site-muted-rgb: 120 100 90;
-  --site-glow-rgb: 214 180 120;
+  --theme-rgb: 48 111 98;
+  --theme-hover-rgb: 34 86 76;
+  --theme-active-rgb: 24 69 61;
+  --site-paper-rgb: 253 253 251;
+  --site-surface-rgb: 244 245 242;
+  --site-ink-rgb: 31 33 31;
+  --site-muted-rgb: 105 111 105;
+  --site-glow-rgb: 134 151 142;
   --site-paper-dark-rgb: 20 18 19;
   --site-surface-dark-rgb: 27 24 25;
   --site-ink-dark-rgb: 237 233 229;
@@ -33,22 +33,16 @@ body {
   @apply text-gray-800;
   min-height: 100vh;
   color: rgb(var(--site-ink-rgb));
-  background:
-    radial-gradient(circle at top left, rgb(var(--theme-rgb) / 0.1), transparent 26%),
-    radial-gradient(circle at 85% 12%, rgb(var(--site-glow-rgb) / 0.08), transparent 20%),
-    linear-gradient(180deg, rgb(var(--site-paper-rgb)), rgb(var(--site-surface-rgb)));
+  background: linear-gradient(180deg, rgb(var(--site-paper-rgb)), rgb(var(--site-surface-rgb)));
   font-family: Cantarell, "Source Han Serif CN VF" !important;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  background-attachment: fixed;
+  background-attachment: scroll;
 }
 
 [data-color-mode="dark"] body {
   color: rgb(var(--site-ink-dark-rgb));
-  background:
-    radial-gradient(circle at top left, rgb(var(--theme-rgb) / 0.14), transparent 22%),
-    radial-gradient(circle at 85% 12%, rgb(var(--site-glow-dark-rgb) / 0.16), transparent 24%),
-    linear-gradient(180deg, rgb(var(--site-paper-dark-rgb)), rgb(12 12 13));
+  background: linear-gradient(180deg, rgb(var(--site-paper-dark-rgb)), rgb(12 12 13));
 }
 
 ::selection {
@@ -72,12 +66,7 @@ textarea:focus {
 
 .site-shell::before,
 .site-shell::after {
-  content: "";
-  position: fixed;
-  inset: auto;
-  pointer-events: none;
-  z-index: -1;
-  filter: blur(6px);
+  content: none;
 }
 
 .site-shell::before {
@@ -103,9 +92,9 @@ textarea:focus {
 }
 
 .site-panel {
-  background: rgb(var(--site-paper-rgb) / 0.9);
-  border: 1px solid rgb(28 20 15 / 0.08);
-  box-shadow: 0 10px 24px rgb(40 28 20 / 0.045);
+  background: rgb(var(--site-paper-rgb) / 0.74);
+  border: 1px solid rgb(31 33 31 / 0.08);
+  box-shadow: 0 1px 0 rgb(31 33 31 / 0.03);
   backdrop-filter: none;
 }
 
@@ -116,9 +105,7 @@ textarea:focus {
 }
 
 .site-panel-muted {
-  background:
-    linear-gradient(180deg, rgb(var(--theme-rgb) / 0.04), transparent 42%),
-    rgb(var(--site-paper-rgb) / 0.88);
+  background: rgb(var(--site-paper-rgb) / 0.68);
 }
 
 [data-color-mode="dark"] .site-panel-muted {
@@ -129,8 +116,8 @@ textarea:focus {
 
 .site-display {
   font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", "Source Han Serif CN VF", serif !important;
-  letter-spacing: -0.028em;
-  line-height: 0.98;
+  letter-spacing: 0;
+  line-height: 1.08;
 }
 
 .site-kicker {
@@ -174,21 +161,20 @@ textarea:focus {
   }
 
   .site-panel {
-    background: rgb(var(--site-paper-rgb) / 0.72);
-    border-color: rgb(28 20 15 / 0.06);
-    box-shadow: 0 3px 12px rgb(40 28 20 / 0.025);
+    background: rgb(var(--site-paper-rgb) / 0.68);
+    border-color: rgb(31 33 31 / 0.07);
+    border-radius: 10px !important;
+    box-shadow: none;
     backdrop-filter: none;
   }
 
   .site-panel-muted {
-    background:
-      linear-gradient(180deg, rgb(var(--theme-rgb) / 0.025), transparent 36%),
-      rgb(var(--site-paper-rgb) / 0.76);
+    background: rgb(var(--site-paper-rgb) / 0.62);
   }
 
   .site-display {
-    letter-spacing: -0.022em;
-    line-height: 1.02;
+    letter-spacing: 0;
+    line-height: 1.12;
   }
 
   .site-kicker {
@@ -199,7 +185,7 @@ textarea:focus {
 
 @media (min-width: 768px) and (hover: hover) and (pointer: fine) {
   .site-panel {
-    backdrop-filter: blur(8px);
+    backdrop-filter: none;
   }
 }
 

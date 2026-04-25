@@ -28,15 +28,15 @@ export function AdjacentSection({ id, setError }: { id: string; setError: (error
 }
 
 export function AdjacentCard({ data, type }: { data: AdjacentFeed | null | undefined; type: "previous" | "next" }) {
-    const direction = type === "previous" ? "items-start text-left" : "items-end text-right";
+    const direction = type === "previous" ? "items-start text-left" : "items-start text-left sm:items-end sm:text-right";
     const { t } = useTranslation();
 
     if (!data) {
         return (
-            <div className={`site-panel flex min-h-[180px] flex-col justify-between rounded-[28px] px-6 py-6 ${direction}`}>
+            <div className={`site-panel flex min-h-[140px] flex-col justify-between rounded-[10px] px-4 py-4 md:px-5 md:py-5 ${direction}`}>
                 <p className="site-kicker">{type === "previous" ? "Previous" : "Next"}</p>
                 <div>
-                    <h3 className="site-display mt-4 text-[2rem] text-neutral-900 dark:text-white">{t("no_more")}</h3>
+                    <h3 className="site-display mt-3 text-[1.25rem] font-semibold text-neutral-900 dark:text-white md:text-[1.5rem]">{t("no_more")}</h3>
                 </div>
             </div>
         );
@@ -49,13 +49,13 @@ export function AdjacentCard({ data, type }: { data: AdjacentFeed | null | undef
         <Link
             href={`/feed/${data.id}`}
             target="_blank"
-            className={`site-panel flex min-h-[180px] flex-col justify-between rounded-[28px] px-6 py-6 transition hover:-translate-y-1 ${direction}`}
+            className={`site-panel flex min-h-[140px] flex-col justify-between rounded-[10px] px-4 py-4 transition hover:border-theme/30 md:px-5 md:py-5 ${direction}`}
             onMouseEnter={() => preloadRoute("/feed")}
             onTouchStart={() => preloadRoute("/feed")}
         >
             <p className="site-kicker">{type === "previous" ? "Previous" : "Next"}</p>
             <div>
-                <h3 className="site-display mt-4 text-[2rem] text-neutral-900 dark:text-white">{data.title}</h3>
+                <h3 className="site-display mt-3 text-[1.25rem] font-semibold text-neutral-900 dark:text-white md:text-[1.5rem]">{data.title}</h3>
                 <p className="mt-4 flex flex-wrap gap-3 text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
                     <span title={createdAt.toLocaleString()}>
                         {createdAt.getTime() === updatedAt.getTime()

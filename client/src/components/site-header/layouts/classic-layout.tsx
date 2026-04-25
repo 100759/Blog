@@ -9,10 +9,10 @@ export const classicLayoutDefinition: HeaderLayoutDefinition = {
   renderDesktop({ children, profile, siteConfig }) {
     return (
       <div className="hidden w-full md:block">
-        <div className="site-panel grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-[24px] px-4 py-2.5">
+        <div className="site-panel grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-[10px] px-4 py-2.5">
           <BrandLink siteConfig={siteConfig} className="hidden min-w-0 flex-row items-center md:flex" />
           <div className="flex min-w-0 flex-1 items-center justify-center">
-            <div className="scrollbar-none min-w-0 max-w-full overflow-x-auto rounded-full border border-black/5 bg-white/55 px-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] t-primary dark:border-white/10 dark:bg-white/[0.03]">
+            <div className="scrollbar-none min-w-0 max-w-full overflow-x-auto rounded-[8px] border border-black/5 bg-white/45 px-1.5 t-primary dark:border-white/10 dark:bg-white/[0.03]">
               <div className="flex min-w-max flex-row items-center whitespace-nowrap">
                 <NavBar menu={false} itemClassName="whitespace-nowrap text-[13px] tracking-[0.01em]" />
               </div>
@@ -30,7 +30,7 @@ export const classicLayoutDefinition: HeaderLayoutDefinition = {
     return (
       <div className="flex w-full flex-row items-center justify-center md:hidden">
         <div className="w-full flex-row items-center justify-center transition-all duration-500">
-          <div className="site-panel flex flex-row items-center rounded-[20px] px-3 py-1.5 t-primary">
+          <div className="site-panel flex flex-row items-center rounded-[10px] px-3 py-1.5 t-primary">
             <BrandLink
               siteConfig={siteConfig}
               compact

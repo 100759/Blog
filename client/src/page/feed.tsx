@@ -156,24 +156,22 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
       ) : null}
 
       {feed && !error ? (
-        <div className="wauto ani-show py-8">
+        <div className="wauto ani-show py-6 md:py-8">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_232px] 2xl:grid-cols-[minmax(0,1fr)_248px]">
             <div className="min-w-0">
-              <article className="site-panel overflow-hidden rounded-[28px] md:rounded-[32px]" aria-label={feed.title ?? "Unnamed"}>
-                <div className="px-5 py-6 md:px-7 md:py-7">
+              <article className="site-panel overflow-hidden rounded-[10px]" aria-label={feed.title ?? "Unnamed"}>
+                <div className="border-b border-black/5 px-4 py-5 dark:border-white/10 md:px-7 md:py-7">
                   <div className="flex max-w-2xl flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400">
-                    {top > 0 ? <span className="rounded-full bg-theme/10 px-3 py-1 text-theme">{t("article.top.title")}</span> : null}
+                    {top > 0 ? <span className="rounded-[6px] bg-theme/10 px-2.5 py-1 text-theme">{t("article.top.title")}</span> : null}
                   </div>
 
-                  <h1 className="site-display mt-4 max-w-3xl break-words text-[1.9rem] leading-tight text-neutral-900 dark:text-white sm:text-[2.35rem] md:text-[2.9rem]">
+                  <h1 className="site-display mt-3 max-w-3xl break-words text-[1.55rem] font-semibold leading-tight text-neutral-900 dark:text-white sm:text-[2rem] md:text-[2.35rem]">
                     {feed.title}
                   </h1>
 
                   {excerpt ? (
                     <p className="mt-4 max-w-2xl text-[14px] leading-7 text-neutral-600 dark:text-neutral-300 md:text-[15px]">{excerpt}</p>
                   ) : null}
-
-                  <div className="site-rule mt-5 w-full max-w-lg opacity-75" />
 
                   <div className="mt-4 flex max-w-2xl flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-neutral-500 dark:text-neutral-400">
                     {createdAt ? (
@@ -208,9 +206,9 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
                         <button
                           aria-label={top > 0 ? t("untop.title") : t("top.title")}
                           onClick={topFeed}
-                          className={`min-h-10 rounded-full px-4 py-2 text-sm font-medium transition ${
+                          className={`min-h-10 rounded-[8px] px-4 py-2 text-sm font-medium transition ${
                             top > 0
-                              ? "bg-theme text-white shadow-[0_16px_28px_rgba(var(--theme-rgb),0.22)]"
+                              ? "bg-theme text-white"
                               : "border border-black/10 bg-white/55 text-neutral-700 hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
                           }`}
                         >
@@ -219,14 +217,14 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
                         <Link
                           aria-label={t("edit")}
                           href={`/admin/writing/${feed.id}`}
-                          className="inline-flex min-h-10 items-center justify-center rounded-full border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
+                          className="inline-flex min-h-10 items-center justify-center rounded-[8px] border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
                         >
                           {t("edit")}
                         </Link>
                         <button
                           aria-label={t("delete.title")}
                           onClick={deleteFeed}
-                          className="min-h-10 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300"
+                          className="min-h-10 rounded-[8px] border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300"
                         >
                           {t("delete.title")}
                         </button>
@@ -239,10 +237,10 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
                       <img
                         src={stripImageUrlMetadata(showHeroImage)}
                         alt=""
-                        className="h-[190px] w-full rounded-[20px] object-cover shadow-[0_10px_24px_rgba(36,24,19,0.08)] md:h-[220px] md:max-w-3xl md:rounded-[22px]"
+                        className="h-[180px] w-full rounded-[8px] object-cover md:h-[220px] md:max-w-3xl"
                       />
                     ) : (
-                      <div className="flex min-h-[150px] w-full items-end rounded-[20px] border border-dashed border-black/10 bg-white/55 p-5 dark:border-white/10 dark:bg-white/[0.04] md:max-w-3xl md:rounded-[22px]">
+                      <div className="flex min-h-[150px] w-full items-end rounded-[8px] border border-dashed border-black/10 bg-white/40 p-5 dark:border-white/10 dark:bg-white/[0.04] md:max-w-3xl">
                         <div>
                           <p className="site-kicker">{feed.user.username}</p>
                           <p className="site-display mt-4 text-[1.8rem] text-neutral-900 dark:text-white">{siteConfig.name}</p>
@@ -276,18 +274,18 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
                   </div>
                 ) : null}
 
-                <div className="border-t border-black/5 px-5 py-7 dark:border-white/10 md:px-7 md:py-8">
+                <div className="px-4 py-7 md:px-7 md:py-8">
                   <div className="mx-auto min-w-0 w-full max-w-[720px] text-[16px] leading-8 text-neutral-700 dark:text-neutral-300">
                     <Markdown content={feed.content} />
                   </div>
                 </div>
 
-                <div className="border-t border-black/5 px-5 py-5 dark:border-white/10 md:px-7 md:py-6">
+                <div className="border-t border-black/5 px-4 py-5 dark:border-white/10 md:px-7 md:py-6">
                   <div className="flex flex-wrap items-center gap-4">
                     {feed.user.avatar ? (
-                      <img src={feed.user.avatar} className="h-12 w-12 rounded-[18px] object-cover shadow-[0_12px_24px_rgba(36,24,19,0.14)]" />
+                      <img src={feed.user.avatar} className="h-11 w-11 rounded-[8px] object-cover" />
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-[18px] border border-black/10 bg-white/55 dark:border-white/10 dark:bg-white/[0.04]">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-[8px] border border-black/10 bg-white/55 dark:border-white/10 dark:bg-white/[0.04]">
                         <i className="ri-user-line text-neutral-500 dark:text-neutral-300" />
                       </div>
                     )}
@@ -310,7 +308,7 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
 
             <aside className="hidden xl:block">
               <div className="sticky top-[6rem]">
-                <div className="site-panel overflow-hidden rounded-[22px] p-3.5">
+                <div className="site-panel overflow-hidden rounded-[10px] p-3.5">
                   <p className="site-kicker mb-3">Outline</p>
                   <TOC />
                 </div>
@@ -403,11 +401,11 @@ function CommentInput({ id, onRefresh }: { id: string; onRefresh: () => void }) 
   }
 
   return (
-    <div className="site-panel rounded-[30px] px-6 py-6 md:px-7">
+    <div className="site-panel rounded-[10px] px-4 py-5 md:px-7 md:py-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="site-kicker">{t("comment.title")}</p>
-          <h3 className="site-display mt-3 text-[2rem] text-neutral-900 dark:text-white">{t("comment.title")}</h3>
+          <h3 className="site-display mt-2 text-[1.25rem] font-semibold text-neutral-900 dark:text-white md:text-[1.5rem]">{t("comment.title")}</h3>
         </div>
       </div>
       {profile ? (
@@ -415,19 +413,19 @@ function CommentInput({ id, onRefresh }: { id: string; onRefresh: () => void }) 
           <textarea
             id="comment"
             placeholder={t("comment.placeholder.title")}
-            className="mt-6 min-h-32 w-full rounded-[22px] border border-black/10 bg-white/55 px-4 py-4 text-base text-neutral-800 outline-none transition focus:border-theme/40 focus:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-100 dark:focus:bg-white/[0.06] md:rounded-[24px] md:px-5"
+            className="mt-5 min-h-32 w-full rounded-[8px] border border-black/10 bg-white/50 px-4 py-4 text-base text-neutral-800 outline-none transition focus:border-theme/40 focus:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-100 dark:focus:bg-white/[0.06] md:px-5"
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
           <div className="mt-5 flex justify-end">
-            <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-theme px-5 py-3 text-sm font-medium text-white shadow-[0_18px_30px_rgba(var(--theme-rgb),0.24)]" onClick={submit}>
+            <button className="inline-flex min-h-11 items-center justify-center rounded-[8px] bg-theme px-5 py-3 text-sm font-medium text-white" onClick={submit}>
               {t("comment.submit")}
             </button>
           </div>
         </>
       ) : (
         <div className="mt-6 flex justify-center py-10">
-          <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-theme px-5 py-3 text-sm font-medium text-white" onClick={() => setLocation("/login")}>
+          <button className="inline-flex min-h-11 items-center justify-center rounded-[8px] bg-theme px-5 py-3 text-sm font-medium text-white" onClick={() => setLocation("/login")}>
             {t("login.required")}
           </button>
         </div>
@@ -482,9 +480,9 @@ function Comments({ id }: { id: string }) {
     <section>
       <CommentInput id={id} onRefresh={loadComments} />
       {error ? (
-        <div className="site-panel mt-4 flex flex-col items-center justify-center rounded-[30px] px-6 py-10 text-center">
+        <div className="site-panel mt-4 flex flex-col items-center justify-center rounded-[10px] px-6 py-10 text-center">
           <h1 className="text-xl font-semibold t-primary">{error}</h1>
-          <button className="mt-4 rounded-full bg-theme px-4 py-2 text-white" onClick={loadComments}>
+          <button className="mt-4 rounded-[8px] bg-theme px-4 py-2 text-white" onClick={loadComments}>
             {t("reload")}
           </button>
         </div>
@@ -522,12 +520,12 @@ function CommentItem({ comment, onRefresh }: { comment: Comment; onRefresh: () =
   }
 
   return (
-    <div className="site-panel rounded-[26px] px-5 py-5">
+    <div className="site-panel rounded-[10px] px-4 py-4 md:px-5 md:py-5">
       <div className="flex items-start gap-4">
         {comment.user.avatar ? (
-          <img src={comment.user.avatar} className="mt-1 h-11 w-11 rounded-[16px] object-cover" />
+          <img src={comment.user.avatar} className="mt-1 h-10 w-10 rounded-[8px] object-cover" />
         ) : (
-          <div className="mt-1 flex h-11 w-11 items-center justify-center rounded-[16px] border border-black/10 bg-white/55 dark:border-white/10 dark:bg-white/[0.04]">
+          <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-[8px] border border-black/10 bg-white/55 dark:border-white/10 dark:bg-white/[0.04]">
             <i className="ri-user-line text-neutral-500 dark:text-neutral-300" />
           </div>
         )}

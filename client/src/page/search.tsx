@@ -73,39 +73,25 @@ export function SearchPage({ keyword }: { keyword: string }) {
                 <meta property="og:url" content={document.URL} />
             </Helmet>
             <Waiting for={status === "idle"}>
-                <main className="wauto ani-show pb-14 pt-8">
-                    <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(240px,0.38fr)]">
-                        <div className="site-panel site-panel-muted rounded-[28px] px-6 py-7 md:px-8 md:py-8">
+                <main className="wauto ani-show pb-14 pt-6 md:pt-8">
+                    <section className="border-b border-black/8 pb-5 dark:border-white/10">
+                        <div>
                             <p className="site-kicker">{t("article.search.title")}</p>
-                            <h1 className="site-display mt-4 text-[2.2rem] leading-tight text-neutral-900 dark:text-white md:text-[3rem]">
+                            <h1 className="site-display mt-2 text-[1.55rem] font-semibold leading-tight text-neutral-900 dark:text-white md:text-[2rem]">
                                 {keyword}
                             </h1>
-                            <p className="mt-4 max-w-2xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
+                            <p className="mt-2 max-w-2xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
                                 {t("article.search.summary")}
                             </p>
-                            <div className="site-rule mt-5 w-full max-w-xl opacity-75" />
-                            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-neutral-500 dark:text-neutral-400">
+                            <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-neutral-500 dark:text-neutral-400">
                                 <span>{t("article.total$count", { count: feeds?.size || 0 })}</span>
                                 <span>{t("article.search.page", { page })}</span>
                                 <span>{siteConfig.feedLayout}</span>
                             </div>
                         </div>
-
-                        <div className="site-panel rounded-[24px] px-5 py-6 md:px-6 md:py-6">
-                            <p className="site-kicker">{t("article.search.title")}</p>
-                            <h2 className="site-display mt-3 text-[1.75rem] text-neutral-900 dark:text-white">
-                                {t("article.total$count", { count: feeds?.size || 0 })}
-                            </h2>
-                            <p className="mt-4 text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
-                                <span className="font-medium text-neutral-900 dark:text-white">{keyword}</span>
-                            </p>
-                            <p className="mt-3 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
-                                {hasResults ? t("article.search.result_hint") : t("article.search.empty_description")}
-                            </p>
-                        </div>
                     </section>
 
-                    <section className="mt-7">
+                    <section className="mt-6 md:mt-7">
                         <Waiting for={status === "idle"}>
                             {hasResults ? (
                                 <div className={feedListClass}>
@@ -126,9 +112,9 @@ export function SearchPage({ keyword }: { keyword: string }) {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="site-panel rounded-[28px] px-6 py-10 text-center md:px-8">
+                                <div className="site-panel rounded-[10px] px-5 py-8 text-center md:px-8">
                                     <p className="site-kicker">{t("article.search.title")}</p>
-                                    <h2 className="site-display mt-4 text-[2rem] text-neutral-900 dark:text-white">
+                                    <h2 className="site-display mt-3 text-[1.35rem] font-semibold text-neutral-900 dark:text-white">
                                         {t("article.search.empty_title")}
                                     </h2>
                                     <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-neutral-600 dark:text-neutral-300">
@@ -145,7 +131,7 @@ export function SearchPage({ keyword }: { keyword: string }) {
                                     <div />
                                 )}
                                 {feeds?.hasNext ? (
-                                    <Link href={`?page=${page + 1}&limit=${limit}`} className="rounded-full bg-theme px-5 py-3 text-sm font-medium text-white shadow-[0_18px_32px_rgba(var(--theme-rgb),0.22)]">
+                                    <Link href={`?page=${page + 1}&limit=${limit}`} className="rounded-[8px] bg-theme px-5 py-3 text-sm font-medium text-white">
                                         {t("next")}
                                     </Link>
                                 ) : null}

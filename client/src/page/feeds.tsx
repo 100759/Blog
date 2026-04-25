@@ -124,40 +124,21 @@ export function FeedsPage() {
             <Waiting for={feeds.draft.size + feeds.normal.size + feeds.unlisted.size > 0 || status === "idle"}>
                 <main className="w-full pb-14">
                     <section className="wauto ani-show pt-4 md:pt-8">
-                        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.34fr)]">
-                            <div className="site-panel site-panel-muted overflow-hidden rounded-[18px] px-4 py-4 sm:rounded-[22px] sm:px-5 sm:py-5 md:rounded-[28px] md:px-6 md:py-6">
+                        <div className="border-b border-black/8 pb-5 dark:border-white/10">
+                            <div className="max-w-3xl">
                                 <p className="site-kicker">{listTitle}</p>
-                                <h1 className="site-display mt-2.5 max-w-3xl text-[1.4rem] leading-tight text-neutral-900 dark:text-white sm:mt-3 sm:text-[1.85rem] md:text-[2.3rem]">
+                                <h1 className="site-display mt-2 text-[1.45rem] font-semibold text-neutral-900 dark:text-white sm:text-[1.8rem] md:text-[2.1rem]">
                                     {siteConfig.name}
                                 </h1>
-                                <p className="mt-2.5 max-w-xl text-[13px] leading-6 text-neutral-600 dark:text-neutral-300 sm:mt-3 sm:text-[14px]">
+                                <p className="mt-2 max-w-xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
                                     {listDescription}
                                 </p>
-                                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[12px] text-neutral-500 dark:text-neutral-400 sm:mt-4 sm:gap-x-5">
+                                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[12px] text-neutral-500 dark:text-neutral-400">
                                     <span>{t("article.total$count", { count: currentFeedSet.size })}</span>
                                 </div>
                             </div>
-
-                            <div className="site-panel overflow-hidden rounded-[18px] px-4 py-4 sm:rounded-[20px] md:rounded-[24px]">
-                                <div className="flex items-start justify-between gap-4">
-                                    <div>
-                                        <p className="site-kicker">{t("article.total$count", { count: currentFeedSet.size })}</p>
-                                        <h2 className="mt-2 text-[0.98rem] font-semibold tracking-[-0.02em] text-neutral-900 dark:text-white sm:text-[1.12rem]">
-                                            {listTitle}
-                                        </h2>
-                                    </div>
-                                    {siteConfig.avatar ? (
-                                        <img
-                                            src={stripImageUrlMetadata(siteConfig.avatar)}
-                                            alt={siteConfig.name}
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="h-10 w-10 rounded-[14px] border border-black/10 object-cover shadow-[0_8px_16px_rgba(36,24,19,0.06)] dark:border-white/10 sm:h-11 sm:w-11"
-                                        />
-                                    ) : null}
-                                </div>
-
-                                <div className="mt-4 flex flex-wrap gap-2">
+                            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                                <div className="flex flex-wrap gap-2">
                                     <TypeToggle href="/?type=normal" active={listState === "normal"} label={t("article.title")} />
                                     {profile?.permission ? (
                                         <>
@@ -166,6 +147,15 @@ export function FeedsPage() {
                                         </>
                                     ) : null}
                                 </div>
+                                {siteConfig.avatar ? (
+                                    <img
+                                        src={stripImageUrlMetadata(siteConfig.avatar)}
+                                        alt={siteConfig.name}
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="h-9 w-9 rounded-[8px] border border-black/10 object-cover dark:border-white/10"
+                                    />
+                                ) : null}
                             </div>
                         </div>
                     </section>
@@ -180,11 +170,11 @@ export function FeedsPage() {
                         <div className="mb-4 flex flex-wrap items-end justify-between gap-3 sm:mb-5 sm:gap-4">
                             <div>
                                 <p className="site-kicker">{listTitle}</p>
-                                <h2 className="mt-2.5 text-[1.05rem] font-semibold tracking-[-0.02em] text-neutral-900 dark:text-white sm:mt-3 sm:text-[1.3rem]">
+                                <h2 className="mt-2 text-[1rem] font-semibold text-neutral-900 dark:text-white sm:text-[1.18rem]">
                                     {t("article.total$count", { count: currentFeedSet.size })}
                                 </h2>
                             </div>
-                            <div className="rounded-full border border-black/10 bg-white/55 px-3 py-1.5 text-[11px] font-medium text-neutral-500 backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300">
+                            <div className="rounded-[8px] border border-black/10 bg-white/35 px-3 py-1.5 text-[11px] font-medium text-neutral-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300">
                                 {t("index.title")} {page}
                             </div>
                         </div>
@@ -212,7 +202,7 @@ export function FeedsPage() {
                                     <div />
                                 )}
                                 {currentFeedSet?.hasNext ? (
-                                    <Link href={`/?type=${listState}&page=${page + 1}`} className="inline-flex min-h-11 items-center justify-center rounded-full bg-theme px-5 py-3 text-sm font-medium text-white shadow-[0_18px_32px_rgba(var(--theme-rgb),0.22)]">
+                                    <Link href={`/?type=${listState}&page=${page + 1}`} className="inline-flex min-h-11 items-center justify-center rounded-[8px] bg-theme px-5 py-3 text-sm font-medium text-white">
                                         {t("next")}
                                     </Link>
                                 ) : null}
@@ -238,7 +228,7 @@ function FeaturedFeedLead({ feed }: { feed: FeedRecord }) {
             onMouseEnter={() => preloadRoute("/feed")}
             onTouchStart={() => preloadRoute("/feed")}
         >
-            <article className="site-panel overflow-hidden rounded-[18px] sm:rounded-[24px] md:rounded-[36px]">
+            <article className="site-panel overflow-hidden rounded-[10px]">
                 <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.56fr)]">
                     <div className="px-4 py-4 sm:px-5 sm:py-6 md:px-7 md:py-8">
                         <div className="flex flex-wrap items-center gap-2 text-[12px] font-medium uppercase tracking-[0.18em] text-neutral-500 dark:text-neutral-400">
@@ -246,7 +236,7 @@ function FeaturedFeedLead({ feed }: { feed: FeedRecord }) {
                             {feed.draft === 1 ? <span>{t("draft")}</span> : null}
                             {feed.listed === 0 ? <span>{t("unlisted")}</span> : null}
                         </div>
-                        <h2 className="site-display mt-3 text-[1.45rem] text-neutral-900 dark:text-white sm:mt-4 sm:text-[2rem] md:text-[2.7rem]">
+                        <h2 className="site-display mt-3 text-[1.35rem] font-semibold text-neutral-900 dark:text-white sm:mt-4 sm:text-[1.8rem] md:text-[2.15rem]">
                             {feed.title}
                         </h2>
                         <p className="mt-3 max-w-2xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300 sm:mt-4 sm:text-[15px] sm:leading-7">
@@ -279,10 +269,10 @@ function FeaturedFeedLead({ feed }: { feed: FeedRecord }) {
                                 alt=""
                                 loading="eager"
                                 decoding="async"
-                                className="h-full min-h-[140px] w-full rounded-[14px] object-cover shadow-[0_8px_18px_rgba(36,24,19,0.08)] sm:min-h-[180px] sm:rounded-[18px] lg:min-h-[220px] lg:rounded-[24px]"
+                                className="h-full min-h-[140px] w-full rounded-[8px] object-cover sm:min-h-[180px] lg:min-h-[220px]"
                             />
                         ) : (
-                            <div className="flex h-full min-h-[140px] w-full items-end rounded-[14px] border border-dashed border-black/10 bg-white/55 p-4 dark:border-white/10 dark:bg-white/[0.04] sm:min-h-[180px] sm:rounded-[18px] sm:p-5 lg:min-h-[220px] lg:rounded-[24px]">
+                            <div className="flex h-full min-h-[140px] w-full items-end rounded-[8px] border border-dashed border-black/10 bg-white/40 p-4 dark:border-white/10 dark:bg-white/[0.04] sm:min-h-[180px] sm:p-5 lg:min-h-[220px]">
                                 <div>
                                     <p className="site-kicker">{t("article.title")}</p>
                                     <p className="site-display mt-2 text-[1.2rem] text-neutral-900 dark:text-white sm:mt-3 sm:text-[1.5rem]">{feed.title}</p>
@@ -301,9 +291,9 @@ function TypeToggle({ href, active, label }: { href: string; active: boolean; la
     return (
         <Link
             href={href}
-            className={`inline-flex min-h-11 items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+            className={`inline-flex min-h-10 items-center justify-center rounded-[8px] border px-3.5 py-2 text-sm font-medium transition-colors ${
                 active
-                    ? "border-theme/20 bg-theme text-white shadow-[0_16px_28px_rgba(var(--theme-rgb),0.18)]"
+                    ? "border-theme/20 bg-theme text-white"
                     : "border-black/10 bg-white/55 text-neutral-700 hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
             }`}
         >
