@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { timeago } from "../utils/timeago";
-import { Markdown } from "./markdown";
+import { parseImageUrlMetadata } from "../utils/image-upload";
 
 interface Moment {
     id: number;
@@ -11,6 +11,32 @@ interface Moment {
         id: number;
         username: string;
         avatar: string;
+    };
+}
+
+function parseMomentContent(content: string) {
+    const images: Array<{ alt: string; url: string; src: string }> = [];
+    const imagePattern = /!\[(.*?)\]\((\S+?)(?:\s+"[^"]*")?\)/g;
+    let text = content.replace(imagePattern, (_match, alt: string, url: string) => {
+        const parsed = parseImageUrlMetadata(url);
+        images.push({
+            alt: alt || "",
+            url,
+            src: parsed.src,
+        });
+        return "";
+    });
+    const locationMatch = text.match(/^\s*>?\s*📍\s*(.+?)\s*$/m);
+    const location = locationMatch?.[1]?.trim();
+
+    if (locationMatch) {
+        text = text.replace(locationMatch[0], "");
+    }
+
+    return {
+        images,
+        location,
+        text: text.trim(),
     };
 }
 
@@ -28,6 +54,7 @@ export function MomentItem({
     const { t } = useTranslation();
     const createdAt = new Date(moment.createdAt);
     const updatedAt = new Date(moment.updatedAt);
+    const parsed = parseMomentContent(moment.content);
 
     return (
         <article className="site-panel moment-card rounded-[14px] px-3.5 py-3 md:px-4 md:py-3.5">
@@ -76,7 +103,35 @@ export function MomentItem({
                 ) : null}
             </div>
             <div className="moment-content mt-3 text-[14px] leading-6 text-neutral-800 dark:text-neutral-200">
-                <Markdown content={moment.content} variant="moment" />
+                {parsed.text ? (
+                    <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.65] text-neutral-700 dark:text-neutral-300">
+                        {parsed.text}
+                    </p>
+                ) : null}
+                {parsed.images.length > 0 ? (
+                    <div className={`moment-photo-grid moment-photo-grid-${Math.min(parsed.images.length, 9)}`}>
+                        {parsed.images.slice(0, 9).map((image, index) => (
+                            <button
+                                key={`${image.src}-${index}`}
+                                type="button"
+                                className="moment-photo"
+                                aria-label={image.alt || `image ${index + 1}`}
+                                onClick={() => window.open(image.src, "_blank", "noopener,noreferrer")}
+                            >
+                                <img src={image.url} alt={image.alt} loading="lazy" />
+                                {index === 8 && parsed.images.length > 9 ? (
+                                    <span className="moment-photo-more">+{parsed.images.length - 9}</span>
+                                ) : null}
+                            </button>
+                        ))}
+                    </div>
+                ) : null}
+                {parsed.location ? (
+                    <p className="moment-location">
+                        <span>📍</span>
+                        <span>{parsed.location}</span>
+                    </p>
+                ) : null}
             </div>
         </article>
     );

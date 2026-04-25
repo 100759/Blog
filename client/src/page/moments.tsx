@@ -4,13 +4,13 @@ import { useTranslation } from "react-i18next";
 import Modal from "react-modal";
 import { useSearch } from "wouter";
 import { client } from "../app/runtime";
-import { MarkdownEditor } from "../components/markdown_editor";
 import { MomentItem } from "../components/moment_item";
 import { Waiting } from "../components/loading";
 import { useAlert, useConfirm } from "../components/dialog";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { ProfileContext } from "../state/profile";
 import { siteName } from "../utils/constants";
+import { buildMarkdownImage, uploadImageFile } from "../utils/image-upload";
 import { tryInt } from "../utils/int";
 
 interface Moment {
@@ -25,10 +25,49 @@ interface Moment {
     };
 }
 
+type ComposerImage = {
+    id: string;
+    name: string;
+    url: string;
+    markdown: string;
+};
+
+function parseMomentDraft(content: string) {
+    const images: ComposerImage[] = [];
+    const imagePattern = /!\[(.*?)\]\((\S+?)(?:\s+"[^"]*")?\)/g;
+    let text = content.replace(imagePattern, (match, alt: string, url: string) => {
+        images.push({
+            id: `${url}-${images.length}`,
+            name: alt || "image",
+            url,
+            markdown: match.endsWith("\n") ? match : `${match}\n`,
+        });
+        return "";
+    });
+    const locationMatch = text.match(/^\s*>?\s*📍\s*(.+?)\s*$/m);
+    const location = locationMatch?.[1]?.trim() || "";
+
+    if (locationMatch) {
+        text = text.replace(locationMatch[0], "");
+    }
+
+    return {
+        text: text.trim(),
+        images,
+        location,
+        useLocation: Boolean(location),
+    };
+}
+
 export function MomentsPage() {
     const [moments, setMoments] = useState<Moment[]>([]);
     const [length, setLength] = useState(0);
-    const [content, setContent] = useState("");
+    const [draftText, setDraftText] = useState("");
+    const [draftImages, setDraftImages] = useState<ComposerImage[]>([]);
+    const [draftLocation, setDraftLocation] = useState("");
+    const [useLocation, setUseLocation] = useState(false);
+    const [uploadingImages, setUploadingImages] = useState(false);
+    const [locating, setLocating] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMoment, setEditingMoment] = useState<Moment | null>(null);
@@ -90,19 +129,99 @@ export function MomentsPage() {
         }
     }
 
+    function buildMomentContent() {
+        return [
+            draftText.trim(),
+            draftImages.map((image) => image.markdown.trim()).join("\n"),
+            useLocation && draftLocation.trim() ? `> 📍 ${draftLocation.trim()}` : "",
+        ]
+            .filter(Boolean)
+            .join("\n\n");
+    }
+
+    function resetComposer() {
+        setDraftText("");
+        setDraftImages([]);
+        setDraftLocation("");
+        setUseLocation(false);
+    }
+
+    async function handleImageUpload(files: FileList | null) {
+        if (!files || files.length === 0) return;
+
+        setUploadingImages(true);
+        try {
+            const uploaded = await Promise.all(Array.from(files).map(async (file) => {
+                const result = await uploadImageFile(file);
+                return {
+                    id: `${result.url}-${Date.now()}-${Math.random()}`,
+                    name: file.name,
+                    url: result.url,
+                    markdown: buildMarkdownImage(file.name, result.url, {
+                        blurhash: result.blurhash,
+                        width: result.width,
+                        height: result.height,
+                    }),
+                };
+            }));
+            setDraftImages((prev) => [...prev, ...uploaded]);
+        } catch (error) {
+            showAlert(error instanceof Error ? error.message : t("upload.failed"));
+        } finally {
+            setUploadingImages(false);
+        }
+    }
+
+    async function handleLocate() {
+        if (!navigator.geolocation) {
+            showAlert("当前浏览器不支持定位");
+            return;
+        }
+
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                const fallback = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+                try {
+                    const response = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+                    );
+                    const data = await response.json() as { display_name?: string };
+                    setDraftLocation(data.display_name || fallback);
+                } catch {
+                    setDraftLocation(fallback);
+                } finally {
+                    setUseLocation(true);
+                    setLocating(false);
+                }
+            },
+            () => {
+                setLocating(false);
+                showAlert("定位失败，可以手动填写地址");
+            },
+            {
+                enableHighAccuracy: false,
+                maximumAge: 5 * 60 * 1000,
+                timeout: 10000,
+            },
+        );
+    }
+
     function handleSubmit() {
-        if (!content.trim()) return;
+        const nextContent = buildMomentContent();
+        if (!nextContent.trim()) return;
 
         setLoading(true);
 
         if (editingMoment) {
             client.moments
-                .update(editingMoment.id, { content })
+                .update(editingMoment.id, { content: nextContent })
                 .then(({ error }) => {
                     if (error) {
                         showAlert(t("update.failed$message", { message: error.value }));
                     } else {
-                        setContent("");
+                        resetComposer();
                         setEditingMoment(null);
                         setIsModalOpen(false);
                         fetchMoments(1, false);
@@ -114,12 +233,12 @@ export function MomentsPage() {
                 });
         } else {
             client.moments
-                .create({ content })
+                .create({ content: nextContent })
                 .then(({ error }) => {
                     if (error) {
                         showAlert(t("publish.failed$message", { message: error.value }));
                     } else {
-                        setContent("");
+                        resetComposer();
                         setIsModalOpen(false);
                         fetchMoments(1, false);
                         showAlert(t("publish.success"));
@@ -132,8 +251,12 @@ export function MomentsPage() {
     }
 
     function handleEdit(moment: Moment) {
+        const draft = parseMomentDraft(moment.content);
         setEditingMoment(moment);
-        setContent(moment.content);
+        setDraftText(draft.text);
+        setDraftImages(draft.images);
+        setDraftLocation(draft.location);
+        setUseLocation(draft.useLocation);
         setIsModalOpen(true);
     }
 
@@ -152,7 +275,7 @@ export function MomentsPage() {
 
     function openCreateModal() {
         setEditingMoment(null);
-        setContent("");
+        resetComposer();
         setIsModalOpen(true);
     }
 
@@ -271,16 +394,90 @@ export function MomentsPage() {
                     },
                 }}
             >
-                <div className="site-panel w-full rounded-[10px] p-4 md:p-5">
-                    <h2 className="site-display text-[1.5rem] font-semibold text-neutral-900 dark:text-white md:text-[1.75rem]">
-                        {editingMoment ? t("moments.edit") : t("moments.publish")}
-                    </h2>
-
-                    <div className="mt-5 rounded-[8px] border border-black/10 bg-white/50 p-2 dark:border-white/10 dark:bg-white/[0.04]">
-                        <MarkdownEditor content={content} setContent={setContent} height="300px" />
+                <div className="moment-composer site-panel w-full rounded-[18px] p-4 md:p-5">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <p className="site-kicker">Moment</p>
+                            <h2 className="site-display mt-1 text-[1.35rem] font-semibold text-neutral-900 dark:text-white md:text-[1.55rem]">
+                                {editingMoment ? "编辑动态" : "发一条动态"}
+                            </h2>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setIsModalOpen(false)}
+                            className="rounded-full border border-black/10 bg-white/50 px-3 py-1.5 text-[12px] font-medium text-neutral-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200"
+                        >
+                            {t("cancel")}
+                        </button>
                     </div>
 
-                    <div className="mt-5 flex justify-end gap-2">
+                    <div className="mt-4">
+                        <textarea
+                            value={draftText}
+                            onChange={(event) => setDraftText(event.target.value)}
+                            placeholder="这一刻想说点什么..."
+                            className="moment-composer-textarea"
+                            rows={5}
+                        />
+                    </div>
+
+                    {draftImages.length > 0 ? (
+                        <div className="moment-composer-grid mt-3">
+                            {draftImages.map((image) => (
+                                <div key={image.id} className="moment-composer-image">
+                                    <img src={image.url} alt={image.name} />
+                                    <button
+                                        type="button"
+                                        onClick={() => setDraftImages((prev) => prev.filter((item) => item.id !== image.id))}
+                                        aria-label="remove image"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    ) : null}
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <label className="moment-composer-tool">
+                            <input
+                                type="file"
+                                accept="image/gif,image/jpeg,image/jpg,image/png,image/webp"
+                                multiple
+                                className="hidden"
+                                onChange={(event) => {
+                                    void handleImageUpload(event.currentTarget.files);
+                                    event.currentTarget.value = "";
+                                }}
+                            />
+                            <i className="ri-image-add-line" />
+                            <span>{uploadingImages ? "上传中..." : "图片"}</span>
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (draftLocation) {
+                                    setUseLocation((value) => !value);
+                                } else {
+                                    void handleLocate();
+                                }
+                            }}
+                            className={`moment-composer-tool ${useLocation ? "is-active" : ""}`}
+                        >
+                            <i className="ri-map-pin-line" />
+                            <span>{locating ? "定位中..." : useLocation ? "已使用地址" : "添加地址"}</span>
+                        </button>
+                        {draftLocation ? (
+                            <input
+                                value={draftLocation}
+                                onChange={(event) => setDraftLocation(event.target.value)}
+                                className="moment-location-input"
+                                placeholder="填写地址"
+                            />
+                        ) : null}
+                    </div>
+
+                    <div className="mt-4 flex justify-end gap-2">
                         <button
                             onClick={() => setIsModalOpen(false)}
                             className="rounded-[8px] border border-black/10 bg-white/55 px-4 py-2 text-sm font-medium text-neutral-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200"
@@ -289,7 +486,7 @@ export function MomentsPage() {
                         </button>
                         <button
                             onClick={handleSubmit}
-                            disabled={loading || !content.trim()}
+                            disabled={loading || uploadingImages || locating || !buildMomentContent().trim()}
                             className="rounded-[8px] bg-theme px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                         >
                             {loading ? t("saving") : editingMoment ? t("update.title") : t("publish.title")}
