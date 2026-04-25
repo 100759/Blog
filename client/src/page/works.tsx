@@ -16,7 +16,7 @@ const works: WorkItem[] = [
         title: "FuHeng Blog",
         category: "个人博客",
         status: "已上线",
-        description: "基于 Rin 二次开发的个人博客，包含文章、动态、标签、友链、后台写作与站点配置。",
+        description: "基于 Rin 二次开发的个人博客，包含文章、动态、友链、富文本写作、图片上传与站点配置。",
         stack: ["React", "Cloudflare Workers", "D1", "R2"],
         href: "https://blog.fuheng.vip",
     },
@@ -24,7 +24,7 @@ const works: WorkItem[] = [
         title: "网站视觉重整",
         category: "网站设计",
         status: "持续迭代",
-        description: "围绕移动端阅读体验、页面结构、导航可用性和个人品牌气质做的整站视觉改造。",
+        description: "围绕移动端阅读体验、页面层级、导航可用性和个人品牌气质做的整站视觉改造。",
         stack: ["UI Design", "Responsive", "Tailwind CSS"],
     },
     {

@@ -13,7 +13,6 @@ type SearchFeedRecord = {
     id: number;
     title: string | null;
     summary: string;
-    hashtags: { id: number; name: string }[];
     avatar?: string | null;
     createdAt: Date | string;
     updatedAt: Date | string;

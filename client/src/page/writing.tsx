@@ -17,15 +17,6 @@ const AUTO_SAVE_DELAY_MS = 1800;
 type SaveState = "idle" | "saving" | "saved" | "error";
 type SaveIntent = "continue" | "publish";
 
-function normalizeAlias(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[`~!@#$%^&*()+=[\]{};:'",.<>/?\\|]+/g, " ")
-    .replace(/\s+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 function computeWordCount(value: string) {
   const latinWords = value.split(/\s+/).filter(Boolean).length;
   const cjkChars = (value.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu) ?? []).length;
@@ -40,29 +31,23 @@ function buildSuggestedSummary(value: string) {
 
 function buildPersistedSnapshot({
   title,
-  alias,
   content,
   summary,
-  tags,
   draft,
   listed,
   createdAt,
 }: {
   title: string;
-  alias: string;
   content: string;
   summary: string;
-  tags: string[];
   draft: boolean;
   listed: boolean;
   createdAt?: Date;
 }) {
   return JSON.stringify({
     title: title.trim(),
-    alias: alias.trim(),
     content,
     summary: summary.trim(),
-    tags,
     draft,
     listed,
     createdAt: createdAt?.toISOString() ?? null,
@@ -76,8 +61,6 @@ export function WritingPage({ id }: { id?: number }) {
   const cache = Cache.with(id);
   const [title, setTitle] = cache.useCache("title", "");
   const [summary, setSummary] = cache.useCache("summary", "");
-  const [tags, setTags] = cache.useCache("tags", "");
-  const [alias, setAlias] = cache.useCache("alias", "");
   const [draft, setDraft] = useState(id === undefined);
   const listed = true;
   const [cachedContent, setContent] = cache.useCache("content", "");
@@ -87,20 +70,13 @@ export function WritingPage({ id }: { id?: number }) {
   const [lastSavedAt, setLastSavedAt] = useState<Date | undefined>();
   const [loadingFeed, setLoadingFeed] = useState(Boolean(id));
   const { showAlert, AlertUI } = useAlert();
-  const aliasTouchedRef = useRef(Boolean(alias));
   const hydratedRef = useRef(id === undefined);
   const lastPersistedSnapshotRef = useRef(
     id === undefined
       ? buildPersistedSnapshot({
           title,
-          alias,
           content: convertStoredContentToEditorHtml(cachedContent),
           summary,
-          tags: tags
-            .split("#")
-            .filter((tag) => tag !== "")
-            .map((tag) => tag.trim())
-            .filter(Boolean),
           draft: true,
           listed: true,
           createdAt,
@@ -110,29 +86,17 @@ export function WritingPage({ id }: { id?: number }) {
 
   const content = useMemo(() => convertStoredContentToEditorHtml(cachedContent), [cachedContent]);
 
-  const tagList = useMemo(
-    () =>
-      tags
-        .split("#")
-        .filter((tag) => tag !== "")
-        .map((tag) => tag.trim())
-        .filter(Boolean),
-    [tags],
-  );
-
   const persistedSnapshot = useMemo(
     () =>
       buildPersistedSnapshot({
         title,
-        alias,
         content,
         summary,
-        tags: tagList,
         draft,
         listed,
         createdAt,
       }),
-    [alias, content, createdAt, draft, listed, summary, tagList, title],
+    [content, createdAt, draft, listed, summary, title],
   );
 
   const readingTitle = title.trim() || t("writing_editor.untitled");
@@ -146,10 +110,8 @@ export function WritingPage({ id }: { id?: number }) {
   const applyFetchedSnapshot = useCallback((data: any) => {
     lastPersistedSnapshotRef.current = buildPersistedSnapshot({
       title: data.title ?? "",
-      alias: data.alias ?? "",
       content: convertStoredContentToEditorHtml(data.content ?? ""),
       summary: data.summary ?? "",
-      tags: (data.hashtags ?? []).map(({ name }: { name: string }) => name),
       draft: data.draft === 1,
       listed: true,
       createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
@@ -168,18 +130,8 @@ export function WritingPage({ id }: { id?: number }) {
       }
 
       if (title === "" && data.title) setTitle(data.title);
-      if (tags === "" && data.hashtags) {
-        setTags(data.hashtags.map(({ name }: { name: string }) => `#${name}`).join(" "));
-      }
-      if (alias === "" && (data as any).alias) {
-        setAlias((data as any).alias);
-        aliasTouchedRef.current = true;
-      }
       if (cachedContent === "") setContent(convertStoredContentToEditorHtml(data.content));
       if (summary === "") setSummary((data as any).summary || "");
-      if (title !== "" || cachedContent !== "" || summary !== "" || tags !== "" || alias !== "") {
-        aliasTouchedRef.current = alias.trim().length > 0;
-      }
       setDraft((data as any).draft === 1);
       setCreatedAt(new Date(data.createdAt));
       applyFetchedSnapshot(data);
@@ -187,22 +139,12 @@ export function WritingPage({ id }: { id?: number }) {
       setSaveState("idle");
       setLoadingFeed(false);
     });
-  }, [alias, applyFetchedSnapshot, cachedContent, id, setAlias, setContent, setSummary, setTags, setTitle, summary, tags, title]);
+  }, [applyFetchedSnapshot, cachedContent, id, setContent, setSummary, setTitle, summary, title]);
 
   useEffect(() => {
     if (cachedContent === content) return;
     setContent(content);
   }, [cachedContent, content, setContent]);
-
-  useEffect(() => {
-    if (id !== undefined) return;
-    if (aliasTouchedRef.current) return;
-
-    const nextAlias = normalizeAlias(title);
-    if (alias !== nextAlias) {
-      setAlias(nextAlias);
-    }
-  }, [alias, id, setAlias, title]);
 
   useEffect(() => {
     if (saveState === "saved" && isDirty) {
@@ -237,7 +179,6 @@ export function WritingPage({ id }: { id?: number }) {
 
       const trimmedTitle = title.trim();
       const trimmedSummary = summary.trim() || buildSuggestedSummary(content);
-      const trimmedAlias = alias.trim();
       const effectiveDraft = forcePublished ? false : draft;
 
       if (intent === "publish") {
@@ -250,14 +191,7 @@ export function WritingPage({ id }: { id?: number }) {
           showAlert(t("content.empty"));
           return;
         }
-      } else if (
-        id === undefined &&
-        !trimmedTitle &&
-        !hasMeaningfulContent(content) &&
-        !trimmedSummary &&
-        !trimmedAlias &&
-        tagList.length === 0
-      ) {
+      } else if (id === undefined && !trimmedTitle && !hasMeaningfulContent(content) && !trimmedSummary) {
         showAlert(t("writing_editor.empty_draft"));
         return;
       }
@@ -269,9 +203,9 @@ export function WritingPage({ id }: { id?: number }) {
         title: trimmedTitle,
         content,
         summary: trimmedSummary,
-        tags: tagList,
+        tags: [],
         draft: effectiveDraft,
-        alias: trimmedAlias || undefined,
+        alias: undefined,
         listed,
         createdAt: createdAt?.toISOString(),
       };
@@ -289,10 +223,8 @@ export function WritingPage({ id }: { id?: number }) {
           Cache.with(id).clear();
           lastPersistedSnapshotRef.current = buildPersistedSnapshot({
             title: trimmedTitle,
-            alias: trimmedAlias,
             content,
             summary: trimmedSummary,
-            tags: tagList,
             draft: effectiveDraft,
             listed,
             createdAt,
@@ -341,7 +273,7 @@ export function WritingPage({ id }: { id?: number }) {
         setPublishing(null);
       }
     },
-    [alias, content, createdAt, draft, id, publishing, setLocation, showAlert, summary, t, tagList, title],
+    [content, createdAt, draft, id, listed, publishing, setLocation, showAlert, summary, t, title],
   );
 
   useEffect(() => {
@@ -373,26 +305,11 @@ export function WritingPage({ id }: { id?: number }) {
   }, [persistEntry]);
 
   const saveStatusText = useMemo(() => {
-    if (loadingFeed) {
-      return t("writing_editor.loading");
-    }
-
-    if (saveState === "saving") {
-      return t("writing_editor.status.saving");
-    }
-
-    if (saveState === "error") {
-      return t("writing_editor.status.error");
-    }
-
-    if (lastSavedAt && !isDirty) {
-      return t("writing_editor.status.saved$time", { time: lastSavedAt.toLocaleString() });
-    }
-
-    if (id === undefined) {
-      return t("writing_editor.status.local");
-    }
-
+    if (loadingFeed) return t("writing_editor.loading");
+    if (saveState === "saving") return t("writing_editor.status.saving");
+    if (saveState === "error") return t("writing_editor.status.error");
+    if (lastSavedAt && !isDirty) return t("writing_editor.status.saved$time", { time: lastSavedAt.toLocaleString() });
+    if (id === undefined) return t("writing_editor.status.local");
     return t("writing_editor.status.unsaved");
   }, [id, isDirty, lastSavedAt, loadingFeed, saveState, t]);
 
@@ -484,21 +401,7 @@ export function WritingPage({ id }: { id?: number }) {
         <div className="grid gap-6">
           <div className="flex min-w-0 flex-col gap-4">
             <FlatPanel className="p-4 sm:p-5 md:p-6">
-              <div className="flex flex-col gap-3 border-b border-black/5 pb-4 dark:border-white/5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="site-kicker">{t("writing")}</p>
-                    <p className="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
-                      {t("writing_editor.description")}
-                    </p>
-                  </div>
-                  <div className="inline-flex items-center rounded-full border border-black/10 bg-white/70 px-3 py-1.5 text-xs text-neutral-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-neutral-300">
-                    {saveStatusText}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <div className="grid gap-4 lg:grid-cols-2">
                 <div className="lg:col-span-2">
                   <Input
                     id={id}
@@ -509,12 +412,13 @@ export function WritingPage({ id }: { id?: number }) {
                     className="text-base"
                   />
                 </div>
+
                 <div className="lg:col-span-2">
                   <div className="rounded-[18px] border border-black/10 bg-white/45 p-3 dark:border-white/10 dark:bg-white/[0.03]">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <p className="site-kicker">{t("summary")}</p>
-                        <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">可留空，发布时会自动从正文提炼一段摘要。</p>
+                        <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">可留空，发布时会自动从正文提炼摘要。</p>
                       </div>
                       <button
                         type="button"
@@ -529,24 +433,6 @@ export function WritingPage({ id }: { id?: number }) {
                     </div>
                   </div>
                 </div>
-                <Input
-                  id={id}
-                  value={alias}
-                  setValue={(value) => {
-                    aliasTouchedRef.current = true;
-                    setAlias(value);
-                  }}
-                  placeholder={t("alias")}
-                  variant="flat"
-                />
-                <Input
-                  id={id}
-                  value={tags}
-                  setValue={setTags}
-                  placeholder={t("tags")}
-                  variant="flat"
-                  className="lg:col-span-2"
-                />
               </div>
 
               <div className="mt-4 rounded-[18px] border border-black/10 bg-white/40 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
@@ -556,27 +442,6 @@ export function WritingPage({ id }: { id?: number }) {
                     <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">需要的话可以调整文章发布时间。</p>
                   </div>
                   <DateTimeInput value={createdAt} onChange={setCreatedAt} className="w-full max-w-[16rem]" />
-                </div>
-              </div>
-
-              <div className="mt-4 grid gap-3 lg:grid-cols-3">
-                <div className="rounded-[18px] border border-black/10 bg-white/40 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-                  <p className="site-kicker">标题</p>
-                  <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-                    {title.trim() ? "标题已填写，可直接发布。" : "建议先写一个清楚的标题。"}
-                  </p>
-                </div>
-                <div className="rounded-[18px] border border-black/10 bg-white/40 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-                  <p className="site-kicker">摘要</p>
-                  <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-                    {summary.trim() ? "摘要已填写。" : suggestedSummary ? "未填写时会自动生成摘要。" : "先写一点正文，摘要才能生成。"}
-                  </p>
-                </div>
-                <div className="rounded-[18px] border border-black/10 bg-white/40 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-                  <p className="site-kicker">别名</p>
-                  <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-                    {alias.trim() ? `当前链接别名：/${alias.trim()}` : "默认会跟随标题自动生成。"}
-                  </p>
                 </div>
               </div>
             </FlatPanel>

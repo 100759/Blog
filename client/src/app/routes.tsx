@@ -21,8 +21,6 @@ const MomentsPage = lazyNamed(() => import("../page/moments"), "MomentsPage");
 const FriendsPage = lazyNamed(() => import("../page/friends"), "FriendsPage");
 const WorksPage = lazyNamed(() => import("../page/works"), "WorksPage");
 const SitesPage = lazyNamed(() => import("../page/sites"), "SitesPage");
-const HashtagsPage = lazyNamed(() => import("../page/hashtags"), "HashtagsPage");
-const HashtagPage = lazyNamed(() => import("../page/hashtag"), "HashtagPage");
 const SearchPage = lazyNamed(() => import("../page/search"), "SearchPage");
 const Settings = lazyNamed(() => import("../page/settings"), "Settings");
 const HealthPage = lazyNamed(() => import("../page/health"), "HealthPage");
@@ -43,7 +41,6 @@ const routePreloaders = {
   "/friends": () => import("../page/friends"),
   "/works": () => import("../page/works"),
   "/sites": () => import("../page/sites"),
-  "/hashtags": () => import("../page/hashtags"),
   "/search": () => import("../page/search"),
   "/feed": () => import("../page/feed"),
 } satisfies Record<string, () => Promise<unknown>>;
@@ -125,7 +122,6 @@ export function AppRoutes() {
       preloadRoute("/friends");
       preloadRoute("/works");
       preloadRoute("/sites");
-      preloadRoute("/hashtags");
     };
 
     if (typeof window === "undefined") {
@@ -172,14 +168,6 @@ export function AppRoutes() {
 
       <AppRoute path="/sites">
         <SitesPage />
-      </AppRoute>
-
-      <AppRoute path="/hashtags">
-        <HashtagsPage />
-      </AppRoute>
-
-      <AppRoute path="/hashtag/:name">
-        {(params) => <HashtagPage name={params.name || ""} />}
       </AppRoute>
 
       <AppRoute path="/search/:keyword">

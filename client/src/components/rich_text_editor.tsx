@@ -50,23 +50,17 @@ export function RichTextEditor({
   };
 
   const focusEditor = () => {
-    window.setTimeout(() => {
-      editorRef.current?.focus();
-    }, 0);
+    window.setTimeout(() => editorRef.current?.focus(), 0);
   };
 
   const clearSelectedDivider = () => {
-    if (selectedDividerRef.current) {
-      selectedDividerRef.current.classList.remove("is-selected");
-      selectedDividerRef.current = null;
-    }
+    selectedDividerRef.current?.classList.remove("is-selected");
+    selectedDividerRef.current = null;
   };
 
   const clearSelectedImage = () => {
-    if (selectedImageRef.current) {
-      selectedImageRef.current.classList.remove("is-selected");
-      selectedImageRef.current = null;
-    }
+    selectedImageRef.current?.classList.remove("is-selected");
+    selectedImageRef.current = null;
     setSelectionVersion((value) => value + 1);
   };
 
@@ -75,16 +69,25 @@ export function RichTextEditor({
     clearSelectedImage();
   };
 
-  const selectDivider = (divider: HTMLElement | null) => {
-    if (!divider) return;
+  const exec = (command: string, value?: string) => {
+    clearSelectionMarkers();
+    document.execCommand(command, false, value);
+    syncFromDom();
+    focusEditor();
+  };
+
+  const applyBlock = (tagName: "P" | "H2" | "H3" | "BLOCKQUOTE") => {
+    exec("formatBlock", tagName);
+  };
+
+  const selectDivider = (divider: HTMLElement) => {
     clearSelectionMarkers();
     divider.classList.add("is-selected");
     selectedDividerRef.current = divider;
     focusEditor();
   };
 
-  const selectImage = (image: HTMLImageElement | null) => {
-    if (!image) return;
+  const selectImage = (image: HTMLImageElement) => {
     clearSelectionMarkers();
     image.classList.add("is-selected");
     selectedImageRef.current = image;
@@ -102,16 +105,6 @@ export function RichTextEditor({
     clearSelectedDivider();
     syncFromDom();
     focusEditor();
-  };
-
-  const applyImageSize = (size: "compact" | "default" | "wide") => {
-    const image = selectedImageRef.current;
-    if (!image) return;
-    image.classList.remove("image-size-compact", "image-size-default", "image-size-wide");
-    image.classList.add(`image-size-${size}`);
-    syncFromDom();
-    focusEditor();
-    setSelectionVersion((value) => value + 1);
   };
 
   const removeImage = () => {
@@ -135,15 +128,14 @@ export function RichTextEditor({
     focusEditor();
   };
 
-  const exec = (command: string, value?: string) => {
-    clearSelectionMarkers();
-    document.execCommand(command, false, value);
+  const applyImageSize = (size: "compact" | "default" | "wide") => {
+    const image = selectedImageRef.current;
+    if (!image) return;
+    image.classList.remove("image-size-compact", "image-size-default", "image-size-wide");
+    image.classList.add(`image-size-${size}`);
     syncFromDom();
     focusEditor();
-  };
-
-  const applyBlock = (tagName: "P" | "H2" | "H3" | "BLOCKQUOTE") => {
-    exec("formatBlock", tagName);
+    setSelectionVersion((value) => value + 1);
   };
 
   const insertLink = () => {
@@ -174,11 +166,12 @@ export function RichTextEditor({
     `<p><img class="image-size-default" src="${src.replace(/"/g, "&quot;")}" alt="${fileName.replace(/"/g, "&quot;")}" /></p><p><br></p>`;
 
   const uploadAndInsertImages = async (files: File[]) => {
-    if (files.length === 0) return;
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    if (imageFiles.length === 0) return;
 
     setUploading(true);
     try {
-      for (const file of files) {
+      for (const file of imageFiles) {
         if (file.size > DEFAULT_IMAGE_MAX_FILE_SIZE) {
           showAlert(`图片不能超过 ${MAX_IMAGE_SIZE_MB}MB`);
           continue;
@@ -245,9 +238,7 @@ export function RichTextEditor({
     if (!anchor) return false;
 
     const block = anchor.closest("p, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, li, div");
-    if (!(block instanceof HTMLElement) || !editor.contains(block)) {
-      return false;
-    }
+    if (!(block instanceof HTMLElement) || !editor.contains(block)) return false;
 
     const sibling = block[direction];
     if (sibling instanceof HTMLElement && sibling.classList.contains("rich-divider")) {
@@ -350,34 +341,18 @@ export function RichTextEditor({
         {selectedImageRef.current ? (
           <div key={selectionVersion} className="rich-editor-image-tools">
             <span className="rich-editor-image-tools-label">图片</span>
-            <button type="button" onClick={() => applyImageSize("compact")} className="rich-editor-image-tool">
-              小图
-            </button>
-            <button type="button" onClick={() => applyImageSize("default")} className="rich-editor-image-tool">
-              常规
-            </button>
-            <button type="button" onClick={() => applyImageSize("wide")} className="rich-editor-image-tool">
-              宽图
-            </button>
-            <button
-              type="button"
-              onClick={() => replaceImageInputRef.current?.click()}
-              className="rich-editor-image-tool"
-            >
-              替换
-            </button>
-            <button type="button" onClick={removeImage} className="rich-editor-image-tool is-danger">
-              删除
-            </button>
+            <button type="button" onClick={() => applyImageSize("compact")} className="rich-editor-image-tool">小图</button>
+            <button type="button" onClick={() => applyImageSize("default")} className="rich-editor-image-tool">常规</button>
+            <button type="button" onClick={() => applyImageSize("wide")} className="rich-editor-image-tool">宽图</button>
+            <button type="button" onClick={() => replaceImageInputRef.current?.click()} className="rich-editor-image-tool">替换</button>
+            <button type="button" onClick={removeImage} className="rich-editor-image-tool is-danger">删除</button>
           </div>
         ) : null}
 
         <div
           className="rich-editor-frame"
           onDragEnter={(event) => {
-            if (Array.from(event.dataTransfer?.types || []).includes("Files")) {
-              setDragging(true);
-            }
+            if (Array.from(event.dataTransfer?.types || []).includes("Files")) setDragging(true);
           }}
           onDragOver={(event) => {
             if (Array.from(event.dataTransfer?.types || []).includes("Files")) {
@@ -386,15 +361,12 @@ export function RichTextEditor({
             }
           }}
           onDragLeave={(event) => {
-            if (event.currentTarget === event.target) {
-              setDragging(false);
-            }
+            if (event.currentTarget === event.target) setDragging(false);
           }}
           onDrop={(event) => {
             event.preventDefault();
             setDragging(false);
-            const files = Array.from(event.dataTransfer.files).filter((file) => file.type.startsWith("image/"));
-            void uploadAndInsertImages(files);
+            void uploadAndInsertImages(Array.from(event.dataTransfer.files));
           }}
         >
           <div
@@ -502,9 +474,7 @@ export function RichTextEditor({
             </div>
           ) : null}
 
-          <p className="rich-editor-hint">
-            支持拖拽上传、粘贴图片、撤销重做。分割线和图片点一下就能选中后删除。
-          </p>
+          <p className="rich-editor-hint">支持拖拽上传、粘贴图片、撤销重做。分割线和图片点一下就能选中后删除。</p>
 
           {uploading ? (
             <div className="rich-editor-uploading">

@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { timeago } from "../utils/timeago";
-import { HashTag } from "./hashtag";
 import { useEffect, useRef } from "react";
 import { drawBlurhashToCanvas } from "../utils/blurhash";
 import { parseImageUrlMetadata } from "../utils/image-upload";
@@ -94,14 +93,13 @@ export type FeedCardProps = {
     top?: number;
     title: string;
     summary: string;
-    hashtags: { id: number, name: string }[];
     createdAt: Date;
     updatedAt: Date;
     preview?: boolean;
     variant?: FeedCardVariant;
 };
 
-export function FeedCard({ id, title, avatar, draft, listed, top, summary, hashtags, createdAt, updatedAt, preview = false, variant }: FeedCardProps) {
+export function FeedCard({ id, title, avatar, draft, listed, top, summary, createdAt, updatedAt, preview = false, variant }: FeedCardProps) {
     const { t } = useTranslation();
     const siteConfig = useSiteConfig();
     const activeVariant = normalizeFeedCardVariant(variant ?? siteConfig.feedCardVariant);
@@ -137,13 +135,6 @@ export function FeedCard({ id, title, avatar, draft, listed, top, summary, hasht
                     }
                 </p>
                 <p className={`${styles.summary} ${activeVariant === "editorial" ? "mt-3 max-w-2xl" : "mt-3"}`}>{summary}</p>
-                {hashtags.length > 0 &&
-                    <div className={`flex flex-row flex-wrap justify-start gap-1.5 ${activeVariant === "editorial" ? "mt-3" : "mt-3"}`}>
-                        {hashtags.map(({ name }, index) => (
-                            <HashTag key={index} name={name} />
-                        ))}
-                    </div>
-                }
             </div>
         </div>
     );

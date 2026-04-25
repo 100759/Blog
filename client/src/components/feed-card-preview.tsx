@@ -16,12 +16,8 @@ const PREVIEW_PROPS: FeedCardProps = {
   id: "preview-feed-card",
   title: "A quieter card with stronger hierarchy",
   summary:
-    "This preview shows how article lists feel before you save. The image, metadata, and tags all respond to the selected feed card style.",
+    "This preview shows how article lists feel before you save. The image, metadata, and spacing all respond to the selected feed card style.",
   avatar: PREVIEW_IMAGE_URL,
-  hashtags: [
-    { id: 1, name: "design" },
-    { id: 2, name: "reading" },
-  ],
   createdAt: new Date("2026-03-01T10:00:00.000Z"),
   updatedAt: new Date("2026-03-03T12:00:00.000Z"),
   draft: 0,

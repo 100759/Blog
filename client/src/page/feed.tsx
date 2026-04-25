@@ -7,7 +7,6 @@ import Popup from "reactjs-popup";
 import { Link, useLocation } from "wouter";
 import { Button } from "../components/button";
 import { useAlert, useConfirm } from "../components/dialog";
-import { HashTag } from "../components/hashtag";
 import { Waiting } from "../components/loading";
 import { Markdown } from "../components/markdown";
 import { Tips } from "../components/tips";
@@ -129,7 +128,6 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
           <meta property="og:url" content={document.URL} />
           <meta name="og:description" content={excerpt} />
           <meta name="author" content={feed.user.username} />
-          <meta name="keywords" content={feed.hashtags.map(({ name }) => name).join(", ")} />
           <meta name="description" content={excerpt} />
         </Helmet>
       ) : null}
@@ -183,14 +181,6 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
                       </>
                     ) : null}
                   </div>
-
-                  {feed.hashtags.length > 0 ? (
-                    <div className="mt-4 flex max-w-2xl flex-wrap gap-1.5">
-                      {feed.hashtags.map(({ id: tagId, name }) => (
-                        <HashTag key={tagId} name={name} />
-                      ))}
-                    </div>
-                  ) : null}
 
                   <div className="mt-5 flex flex-wrap items-center gap-3">
                     {profile?.permission ? (

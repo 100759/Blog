@@ -87,7 +87,6 @@ describe("SearchPage", () => {
             id: 1,
             title: "Content First",
             summary: "Summary",
-            hashtags: [],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           },

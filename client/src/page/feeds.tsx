@@ -2,7 +2,6 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { Link, useSearch } from "wouter";
 import { FeedCard } from "../components/feed_card";
-import { HashTag } from "../components/hashtag";
 import { Waiting } from "../components/loading";
 import { client } from "../app/runtime";
 import { preloadRoute } from "../app/routes";
@@ -34,7 +33,6 @@ type FeedRecord = {
     top?: number;
     title: string;
     summary: string;
-    hashtags: { id: number; name: string }[];
     createdAt: Date | string;
     updatedAt: Date | string;
 }
@@ -72,7 +70,6 @@ export function FeedsPage() {
                         avatar: item.avatar || undefined,
                         title: item.title || t("unlisted"),
                         summary: item.summary,
-                        hashtags: item.hashtags || [],
                         createdAt: item.createdAt,
                         updatedAt: item.updatedAt,
                     })),
@@ -253,13 +250,6 @@ function FeaturedFeedLead({ feed }: { feed: FeedRecord }) {
                                 </span>
                             ) : null}
                         </div>
-                        {feed.hashtags.length > 0 ? (
-                            <div className="mt-4 flex flex-wrap gap-2 sm:mt-6">
-                                {feed.hashtags.map(({ id, name }) => (
-                                    <HashTag key={id} name={name} />
-                                ))}
-                            </div>
-                        ) : null}
                     </div>
 
                     <div className="min-h-[140px] border-t border-black/5 bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.03),rgba(255,255,255,0.1))] p-2.5 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.05),rgba(255,255,255,0.02))] sm:min-h-[180px] sm:p-3 lg:min-h-full lg:border-l lg:border-t-0 lg:p-4">
