@@ -13,6 +13,7 @@ export function Header({ children }: { children?: React.ReactNode }) {
   const layoutDefinition = getHeaderLayoutDefinition(headerLayout);
   const [isRevealed, setIsRevealed] = useState(true);
   const [isAtTop, setIsAtTop] = useState(true);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const headerRef = useRef<HTMLDivElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const revealedRef = useRef(true);
@@ -60,7 +61,9 @@ export function Header({ children }: { children?: React.ReactNode }) {
     const root = document.documentElement;
     const setHeaderScrollOffset = () => {
       const headerHeight = headerRef.current?.getBoundingClientRect().height ?? 0;
-      root.style.setProperty("--header-scroll-offset", `${Math.ceil(headerHeight + 16)}px`);
+      const nextHeaderHeight = Math.ceil(headerHeight);
+      setHeaderHeight(nextHeaderHeight);
+      root.style.setProperty("--header-scroll-offset", `${nextHeaderHeight + 16}px`);
     };
 
     setHeaderScrollOffset();
@@ -89,7 +92,10 @@ export function Header({ children }: { children?: React.ReactNode }) {
       : `fixed inset-x-0 top-0 z-40 transition-transform duration-300 ${
           headerBehavior === "reveal" && !isRevealed ? "-translate-y-full" : "translate-y-0"
         }`;
-  const spacerClassName = !useTopHeader || headerBehavior === "static" ? "h-0" : "h-20";
+  const spacerStyle =
+    !useTopHeader || headerBehavior === "static"
+      ? undefined
+      : { height: `${headerHeight + 16}px` };
 
   return (
     <>
@@ -113,7 +119,7 @@ export function Header({ children }: { children?: React.ReactNode }) {
           )}
         </div>
       </div>
-      <div className={spacerClassName} />
+      <div style={spacerStyle} />
     </>
   );
 }

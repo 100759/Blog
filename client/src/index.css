@@ -53,6 +53,14 @@ textarea:focus {
   outline: none;
 }
 
+html {
+  background: rgb(var(--site-surface-rgb));
+}
+
+[data-color-mode="dark"] html {
+  background: rgb(var(--site-paper-dark-rgb));
+}
+
 .wmde-markdown {
   @apply bg-w;
   font-family: Cantarell, "Source Han Serif CN VF" !important;
