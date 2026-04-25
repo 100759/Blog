@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
+import { preloadRoute } from "../../../app/routes";
 
 export function NavBar({
   menu,
@@ -52,6 +53,8 @@ function NavItem({
       } ${itemClassName}`}
       state={{ animate: true }}
       onClick={onClick}
+      onMouseEnter={() => preloadRoute(href)}
+      onTouchStart={() => preloadRoute(href)}
     >
       {title}
     </Link>

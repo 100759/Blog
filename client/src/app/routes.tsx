@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
-import { lazy, Suspense, useContext } from "react";
+import { lazy, Suspense, useContext, useEffect } from "react";
 import type { DefaultParams, PathPattern } from "wouter";
 import { Route, Switch } from "wouter";
 import { AdminLayout } from "../components/admin-layout";
@@ -34,6 +34,15 @@ const FeedPage = lazyNamed(() => import("../page/feed"), "FeedPage");
 const TOCHeader = lazyNamed(() => import("../page/feed"), "TOCHeader");
 
 const DYNAMIC_IMPORT_RELOAD_KEY = "rin:dynamic-import-reload";
+const preloadedRoutes = new Set<string>();
+const routePreloaders = {
+  "/timeline": () => import("../page/timeline"),
+  "/moments": () => import("../page/moments"),
+  "/friends": () => import("../page/friends"),
+  "/hashtags": () => import("../page/hashtags"),
+  "/search": () => import("../page/search"),
+  "/feed": () => import("../page/feed"),
+} satisfies Record<string, () => Promise<unknown>>;
 
 function isDynamicImportError(error: unknown) {
   if (!(error instanceof Error)) {
@@ -84,8 +93,54 @@ function RoutePending() {
   );
 }
 
+export function preloadRoute(pathname: string) {
+  const matchedEntry = Object.entries(routePreloaders).find(([prefix]) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+
+  if (!matchedEntry) {
+    return;
+  }
+
+  const [prefix, preload] = matchedEntry;
+  if (preloadedRoutes.has(prefix)) {
+    return;
+  }
+
+  preloadedRoutes.add(prefix);
+  void preload().catch(() => {
+    preloadedRoutes.delete(prefix);
+  });
+}
+
 export function AppRoutes() {
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const preloadCommonRoutes = () => {
+      preloadRoute("/timeline");
+      preloadRoute("/moments");
+      preloadRoute("/friends");
+      preloadRoute("/hashtags");
+    };
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if ("requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(() => {
+        preloadCommonRoutes();
+      }, { timeout: 1500 });
+
+      return () => {
+        window.cancelIdleCallback(idleId);
+      };
+    }
+
+    const timer = globalThis.setTimeout(preloadCommonRoutes, 800);
+    return () => {
+      globalThis.clearTimeout(timer);
+    };
+  }, []);
 
   return (
     <Switch>
