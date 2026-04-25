@@ -255,6 +255,187 @@ html {
   margin-right: auto;
 }
 
+.rich-editor-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.rich-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  padding: 1rem 1rem 0;
+  border-bottom: 1px solid rgb(31 33 31 / 0.06);
+}
+
+.rich-editor-toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.rich-editor-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  min-height: 2.4rem;
+  padding: 0 0.9rem;
+  border: 1px solid rgb(31 33 31 / 0.08);
+  border-radius: 9999px;
+  background: rgb(var(--site-paper-rgb) / 0.86);
+  color: rgb(var(--site-ink-rgb));
+  font-size: 0.85rem;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.rich-editor-tool:hover {
+  border-color: rgb(var(--theme-rgb) / 0.35);
+  background: rgb(var(--theme-rgb) / 0.08);
+}
+
+.rich-editor-frame {
+  position: relative;
+  padding: 1rem;
+}
+
+.rich-editor-surface {
+  width: 100%;
+  padding: 1.15rem 1.2rem;
+  border: 1px solid rgb(31 33 31 / 0.08);
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 0.78);
+  color: rgb(var(--site-ink-rgb));
+  font-size: 1rem;
+  line-height: 1.9;
+  outline: none;
+}
+
+.rich-editor-surface:empty::before {
+  content: attr(data-placeholder);
+  color: rgb(var(--site-muted-rgb) / 0.85);
+}
+
+.rich-editor-surface h1,
+.rich-editor-surface h2,
+.rich-editor-surface h3,
+.rich-editor-surface h4,
+.rich-editor-surface h5,
+.rich-editor-surface h6 {
+  color: rgb(var(--site-ink-rgb));
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", "Source Han Serif CN VF", serif;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.rich-editor-surface h2 {
+  margin: 1.15rem 0 0.5rem;
+  font-size: 1.8rem;
+}
+
+.rich-editor-surface h3 {
+  margin: 1rem 0 0.45rem;
+  font-size: 1.35rem;
+}
+
+.rich-editor-surface p,
+.rich-editor-surface ul,
+.rich-editor-surface ol,
+.rich-editor-surface blockquote,
+.rich-editor-surface pre {
+  margin-top: 0.7rem;
+}
+
+.rich-editor-surface ul,
+.rich-editor-surface ol {
+  padding-left: 1.35rem;
+}
+
+.rich-editor-surface blockquote {
+  padding: 0.55rem 0.9rem;
+  border-left: 3px solid rgb(var(--theme-rgb) / 0.45);
+  background: rgb(var(--theme-rgb) / 0.06);
+  color: rgb(var(--site-muted-rgb));
+}
+
+.rich-editor-surface img {
+  display: block;
+  max-width: min(100%, 38rem);
+  margin-top: 0.8rem;
+  border-radius: 0.9rem;
+}
+
+.rich-editor-surface a {
+  color: rgb(var(--theme-rgb));
+  text-decoration: underline;
+  text-underline-offset: 0.22rem;
+}
+
+.rich-editor-surface hr {
+  margin: 1.2rem 0;
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, rgb(var(--theme-rgb) / 0.4), transparent);
+}
+
+.rich-editor-uploading {
+  position: absolute;
+  right: 1.6rem;
+  bottom: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid rgb(31 33 31 / 0.08);
+  border-radius: 9999px;
+  background: rgb(var(--site-paper-rgb) / 0.92);
+  color: rgb(var(--site-muted-rgb));
+  font-size: 0.82rem;
+}
+
+[data-color-mode="dark"] .rich-editor-toolbar {
+  border-bottom-color: rgb(255 255 255 / 0.08);
+}
+
+[data-color-mode="dark"] .rich-editor-tool {
+  border-color: rgb(255 255 255 / 0.1);
+  background: rgb(255 255 255 / 0.04);
+  color: rgb(var(--site-ink-dark-rgb));
+}
+
+[data-color-mode="dark"] .rich-editor-tool:hover {
+  border-color: rgb(var(--theme-rgb) / 0.4);
+  background: rgb(var(--theme-rgb) / 0.12);
+}
+
+[data-color-mode="dark"] .rich-editor-surface {
+  border-color: rgb(255 255 255 / 0.08);
+  background: rgb(255 255 255 / 0.03);
+  color: rgb(var(--site-ink-dark-rgb));
+}
+
+[data-color-mode="dark"] .rich-editor-surface:empty::before {
+  color: rgb(var(--site-muted-dark-rgb) / 0.85);
+}
+
+[data-color-mode="dark"] .rich-editor-surface h1,
+[data-color-mode="dark"] .rich-editor-surface h2,
+[data-color-mode="dark"] .rich-editor-surface h3,
+[data-color-mode="dark"] .rich-editor-surface h4,
+[data-color-mode="dark"] .rich-editor-surface h5,
+[data-color-mode="dark"] .rich-editor-surface h6 {
+  color: rgb(var(--site-ink-dark-rgb));
+}
+
+[data-color-mode="dark"] .rich-editor-surface blockquote {
+  color: rgb(var(--site-muted-dark-rgb));
+  background: rgb(255 255 255 / 0.04);
+}
+
+[data-color-mode="dark"] .rich-editor-uploading {
+  border-color: rgb(255 255 255 / 0.08);
+  background: rgb(var(--site-paper-dark-rgb) / 0.94);
+  color: rgb(var(--site-muted-dark-rgb));
+}
+
 .moment-hero {
   position: relative;
   overflow: hidden;

@@ -18,19 +18,11 @@ import { ProfileContext } from "../state/profile";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { siteName } from "../utils/constants";
 import { stripImageUrlMetadata } from "../utils/image-upload";
+import { extractFirstContentImageUrl, stripContentToPlainText } from "../utils/rich-content";
 import { timeago } from "../utils/timeago";
 
-function extractFirstMarkdownImageUrl(content: string) {
-  const match = /!\[.*?\]\((\S+?)(?:\s+"[^"]*")?\)/.exec(content);
-  if (!match) {
-    return undefined;
-  }
-
-  return stripImageUrlMetadata(match[1]);
-}
-
 function buildArticleExcerpt(content: string, fallback?: string | null) {
-  const trimmed = fallback?.trim() || content.replace(/[#>*`[\]()!-]/g, " ").replace(/\s+/g, " ").trim();
+  const trimmed = fallback?.trim() || stripContentToPlainText(content);
   if (!trimmed) return "";
   return trimmed.length > 220 ? `${trimmed.slice(0, 220)}...` : trimmed;
 }
@@ -109,7 +101,7 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
         setTimeout(() => {
           setFeed(data as any);
           setTop(data.top || 0);
-          const headImageUrl = extractFirstMarkdownImageUrl(data.content);
+          const headImageUrl = extractFirstContentImageUrl(data.content);
           if (headImageUrl) {
             setHeadImage(headImageUrl);
           }

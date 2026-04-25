@@ -5,11 +5,12 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { DateTimeInput, FlatMetaRow, FlatPanel } from "@rin/ui";
 import { client } from "../app/runtime";
-import { MarkdownEditor } from "../components/markdown_editor";
+import { RichTextEditor } from "../components/rich_text_editor";
 import { useAlert } from "../components/dialog";
 import { Checkbox, Input } from "../components/input";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { Cache } from "../utils/cache";
+import { convertStoredContentToEditorHtml, hasMeaningfulContent, stripContentToPlainText } from "../utils/rich-content";
 
 const AUTO_SAVE_DELAY_MS = 1800;
 
@@ -23,20 +24,6 @@ function normalizeAlias(value: string) {
     .replace(/[`~!@#$%^&*()+=[\]{};:'",.<>/?\\|]+/g, " ")
     .replace(/\s+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-function stripMarkdown(value: string) {
-  return value
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/!\[.*?\]\(.*?\)/g, " ")
-    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
-    .replace(/^>\s?/gm, "")
-    .replace(/^#{1,6}\s+/gm, "")
-    .replace(/[*_~>-]/g, " ")
-    .replace(/\n+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 function computeWordCount(value: string) {
@@ -87,7 +74,7 @@ export function WritingPage({ id }: { id?: number }) {
   const [alias, setAlias] = cache.useCache("alias", "");
   const [draft, setDraft] = useState(id === undefined);
   const [listed, setListed] = useState(true);
-  const [content, setContent] = cache.useCache("content", "");
+  const [cachedContent, setContent] = cache.useCache("content", "");
   const [createdAt, setCreatedAt] = useState<Date | undefined>(new Date());
   const [publishing, setPublishing] = useState<SaveIntent | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
@@ -101,7 +88,7 @@ export function WritingPage({ id }: { id?: number }) {
       ? buildPersistedSnapshot({
           title,
           alias,
-          content,
+          content: convertStoredContentToEditorHtml(cachedContent),
           summary,
           tags: tags
             .split("#")
@@ -114,6 +101,8 @@ export function WritingPage({ id }: { id?: number }) {
         })
       : "",
   );
+
+  const content = useMemo(() => convertStoredContentToEditorHtml(cachedContent), [cachedContent]);
 
   const tagList = useMemo(
     () =>
@@ -142,7 +131,7 @@ export function WritingPage({ id }: { id?: number }) {
 
   const readingTitle = title.trim() || t("writing_editor.untitled");
   const readingDescription = summary.trim() || siteConfig.description || t("content.empty");
-  const plainText = useMemo(() => stripMarkdown(content), [content]);
+  const plainText = useMemo(() => stripContentToPlainText(content), [content]);
   const wordCount = useMemo(() => computeWordCount(plainText), [plainText]);
   const readingMinutes = Math.max(1, Math.ceil(Math.max(wordCount, 1) / 320));
   const isDirty = hydratedRef.current && persistedSnapshot !== lastPersistedSnapshotRef.current;
@@ -151,7 +140,7 @@ export function WritingPage({ id }: { id?: number }) {
     lastPersistedSnapshotRef.current = buildPersistedSnapshot({
       title: data.title ?? "",
       alias: data.alias ?? "",
-      content: data.content ?? "",
+      content: convertStoredContentToEditorHtml(data.content ?? ""),
       summary: data.summary ?? "",
       tags: (data.hashtags ?? []).map(({ name }: { name: string }) => name),
       draft: data.draft === 1,
@@ -179,9 +168,9 @@ export function WritingPage({ id }: { id?: number }) {
         setAlias((data as any).alias);
         aliasTouchedRef.current = true;
       }
-      if (content === "") setContent(data.content);
+      if (cachedContent === "") setContent(convertStoredContentToEditorHtml(data.content));
       if (summary === "") setSummary((data as any).summary || "");
-      if (title !== "" || content !== "" || summary !== "" || tags !== "" || alias !== "") {
+      if (title !== "" || cachedContent !== "" || summary !== "" || tags !== "" || alias !== "") {
         aliasTouchedRef.current = alias.trim().length > 0;
       }
       setListed((data as any).listed === 1);
@@ -192,7 +181,12 @@ export function WritingPage({ id }: { id?: number }) {
       setSaveState("idle");
       setLoadingFeed(false);
     });
-  }, [alias, applyFetchedSnapshot, content, id, setAlias, setContent, setSummary, setTags, setTitle, summary, tags, title]);
+  }, [alias, applyFetchedSnapshot, cachedContent, id, setAlias, setContent, setSummary, setTags, setTitle, summary, tags, title]);
+
+  useEffect(() => {
+    if (cachedContent === content) return;
+    setContent(content);
+  }, [cachedContent, content, setContent]);
 
   useEffect(() => {
     if (id !== undefined) return;
@@ -246,14 +240,14 @@ export function WritingPage({ id }: { id?: number }) {
           return;
         }
 
-        if (!content.trim()) {
+        if (!hasMeaningfulContent(content)) {
           showAlert(t("content.empty"));
           return;
         }
       } else if (
         id === undefined &&
         !trimmedTitle &&
-        !content.trim() &&
+        !hasMeaningfulContent(content) &&
         !trimmedSummary &&
         !trimmedAlias &&
         tagList.length === 0
@@ -553,10 +547,11 @@ export function WritingPage({ id }: { id?: number }) {
             </FlatPanel>
 
             <FlatPanel className="overflow-hidden p-0">
-              <MarkdownEditor
+              <RichTextEditor
                 content={content}
                 setContent={setContent}
                 height="clamp(34rem, 72vh, 58rem)"
+                placeholder="直接输入正文，选中文字就可以加粗、加标题、插图。"
                 onSave={() => {
                   void persistEntry({ intent: "continue" });
                 }}
