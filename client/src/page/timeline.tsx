@@ -72,17 +72,16 @@ export function TimelinePage() {
                                 <TimelineMark />
                                 <div className="min-w-0">
                                     <p className="site-kicker">Timeline</p>
-                                <h1 className="site-display text-[1.65rem] font-semibold text-neutral-900 dark:text-white md:text-[2.35rem]">
-                                    时间轴
-                                </h1>
-                                <p className="mt-2 max-w-2xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
-                                    按年份整理所有文章，像翻一册干净的归档本。
-                                </p>
+                                    <h1 className="site-display text-[1.65rem] font-semibold text-neutral-900 dark:text-white md:text-[2.35rem]">
+                                        时间轴
+                                    </h1>
+                                    <p className="mt-2 max-w-2xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
+                                        按年份整理所有文章，像翻一册干净的归档本。
+                                    </p>
+                                    <p className="mt-2 text-[12px] text-neutral-400 dark:text-neutral-500">
+                                        共 {total} 篇文章 · {years.length} 个年份
+                                    </p>
                                 </div>
-                            </div>
-                            <div className="flex gap-2">
-                                <TimelineStat label="文章" value={total} />
-                                <TimelineStat label="年份" value={years.length} />
                             </div>
                         </div>
                     </section>
@@ -109,15 +108,6 @@ function TimelineMark() {
             <span className="absolute left-1/2 top-3 h-6 w-px -translate-x-1/2 rounded-full bg-theme/35" />
             <span className="absolute top-3 h-2 w-2 rounded-full bg-theme shadow-[0_10px_0_rgba(var(--theme-rgb),0.42),0_20px_0_rgba(var(--theme-rgb),0.22)]" />
             <i className="ri-time-line relative z-10 text-[18px]" />
-        </div>
-    );
-}
-
-function TimelineStat({ label, value }: { label: string; value: number }) {
-    return (
-        <div className="min-w-20 rounded-[16px] border border-black/8 bg-white/55 px-4 py-3 text-right dark:border-white/10 dark:bg-white/[0.04]">
-            <p className="text-xs text-neutral-400">{label}</p>
-            <p className="site-display mt-1 text-2xl text-neutral-900 dark:text-white">{value}</p>
         </div>
     );
 }
