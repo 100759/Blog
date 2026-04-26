@@ -255,6 +255,144 @@ html {
   margin-right: auto;
 }
 
+.rich-article-content {
+  overflow-wrap: anywhere;
+}
+
+.rich-article-content > *:first-child {
+  margin-top: 0;
+}
+
+.rich-article-content p,
+.rich-article-content ul,
+.rich-article-content ol,
+.rich-article-content blockquote,
+.rich-article-content pre,
+.rich-article-content table,
+.rich-article-content figure {
+  margin-top: 1rem;
+}
+
+.rich-article-content h1,
+.rich-article-content h2,
+.rich-article-content h3,
+.rich-article-content h4,
+.rich-article-content h5,
+.rich-article-content h6 {
+  margin-top: 2.1rem;
+  color: rgb(var(--site-ink-rgb));
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", "Source Han Serif CN VF", serif;
+  font-weight: 650;
+  line-height: 1.22;
+  scroll-margin-top: 6rem;
+}
+
+.rich-article-content h1 {
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+}
+
+.rich-article-content h2 {
+  font-size: clamp(1.45rem, 3vw, 1.95rem);
+}
+
+.rich-article-content h3 {
+  font-size: clamp(1.18rem, 2.4vw, 1.45rem);
+}
+
+.rich-article-content ul,
+.rich-article-content ol {
+  padding-left: 1.45rem;
+  list-style-position: outside;
+}
+
+.rich-article-content ul {
+  list-style-type: disc;
+}
+
+.rich-article-content ol {
+  list-style-type: decimal;
+}
+
+.rich-article-content li {
+  display: list-item;
+  margin-top: 0.35rem;
+  padding-left: 0.1rem;
+}
+
+.rich-article-content blockquote {
+  border-left: 3px solid rgb(var(--theme-rgb) / 0.42);
+  border-radius: 0 1rem 1rem 0;
+  background: rgb(var(--theme-rgb) / 0.055);
+  padding: 0.8rem 1rem;
+  color: rgb(var(--site-muted-rgb));
+}
+
+.rich-article-content a {
+  color: rgb(var(--theme-rgb));
+  text-decoration: underline;
+  text-underline-offset: 0.22rem;
+}
+
+.rich-article-content img {
+  display: block;
+  max-width: min(100%, 38rem);
+  height: auto;
+  margin: 1.2rem auto 0;
+  border-radius: 1rem;
+}
+
+.rich-article-content img.image-size-compact {
+  max-width: min(100%, 14rem);
+}
+
+.rich-article-content img.image-size-default {
+  max-width: min(100%, 26rem);
+}
+
+.rich-article-content img.image-size-wide {
+  max-width: min(100%, 42rem);
+}
+
+.rich-article-content hr {
+  height: 1px;
+  margin: 1.6rem 0;
+  border: none;
+  background: linear-gradient(90deg, transparent, rgb(var(--theme-rgb) / 0.45), transparent);
+}
+
+.rich-article-content code {
+  border-radius: 0.4rem;
+  background: rgb(31 33 31 / 0.06);
+  padding: 0.1rem 0.35rem;
+  font-size: 0.9em;
+}
+
+.rich-article-content pre {
+  overflow-x: auto;
+  border-radius: 1rem;
+  background: rgb(31 33 31 / 0.06);
+  padding: 1rem;
+}
+
+[data-color-mode="dark"] .rich-article-content h1,
+[data-color-mode="dark"] .rich-article-content h2,
+[data-color-mode="dark"] .rich-article-content h3,
+[data-color-mode="dark"] .rich-article-content h4,
+[data-color-mode="dark"] .rich-article-content h5,
+[data-color-mode="dark"] .rich-article-content h6 {
+  color: rgb(var(--site-ink-dark-rgb));
+}
+
+[data-color-mode="dark"] .rich-article-content blockquote {
+  background: rgb(255 255 255 / 0.045);
+  color: rgb(var(--site-muted-dark-rgb));
+}
+
+[data-color-mode="dark"] .rich-article-content code,
+[data-color-mode="dark"] .rich-article-content pre {
+  background: rgb(255 255 255 / 0.06);
+}
+
 .rich-editor-shell {
   display: flex;
   flex-direction: column;

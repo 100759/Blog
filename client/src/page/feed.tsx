@@ -1,5 +1,5 @@
 import type { Feed } from "@rin/api";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useTranslation } from "react-i18next";
 import ReactModal from "react-modal";
@@ -17,7 +17,7 @@ import { ProfileContext } from "../state/profile";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { siteName } from "../utils/constants";
 import { stripImageUrlMetadata } from "../utils/image-upload";
-import { extractFirstContentImageUrl, stripContentToPlainText } from "../utils/rich-content";
+import { extractFirstContentImageUrl, isHtmlContent, normalizeRichHtml, stripContentToPlainText } from "../utils/rich-content";
 import { timeago } from "../utils/timeago";
 
 function buildArticleExcerpt(content: string, fallback?: string | null) {
@@ -112,6 +112,10 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
   }, [clean, id]);
 
   const excerpt = feed ? buildArticleExcerpt(feed.content) : "";
+  const renderedContent = useMemo(() => {
+    if (!feed) return "";
+    return isHtmlContent(feed.content) ? normalizeRichHtml(feed.content) : feed.content;
+  }, [feed]);
   const createdAt = feed ? new Date(feed.createdAt) : undefined;
   const updatedAt = feed ? new Date(feed.updatedAt) : undefined;
   const showHeroImage = headImage || siteConfig.avatar;
@@ -259,7 +263,11 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
 
                 <div className="px-4 py-7 md:px-7 md:py-8">
                   <div className="mx-auto min-w-0 w-full max-w-[720px] text-[16px] leading-8 text-neutral-700 dark:text-neutral-300">
-                    <Markdown content={feed.content} />
+                    {isHtmlContent(feed.content) ? (
+                      <RichArticleContent content={renderedContent} />
+                    ) : (
+                      <Markdown content={renderedContent} />
+                    )}
                   </div>
                 </div>
 
@@ -303,6 +311,15 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
       <AlertUI />
       <ConfirmUI />
     </Waiting>
+  );
+}
+
+function RichArticleContent({ content }: { content: string }) {
+  return (
+    <div
+      className="rich-article-content toc-content text-[16px] leading-[1.95] text-neutral-700 dark:text-neutral-300 md:text-[17px]"
+      dangerouslySetInnerHTML={{ __html: content }}
+    />
   );
 }
 

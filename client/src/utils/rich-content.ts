@@ -255,6 +255,15 @@ export function normalizeRichHtml(content: string) {
   const doc = new DOMParser().parseFromString(content, "text/html");
 
   doc.querySelectorAll("script, style").forEach((node) => node.remove());
+  doc.querySelectorAll<HTMLElement>("*").forEach((node) => {
+    Array.from(node.attributes).forEach((attribute) => {
+      const name = attribute.name.toLowerCase();
+      const value = attribute.value.trim().toLowerCase();
+      if (name.startsWith("on") || value.startsWith("javascript:")) {
+        node.removeAttribute(attribute.name);
+      }
+    });
+  });
 
   doc.querySelectorAll<HTMLElement>("h1, h2, h3, h4, h5, h6").forEach((heading) => {
     if (!heading.id) {
