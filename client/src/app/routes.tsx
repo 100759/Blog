@@ -20,6 +20,7 @@ const TimelinePage = lazyNamed(() => import("../page/timeline"), "TimelinePage")
 const MomentsPage = lazyNamed(() => import("../page/moments"), "MomentsPage");
 const FriendsPage = lazyNamed(() => import("../page/friends"), "FriendsPage");
 const WorksPage = lazyNamed(() => import("../page/works"), "WorksPage");
+const WorkDetailPage = lazyNamed(() => import("../page/works"), "WorkDetailPage") as ComponentType<{ slug: string }>;
 const SitesPage = lazyNamed(() => import("../page/sites"), "SitesPage");
 const SearchPage = lazyNamed(() => import("../page/search"), "SearchPage");
 const Settings = lazyNamed(() => import("../page/settings"), "Settings");
@@ -160,6 +161,10 @@ export function AppRoutes() {
 
       <AppRoute path="/friends">
         <FriendsPage />
+      </AppRoute>
+
+      <AppRoute path="/works/:slug">
+        {(params) => <WorkDetailPage slug={params.slug || ""} />}
       </AppRoute>
 
       <AppRoute path="/works">
