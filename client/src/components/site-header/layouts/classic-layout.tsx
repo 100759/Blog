@@ -38,7 +38,7 @@ export const classicLayoutDefinition: HeaderLayoutDefinition = {
             />
             <div className="ml-auto flex items-center gap-2">
               {children ? <div className="flex items-center text-sm t-primary">{children}</div> : null}
-              <Menu profile={profile} />
+              <Menu profile={profile} siteName={siteConfig.name} />
             </div>
           </div>
         </div>

@@ -50,7 +50,7 @@ export function MobileTopHeader({
           <div className="hidden md:flex lg:hidden">
             <HeaderActions profile={profile} plain className="flex flex-row items-center gap-1" />
           </div>
-          <Menu profile={profile} />
+          <Menu profile={profile} siteName={siteConfig.name} />
         </div>
       </div>
     </div>
