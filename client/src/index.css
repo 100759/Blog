@@ -262,8 +262,7 @@ html {
 }
 
 .rich-editor-toolbar {
-  position: sticky;
-  top: calc(var(--header-scroll-offset, 5rem) + 0.35rem);
+  position: relative;
   z-index: 3;
   display: flex;
   flex-wrap: wrap;
