@@ -1,49 +1,14 @@
+import { useContext } from "react";
 import { Helmet } from "react-helmet";
 import { siteName } from "../utils/constants";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-
-type Platform = "Cloudflare Workers" | "Cloudflare Pages" | "Vercel" | "自有服务器";
-
-type SiteItem = {
-    name: string;
-    url: string;
-    description: string;
-    platform: Platform;
-    role: string;
-    status: string;
-    color: string;
-};
-
-const platformTone: Record<Platform, string> = {
-    "Cloudflare Workers": "border-orange-200 bg-orange-50 text-orange-700",
-    "Cloudflare Pages": "border-amber-200 bg-amber-50 text-amber-700",
-    Vercel: "border-neutral-900 bg-neutral-950 text-white",
-    自有服务器: "border-sky-200 bg-sky-50 text-sky-700",
-};
-
-const sites: SiteItem[] = [
-    {
-        name: "FuHeng Blog",
-        url: "https://blog.fuheng.vip",
-        description: "主站入口，放文章、动态、作品、友链和个人资料。这里是所有内容的起点。",
-        platform: "Cloudflare Workers",
-        role: "主站",
-        status: "运行中",
-        color: "bg-teal-600",
-    },
-    {
-        name: "Worker 备用入口",
-        url: "https://rin-blog-100759.100759.workers.dev",
-        description: "Cloudflare Workers 默认域名，主域名异常时可以作为备用访问入口。",
-        platform: "Cloudflare Workers",
-        role: "备用",
-        status: "运行中",
-        color: "bg-orange-500",
-    },
-];
+import { ClientConfigContext } from "../state/config";
+import { parseSitesConfig, platformTone, SITES_CONFIG_KEY, type SiteItem } from "./portfolio-data";
 
 export function SitesPage() {
     const siteConfig = useSiteConfig();
+    const config = useContext(ClientConfigContext);
+    const sites = parseSitesConfig(config.get(SITES_CONFIG_KEY));
 
     return (
         <>
@@ -75,7 +40,7 @@ export function SitesPage() {
 
                 <section className="mt-6 space-y-3">
                     {sites.map((site, index) => (
-                        <SiteRow key={site.url} site={site} index={index + 1} />
+                        <SiteRow key={`${site.url}-${index}`} site={site} index={index + 1} />
                     ))}
                 </section>
             </main>

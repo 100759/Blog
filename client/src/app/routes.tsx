@@ -28,6 +28,7 @@ const HealthPage = lazyNamed(() => import("../page/health"), "HealthPage");
 const QueueStatusPage = lazyNamed(() => import("../page/queue-status"), "QueueStatusPage");
 const CompatTasksPage = lazyNamed(() => import("../page/compat-tasks"), "CompatTasksPage");
 const WritingPage = lazyNamed(() => import("../page/writing"), "WritingPage");
+const PortfolioAdminPage = lazyNamed(() => import("../page/portfolio-admin"), "PortfolioAdminPage");
 const CallbackPage = lazyNamed(() => import("../page/callback"), "CallbackPage");
 const LoginPage = lazyNamed(() => import("../page/login"), "LoginPage");
 const ProfilePage = lazyNamed(() => import("../page/profile"), "ProfilePage");
@@ -201,6 +202,10 @@ export function AppRoutes() {
 
       <AdminRoute path="/admin/writing/:id" requirePermission title={t("writing")} description={t("admin.writing_description")} compact>
         {({ id }) => <WritingPage id={tryInt(0, id)} />}
+      </AdminRoute>
+
+      <AdminRoute path="/admin/portfolio" requirePermission title="作品与网站" description="管理作品板块和旗下网站展示内容。">
+        <PortfolioAdminPage />
       </AdminRoute>
 
       <AppRoute path="/callback">
