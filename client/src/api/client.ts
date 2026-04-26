@@ -127,17 +127,6 @@ export interface CompatBlurhashApplyResponse {
   updated: boolean;
 }
 
-export interface SiteCheckResult {
-  url: string;
-  ok: boolean;
-  status: number;
-  statusText: string;
-  latency: number;
-  checkedAt: string;
-  finalUrl?: string;
-  error?: string;
-}
-
 // Re-export for external use
 export type {
   ApiResponse,
@@ -593,17 +582,6 @@ class StorageAPI {
 }
 
 /**
- * Sites API methods
- */
-class SitesAPI {
-  constructor(private http: HttpClient) {}
-
-  async check(urls: string[]): Promise<ApiResponse<SiteCheckResult[]>> {
-    return this.http.post<SiteCheckResult[]>("/api/sites/check", { urls });
-  }
-}
-
-/**
  * Search API methods
  */
 class SearchAPI {
@@ -689,7 +667,6 @@ export class ApiClient {
   config: ConfigAPI;
   aiConfig: AIConfigAPI;
   storage: StorageAPI;
-  sites: SitesAPI;
   search: SearchAPI;
   auth: AuthAPI;
   wp: WordPressAPI;
@@ -706,7 +683,6 @@ export class ApiClient {
     this.config = new ConfigAPI(this.http);
     this.aiConfig = new AIConfigAPI(this.http);
     this.storage = new StorageAPI(this.http);
-    this.sites = new SitesAPI(this.http);
     this.search = new SearchAPI(this.http);
     this.auth = new AuthAPI(this.http);
     this.wp = new WordPressAPI(this.http);

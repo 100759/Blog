@@ -1,98 +1,49 @@
-import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import { siteName } from "../utils/constants";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-import { client } from "../app/runtime";
-import type { SiteCheckResult } from "../api/client";
 
-type Platform = "cloudflare-workers" | "cloudflare-pages" | "vercel" | "custom";
+type Platform = "Cloudflare Workers" | "Cloudflare Pages" | "Vercel" | "自有服务器";
 
 type SiteItem = {
     name: string;
     url: string;
     description: string;
-    tag: string;
     platform: Platform;
     role: string;
-    domainType: string;
-    accent: string;
+    status: string;
+    color: string;
 };
 
-const platformMeta: Record<Platform, { label: string; short: string; icon: string; tone: string }> = {
-    "cloudflare-workers": {
-        label: "Cloudflare Workers",
-        short: "Workers",
-        icon: "ri-cloud-line",
-        tone: "bg-orange-50 text-orange-700 border-orange-200",
-    },
-    "cloudflare-pages": {
-        label: "Cloudflare Pages",
-        short: "Pages",
-        icon: "ri-pages-line",
-        tone: "bg-amber-50 text-amber-700 border-amber-200",
-    },
-    vercel: {
-        label: "Vercel",
-        short: "Vercel",
-        icon: "ri-triangle-line",
-        tone: "bg-neutral-950 text-white border-neutral-950",
-    },
-    custom: {
-        label: "自有服务器",
-        short: "Custom",
-        icon: "ri-server-line",
-        tone: "bg-sky-50 text-sky-700 border-sky-200",
-    },
+const platformTone: Record<Platform, string> = {
+    "Cloudflare Workers": "border-orange-200 bg-orange-50 text-orange-700",
+    "Cloudflare Pages": "border-amber-200 bg-amber-50 text-amber-700",
+    Vercel: "border-neutral-900 bg-neutral-950 text-white",
+    自有服务器: "border-sky-200 bg-sky-50 text-sky-700",
 };
 
 const sites: SiteItem[] = [
     {
         name: "FuHeng Blog",
         url: "https://blog.fuheng.vip",
-        description: "主站入口，集中放文章、动态、作品、旗下网站和个人资料。",
-        tag: "主站",
-        platform: "cloudflare-workers",
-        role: "内容中枢",
-        domainType: "自定义域名",
-        accent: "from-teal-100 via-cyan-50 to-stone-50",
+        description: "主站入口，放文章、动态、作品、友链和个人资料。这里是所有内容的起点。",
+        platform: "Cloudflare Workers",
+        role: "主站",
+        status: "运行中",
+        color: "bg-teal-600",
     },
     {
         name: "Worker 备用入口",
         url: "https://rin-blog-100759.100759.workers.dev",
-        description: "Cloudflare Workers 默认域名，可作为主域名异常时的备用访问入口。",
-        tag: "备用",
-        platform: "cloudflare-workers",
-        role: "备用线路",
-        domainType: "Workers Dev",
-        accent: "from-orange-100 via-white to-amber-50",
+        description: "Cloudflare Workers 默认域名，主域名异常时可以作为备用访问入口。",
+        platform: "Cloudflare Workers",
+        role: "备用",
+        status: "运行中",
+        color: "bg-orange-500",
     },
 ];
 
 export function SitesPage() {
     const siteConfig = useSiteConfig();
-    const [checks, setChecks] = useState<Record<string, SiteCheckResult>>({});
-    const [checking, setChecking] = useState(true);
-    const onlineCount = Object.values(checks).filter((item) => item.ok).length;
-    const avgLatency = useMemo(() => {
-        const values = Object.values(checks).filter((item) => item.latency > 0);
-        if (!values.length) return 0;
-        return Math.round(values.reduce((sum, item) => sum + item.latency, 0) / values.length);
-    }, [checks]);
-
-    function runCheck() {
-        setChecking(true);
-        client.sites.check(sites.map((item) => item.url)).then(({ data }) => {
-            if (data) {
-                setChecks(Object.fromEntries(data.map((item) => [item.url, item])));
-            }
-        }).finally(() => {
-            setChecking(false);
-        });
-    }
-
-    useEffect(() => {
-        runCheck();
-    }, []);
 
     return (
         <>
@@ -105,52 +56,26 @@ export function SitesPage() {
                 <meta property="og:url" content={document.URL} />
             </Helmet>
             <main className="wauto ani-show pb-14 pt-6 md:pt-8">
-                <section className="overflow-hidden rounded-[30px] border border-black/8 bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white shadow-sm dark:border-white/10">
-                    <div className="relative p-5 md:p-8">
-                        <div className="absolute right-[-70px] top-[-90px] size-56 rounded-full bg-teal-300/20 blur-3xl" />
-                        <div className="absolute bottom-[-90px] left-[20%] size-48 rounded-full bg-cyan-200/10 blur-3xl" />
-                        <div className="relative grid gap-7 lg:grid-cols-[1fr_360px] lg:items-end">
-                            <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.26em] text-teal-100/80">Site Network</p>
-                                <h1 className="site-display mt-4 text-[2rem] font-semibold leading-tight md:text-[3.2rem]">
-                                    旗下网站
-                                </h1>
-                                <p className="mt-4 max-w-2xl text-[15px] leading-7 text-white/72">
-                                    这里整理所有正在维护的网站入口，并自动检测域名可用性、响应耗时和部署平台。像一张自己的线上资产地图，打开就知道哪些站点在线。
-                                </p>
-                                <div className="mt-6 flex flex-wrap gap-2">
-                                    <MetricPill label="站点" value={`${sites.length}`} />
-                                    <MetricPill label="在线" value={checking ? "检测中" : `${onlineCount}/${sites.length}`} />
-                                    <MetricPill label="平均延迟" value={avgLatency ? `${avgLatency}ms` : "--"} />
-                                </div>
-                            </div>
-                            <div className="rounded-[26px] border border-white/12 bg-white/8 p-4 backdrop-blur">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs uppercase tracking-[0.22em] text-white/45">Monitor</p>
-                                        <h2 className="mt-2 text-lg font-semibold">域名检测</h2>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={runCheck}
-                                        className="rounded-full border border-white/15 px-4 py-2 text-sm text-white/80 transition hover:border-white/30 hover:bg-white/10"
-                                    >
-                                        {checking ? "检测中..." : "重新检测"}
-                                    </button>
-                                </div>
-                                <div className="mt-5 space-y-3">
-                                    {sites.map((site) => (
-                                        <MiniStatus key={site.url} site={site} check={checks[site.url]} checking={checking} />
-                                    ))}
-                                </div>
-                            </div>
+                <section className="border-b border-black/8 pb-5 dark:border-white/10">
+                    <p className="site-kicker">Sites</p>
+                    <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <h1 className="site-display text-[1.65rem] font-semibold text-neutral-900 dark:text-white md:text-[2.35rem]">
+                                旗下网站
+                            </h1>
+                            <p className="mt-2 max-w-2xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
+                                我的所有网站和长期维护入口。保持清楚、轻量、好打开，不做花哨监控。
+                            </p>
                         </div>
+                        <span className="w-fit rounded-full border border-black/8 bg-white/55 px-4 py-2 text-sm text-neutral-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300">
+                            共 {sites.length} 个站点
+                        </span>
                     </div>
                 </section>
 
-                <section className="mt-6 grid gap-4 lg:grid-cols-2">
-                    {sites.map((item) => (
-                        <SiteCard key={item.url} site={item} check={checks[item.url]} checking={checking} />
+                <section className="mt-6 space-y-3">
+                    {sites.map((site, index) => (
+                        <SiteRow key={site.url} site={site} index={index + 1} />
                     ))}
                 </section>
             </main>
@@ -158,154 +83,58 @@ export function SitesPage() {
     );
 }
 
-function MetricPill({ label, value }: { label: string; value: string }) {
+function SiteRow({ site, index }: { site: SiteItem; index: number }) {
     return (
-        <span className="rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm text-white/75">
-            {label}
-            <strong className="ml-2 text-white">{value}</strong>
-        </span>
-    );
-}
-
-function MiniStatus({ site, check, checking }: { site: SiteItem; check?: SiteCheckResult; checking: boolean }) {
-    const status = getStatus(check, checking);
-
-    return (
-        <div className="flex items-center justify-between gap-3 rounded-[18px] bg-white/8 px-3 py-3">
-            <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{site.name}</p>
-                <p className="mt-1 truncate text-xs text-white/45">{hostOf(site.url)}</p>
-            </div>
-            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs ${status.className}`}>{status.label}</span>
-        </div>
-    );
-}
-
-function SiteCard({ site, check, checking }: { site: SiteItem; check?: SiteCheckResult; checking: boolean }) {
-    const platform = platformMeta[site.platform];
-    const status = getStatus(check, checking);
-
-    return (
-        <article className="site-panel overflow-hidden rounded-[28px]">
-            <div className={`bg-gradient-to-br ${site.accent} p-5 text-neutral-950 md:p-6`}>
-                <div className="flex items-start justify-between gap-4">
-                    <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-neutral-500">{site.tag}</p>
-                        <h2 className="mt-3 text-2xl font-semibold">{site.name}</h2>
+        <a
+            href={site.url}
+            target="_blank"
+            rel="noreferrer"
+            className="site-panel group block rounded-[18px] px-4 py-4 transition hover:-translate-y-0.5 hover:border-theme/30 md:px-5 md:py-5"
+        >
+            <article className="grid gap-4 md:grid-cols-[56px_1fr_auto] md:items-center">
+                <div className="flex items-center gap-3 md:block">
+                    <span className={`grid size-11 place-items-center rounded-[14px] text-sm font-semibold text-white ${site.color}`}>
+                        {String(index).padStart(2, "0")}
+                    </span>
+                    <div className="md:hidden">
+                        <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">{site.name}</h2>
+                        <p className="mt-1 text-xs text-neutral-400">{cleanUrl(site.url)}</p>
                     </div>
-                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium ${platform.tone}`}>
-                        <i className={platform.icon} />
-                        {platform.short}
+                </div>
+
+                <div className="min-w-0">
+                    <div className="hidden items-center gap-3 md:flex">
+                        <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">{site.name}</h2>
+                        <span className="rounded-full bg-black/[0.04] px-2.5 py-1 text-xs text-neutral-500 dark:bg-white/[0.06] dark:text-neutral-300">
+                            {site.role}
+                        </span>
+                    </div>
+                    <p className="mt-2 text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
+                        {site.description}
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                        <span className={`rounded-full border px-2.5 py-1 ${platformTone[site.platform]}`}>
+                            {site.platform}
+                        </span>
+                        <span className="rounded-full border border-black/8 bg-white/45 px-2.5 py-1 text-neutral-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300">
+                            {site.status}
+                        </span>
+                        <span className="min-w-0 truncate text-neutral-400">{cleanUrl(site.url)}</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-black/6 pt-3 dark:border-white/10 md:border-0 md:pt-0">
+                    <span className="text-sm text-neutral-400 md:hidden">{site.role}</span>
+                    <span className="inline-flex items-center gap-2 text-sm font-medium text-theme">
+                        打开
+                        <i className="ri-arrow-right-up-line transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </span>
                 </div>
-                <p className="mt-4 max-w-xl text-[14px] leading-6 text-neutral-650">{site.description}</p>
-            </div>
-
-            <div className="px-5 py-5 md:px-6">
-                <div className="grid gap-3 sm:grid-cols-3">
-                    <InfoBlock label="状态" value={status.label} statusClass={status.dotClassName} />
-                    <InfoBlock label="响应" value={check?.latency ? `${check.latency}ms` : "--"} />
-                    <InfoBlock label="HTTP" value={check?.status ? `${check.status}` : "--"} />
-                </div>
-
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <MetaRow icon="ri-global-line" label="域名" value={hostOf(site.url)} />
-                    <MetaRow icon={platform.icon} label="部署平台" value={platform.label} />
-                    <MetaRow icon="ri-route-line" label="用途" value={site.role} />
-                    <MetaRow icon="ri-shield-check-line" label="类型" value={site.domainType} />
-                </div>
-
-                <div className="mt-5 flex flex-col gap-3 border-t border-black/6 pt-5 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0 text-xs text-neutral-500 dark:text-neutral-400">
-                        <p className="truncate">最终地址：{check?.finalUrl ? cleanUrl(check.finalUrl) : cleanUrl(site.url)}</p>
-                        <p className="mt-1">检测时间：{check?.checkedAt ? formatTime(check.checkedAt) : "等待检测"}</p>
-                    </div>
-                    <a
-                        href={site.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-theme px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
-                    >
-                        打开网站
-                        <i className="ri-arrow-right-up-line" />
-                    </a>
-                </div>
-            </div>
-        </article>
+            </article>
+        </a>
     );
-}
-
-function InfoBlock({ label, value, statusClass }: { label: string; value: string; statusClass?: string }) {
-    return (
-        <div className="rounded-[18px] border border-black/8 bg-black/[0.02] px-4 py-3 dark:border-white/10 dark:bg-white/[0.04]">
-            <p className="text-xs text-neutral-400">{label}</p>
-            <div className="mt-2 flex items-center gap-2">
-                {statusClass ? <span className={`size-2 rounded-full ${statusClass}`} /> : null}
-                <strong className="text-sm text-neutral-850 dark:text-white">{value}</strong>
-            </div>
-        </div>
-    );
-}
-
-function MetaRow({ icon, label, value }: { icon: string; label: string; value: string }) {
-    return (
-        <div className="flex items-center gap-3 rounded-[16px] bg-black/[0.025] px-3 py-3 dark:bg-white/[0.04]">
-            <span className="grid size-9 place-items-center rounded-full bg-white text-theme shadow-sm dark:bg-white/10">
-                <i className={icon} />
-            </span>
-            <div className="min-w-0">
-                <p className="text-xs text-neutral-400">{label}</p>
-                <p className="mt-0.5 truncate text-sm font-medium text-neutral-800 dark:text-neutral-100">{value}</p>
-            </div>
-        </div>
-    );
-}
-
-function getStatus(check: SiteCheckResult | undefined, checking: boolean) {
-    if (checking && !check) {
-        return {
-            label: "检测中",
-            className: "bg-white/12 text-white/70",
-            dotClassName: "bg-amber-400",
-        };
-    }
-
-    if (check?.ok) {
-        return {
-            label: "在线",
-            className: "bg-emerald-400/15 text-emerald-100",
-            dotClassName: "bg-emerald-500",
-        };
-    }
-
-    return {
-        label: "异常",
-        className: "bg-red-400/15 text-red-100",
-        dotClassName: "bg-red-500",
-    };
-}
-
-function hostOf(url: string) {
-    try {
-        return new URL(url).host;
-    } catch {
-        return url.replace(/^https?:\/\//, "");
-    }
 }
 
 function cleanUrl(url: string) {
     return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
-}
-
-function formatTime(value: string) {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-        return value;
-    }
-
-    return date.toLocaleTimeString("zh-CN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-    });
 }
