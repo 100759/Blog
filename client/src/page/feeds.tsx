@@ -46,7 +46,9 @@ export function FeedsPage() {
     const [status, setStatus] = useState<"loading" | "idle">("idle");
     const [feeds, setFeeds] = useState<FeedsData>({ size: 0, data: [], hasNext: false });
     const [categories, setCategories] = useState<FeedCategory[]>([]);
+    const [searchOpen, setSearchOpen] = useState(false);
     const [searchKeyword, setSearchKeyword] = useState("");
+    const searchInputRef = useRef<HTMLInputElement>(null);
     const page = tryInt(1, queryPage);
     const limit = tryInt(siteConfig.pageSize, query.get("limit"));
     const ref = useRef("");
@@ -96,6 +98,12 @@ export function FeedsPage() {
         });
     }, []);
 
+    useEffect(() => {
+        if (searchOpen) {
+            searchInputRef.current?.focus();
+        }
+    }, [searchOpen]);
+
     const currentFeedSet = feeds;
     const allFeeds = currentFeedSet.data || [];
     const featuredFeed = page === 1 ? allFeeds[0] : undefined;
@@ -110,8 +118,15 @@ export function FeedsPage() {
 
     function submitSearch(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
+        if (!searchOpen) {
+            setSearchOpen(true);
+            return;
+        }
         const keyword = searchKeyword.trim();
-        if (!keyword) return;
+        if (!keyword) {
+            searchInputRef.current?.focus();
+            return;
+        }
         setLocation(`/search/${encodeURIComponent(keyword)}`);
     }
 
@@ -153,26 +168,42 @@ export function FeedsPage() {
                                         />
                                     ))}
                                 </div>
-                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                <div className="flex items-center gap-2">
                                     <form
                                         onSubmit={submitSearch}
-                                        className="flex min-h-11 items-center gap-2 rounded-full border border-black/10 bg-white/65 px-3 py-1.5 shadow-sm transition focus-within:border-theme/35 focus-within:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:focus-within:bg-white/[0.07]"
+                                        className={`flex min-h-11 items-center overflow-hidden rounded-full border border-black/10 bg-white/65 shadow-sm transition-all duration-300 focus-within:border-theme/35 focus-within:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:focus-within:bg-white/[0.07] ${
+                                            searchOpen ? "w-[min(78vw,300px)] gap-2 px-3 py-1.5" : "w-11 justify-center px-0"
+                                        }`}
                                     >
-                                        <i className="ri-search-line text-neutral-400" />
-                                        <input
-                                            value={searchKeyword}
-                                            onChange={(event) => setSearchKeyword(event.target.value)}
-                                            placeholder="搜索文章"
-                                            className="min-w-0 bg-transparent text-sm text-neutral-700 outline-none placeholder:text-neutral-400 dark:text-neutral-100"
-                                        />
                                         <button
                                             type="submit"
-                                            className="rounded-full bg-theme/10 px-3 py-1.5 text-xs font-medium text-theme transition hover:bg-theme hover:text-white"
+                                            aria-label={searchOpen ? "搜索文章" : "展开搜索"}
+                                            className={searchOpen ? "text-neutral-400 transition hover:text-theme" : "grid h-11 w-11 place-items-center text-neutral-500 transition hover:text-theme"}
                                         >
-                                            搜索
+                                            <i className="ri-search-line text-base" />
                                         </button>
+                                        {searchOpen ? (
+                                            <>
+                                                <input
+                                                    ref={searchInputRef}
+                                                    value={searchKeyword}
+                                                    onChange={(event) => setSearchKeyword(event.target.value)}
+                                                    onBlur={() => {
+                                                        if (!searchKeyword.trim()) setSearchOpen(false);
+                                                    }}
+                                                    placeholder="搜索文章"
+                                                    className="min-w-0 flex-1 bg-transparent text-sm text-neutral-700 outline-none placeholder:text-neutral-400 dark:text-neutral-100"
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    className="rounded-full bg-theme/10 px-3 py-1.5 text-xs font-medium text-theme transition hover:bg-theme hover:text-white"
+                                                >
+                                                    搜索
+                                                </button>
+                                            </>
+                                        ) : null}
                                     </form>
-                                    <TimelineShortcut avatar={siteConfig.avatar} siteName={siteConfig.name} />
+                                    <TimelineShortcut />
                                 </div>
                             </div>
                         </div>
@@ -233,27 +264,18 @@ export function FeedsPage() {
     );
 }
 
-function TimelineShortcut({ avatar, siteName }: { avatar?: string; siteName: string }) {
+function TimelineShortcut() {
     return (
         <Link
             href="/timeline"
-            className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-theme/18 bg-[linear-gradient(135deg,rgba(var(--theme-rgb),0.12),rgba(255,255,255,0.72))] px-2.5 py-1.5 text-sm font-medium text-neutral-800 shadow-sm transition hover:-translate-y-0.5 hover:border-theme/35 hover:text-theme dark:border-theme/25 dark:bg-[linear-gradient(135deg,rgba(var(--theme-rgb),0.18),rgba(255,255,255,0.05))] dark:text-neutral-100"
+            className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-theme/18 bg-[linear-gradient(135deg,rgba(var(--theme-rgb),0.11),rgba(255,255,255,0.76))] px-2.5 py-1.5 text-sm font-medium text-neutral-800 shadow-sm transition hover:-translate-y-0.5 hover:border-theme/35 hover:text-theme dark:border-theme/25 dark:bg-[linear-gradient(135deg,rgba(var(--theme-rgb),0.18),rgba(255,255,255,0.05))] dark:text-neutral-100"
             onMouseEnter={() => preloadRoute("/timeline")}
             onTouchStart={() => preloadRoute("/timeline")}
         >
-            <span className="relative grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-theme/12 text-theme">
-                {avatar ? (
-                    <img
-                        src={stripImageUrlMetadata(avatar)}
-                        alt={siteName}
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover"
-                    />
-                ) : (
-                    <i className="ri-history-line text-base" />
-                )}
-                <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-theme dark:border-neutral-900" />
+            <span className="relative grid h-8 w-8 place-items-center rounded-full bg-theme/12 text-theme ring-1 ring-theme/15">
+                <span className="absolute left-1/2 top-1.5 h-5 w-px -translate-x-1/2 rounded-full bg-theme/35" />
+                <span className="absolute top-2 h-1.5 w-1.5 rounded-full bg-theme shadow-[0_8px_0_rgba(var(--theme-rgb),0.42),0_16px_0_rgba(var(--theme-rgb),0.24)]" />
+                <i className="ri-arrow-down-line absolute bottom-0.5 text-[10px] opacity-70" />
             </span>
             <span>时间轴</span>
             <i className="ri-arrow-right-line text-theme transition group-hover:translate-x-0.5" />

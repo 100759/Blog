@@ -68,15 +68,18 @@ export function TimelinePage() {
             <Waiting for={feeds}>
                 <main className="wauto ani-show pb-14 pt-6 sm:pt-8">
                     <section className="border-b border-black/8 pb-5 dark:border-white/10">
-                        <p className="site-kicker">Timeline</p>
-                        <div className="mt-2 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-                            <div>
+                        <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+                            <div className="flex items-start gap-3">
+                                <TimelineMark />
+                                <div className="min-w-0">
+                                    <p className="site-kicker">Timeline</p>
                                 <h1 className="site-display text-[1.65rem] font-semibold text-neutral-900 dark:text-white md:text-[2.35rem]">
                                     时间轴
                                 </h1>
                                 <p className="mt-2 max-w-2xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
                                     按年份整理所有文章，像翻一册干净的归档本。
                                 </p>
+                                </div>
                             </div>
                             <div className="flex gap-2">
                                 <TimelineStat label="文章" value={total} />
@@ -98,6 +101,16 @@ export function TimelinePage() {
                 </main>
             </Waiting>
         </>
+    );
+}
+
+function TimelineMark() {
+    return (
+        <div className="relative mt-1 grid h-12 w-12 shrink-0 place-items-center rounded-[18px] border border-theme/20 bg-theme/10 text-theme shadow-sm dark:bg-theme/15">
+            <span className="absolute left-1/2 top-3 h-6 w-px -translate-x-1/2 rounded-full bg-theme/35" />
+            <span className="absolute top-3 h-2 w-2 rounded-full bg-theme shadow-[0_10px_0_rgba(var(--theme-rgb),0.42),0_20px_0_rgba(var(--theme-rgb),0.22)]" />
+            <i className="ri-time-line relative z-10 text-[18px]" />
+        </div>
     );
 }
 
