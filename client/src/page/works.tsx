@@ -17,6 +17,8 @@ type WorkItem = {
     coverTone: string;
     tools: string[];
     highlights: string[];
+    role: string;
+    metrics: string[];
     href?: string;
     gallery?: string[];
 };
@@ -56,6 +58,8 @@ const works: WorkItem[] = [
         coverTone: "from-teal-100 via-cyan-50 to-stone-50",
         tools: ["React", "Cloudflare Workers", "D1", "R2", "TypeScript"],
         highlights: ["富文本写作", "R2 图片上传", "动态与文章分流", "移动端阅读优化"],
+        role: "全栈二开 / 产品整理 / 视觉重构",
+        metrics: ["主站系统", "长期维护", "移动端优先"],
         href: "https://blog.fuheng.vip",
     },
     {
@@ -69,6 +73,8 @@ const works: WorkItem[] = [
         coverTone: "from-amber-100 via-stone-50 to-sky-100",
         tools: ["UI Design", "Responsive", "Tailwind CSS"],
         highlights: ["降低大字号压迫感", "弱化版块边界", "修正顶部安全区", "优化内容首屏"],
+        role: "界面重整 / 移动端体验",
+        metrics: ["手机端", "阅读体验", "已落地"],
     },
     {
         slug: "moment-publisher",
@@ -81,6 +87,8 @@ const works: WorkItem[] = [
         coverTone: "from-emerald-100 via-white to-lime-50",
         tools: ["React", "R2", "Geolocation", "UX"],
         highlights: ["文字图片混排", "可选定位", "紧凑图片网格", "移动端优先"],
+        role: "功能设计 / 发布流程",
+        metrics: ["轻发布", "图片上传", "位置可选"],
     },
     {
         slug: "portrait-assets",
@@ -93,6 +101,8 @@ const works: WorkItem[] = [
         coverTone: "from-zinc-100 via-white to-neutral-200",
         tools: ["Illustration", "Avatar", "Brand Asset"],
         highlights: ["黑白线条", "高识别度", "适合小尺寸", "可继续扩展"],
+        role: "视觉素材整理",
+        metrics: ["品牌识别", "多场景", "轻量素材"],
         gallery: ["头像", "文章封面", "卡片占位", "社交分享"],
     },
     {
@@ -106,6 +116,8 @@ const works: WorkItem[] = [
         coverTone: "from-sky-100 via-white to-teal-100",
         tools: ["Information Architecture", "Web", "Navigation"],
         highlights: ["集中入口", "状态标记", "外链直达", "后续可扩展"],
+        role: "信息架构 / 页面设计",
+        metrics: ["站点索引", "线上入口", "持续扩展"],
         href: "/sites",
     },
 ];
@@ -125,6 +137,14 @@ export function WorksPage() {
     const visibleWorks = useMemo(
         () => activeType === "all" ? works : works.filter((work) => work.type === activeType),
         [activeType],
+    );
+    const featuredWork = works[0];
+    const typeCounts = useMemo(
+        () => filters.map((filter) => ({
+            ...filter,
+            count: filter.value === "all" ? works.length : works.filter((work) => work.type === filter.value).length,
+        })),
+        [],
     );
 
     return (
@@ -155,12 +175,56 @@ export function WorksPage() {
                                 <strong className="site-display text-4xl text-neutral-900 dark:text-white">{works.length}</strong>
                                 <span>个作品整理中</span>
                             </div>
+                            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                                <span className="rounded-full bg-white/60 px-3 py-1.5 dark:bg-white/[0.05]">程序 {typeCounts.find((item) => item.value === "program")?.count}</span>
+                                <span className="rounded-full bg-white/60 px-3 py-1.5 dark:bg-white/[0.05]">设计 {typeCounts.find((item) => item.value === "design")?.count}</span>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                <section className="mt-5 flex gap-2 overflow-x-auto pb-1">
-                    {filters.map((filter) => (
+                <section className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
+                    <Link href={`/works/${featuredWork.slug}`} className="group overflow-hidden rounded-[24px] border border-black/8 bg-white/45 shadow-sm transition hover:border-theme/30 dark:border-white/10 dark:bg-white/[0.04]">
+                        <div className="grid gap-0 md:grid-cols-[minmax(0,0.95fr)_minmax(220px,0.62fr)]">
+                            <div className="p-5 md:p-6">
+                                <p className="site-kicker">Featured</p>
+                                <h2 className="mt-3 text-2xl font-semibold text-neutral-900 dark:text-white md:text-3xl">{featuredWork.title}</h2>
+                                <p className="mt-3 max-w-2xl text-sm leading-7 text-neutral-600 dark:text-neutral-300">{featuredWork.summary}</p>
+                                <div className="mt-5 flex flex-wrap gap-2">
+                                    {featuredWork.metrics.map((item) => (
+                                        <span key={item} className="rounded-full border border-black/8 bg-white/60 px-3 py-1.5 text-xs text-neutral-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-neutral-300">
+                                            {item}
+                                        </span>
+                                    ))}
+                                </div>
+                                <span className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-theme">
+                                    查看精选项目
+                                    <i className="ri-arrow-right-line transition group-hover:translate-x-0.5" />
+                                </span>
+                            </div>
+                            <WorkVisual work={featuredWork} compact />
+                        </div>
+                    </Link>
+                    <div className="hidden gap-2 rounded-[24px] border border-black/8 bg-white/35 p-3 dark:border-white/10 dark:bg-white/[0.03] lg:grid">
+                        {typeCounts.map((filter) => (
+                            <Link
+                                key={filter.value}
+                                href={filter.value === "all" ? "/works" : `/works?type=${filter.value}`}
+                                className={`flex items-center justify-between rounded-[14px] border px-3 py-2.5 text-sm transition ${
+                                    activeType === filter.value
+                                        ? "border-theme/20 bg-theme text-white"
+                                        : "border-transparent bg-white/45 text-neutral-600 hover:border-theme/30 hover:text-theme dark:bg-white/[0.04] dark:text-neutral-300"
+                                }`}
+                            >
+                                <span>{filter.label}</span>
+                                <span className={activeType === filter.value ? "text-white/80" : "text-neutral-400"}>{filter.count}</span>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="mt-5 flex gap-2 overflow-x-auto pb-1 lg:hidden">
+                    {typeCounts.map((filter) => (
                         <Link
                             key={filter.value}
                             href={filter.value === "all" ? "/works" : `/works?type=${filter.value}`}
@@ -170,7 +234,7 @@ export function WorksPage() {
                                     : "border-black/10 bg-white/45 text-neutral-600 hover:border-theme/40 hover:text-theme dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300"
                             }`}
                         >
-                            {filter.label}
+                            {filter.label} {filter.count}
                         </Link>
                     ))}
                 </section>
@@ -245,13 +309,21 @@ export function WorkDetailPage({ slug }: { slug: string }) {
                     <article className="site-panel rounded-[24px] px-5 py-6 md:px-7 md:py-7">
                         <p className="site-kicker">Detail</p>
                         <h2 className="mt-3 text-xl font-semibold text-neutral-900 dark:text-white">作品说明</h2>
-                        <p className="mt-4 text-[15px] leading-8 text-neutral-650 dark:text-neutral-300">
+                            <p className="mt-4 text-[15px] leading-8 text-neutral-650 dark:text-neutral-300">
                             {work.detail}
                         </p>
+                        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                            {work.metrics.map((item) => (
+                                <div key={item} className="rounded-[16px] border border-black/8 bg-white/45 px-4 py-3 dark:border-white/10 dark:bg-white/[0.04]">
+                                    <p className="text-[11px] uppercase tracking-[0.16em] text-neutral-400">Metric</p>
+                                    <p className="mt-1 text-sm font-medium text-neutral-800 dark:text-neutral-100">{item}</p>
+                                </div>
+                            ))}
+                        </div>
                         <div className="mt-7 grid gap-3 sm:grid-cols-2">
                             {work.highlights.map((item) => (
                                 <div key={item} className="rounded-[18px] border border-black/8 bg-black/[0.02] px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
-                                    <i className="ri-sparkling-2-line text-theme" />
+                                    <span className="inline-block size-2 rounded-full bg-theme" />
                                     <p className="mt-3 text-sm font-medium text-neutral-800 dark:text-neutral-100">{item}</p>
                                 </div>
                             ))}
@@ -259,6 +331,11 @@ export function WorkDetailPage({ slug }: { slug: string }) {
                     </article>
 
                     <aside className="space-y-4">
+                        <div className="site-panel rounded-[24px] px-5 py-5">
+                            <p className="site-kicker">Role</p>
+                            <p className="mt-3 text-sm leading-6 text-neutral-650 dark:text-neutral-300">{work.role}</p>
+                        </div>
+
                         <div className="site-panel rounded-[24px] px-5 py-5">
                             <p className="site-kicker">Type</p>
                             <div className="mt-4 flex items-start gap-3">
@@ -320,6 +397,13 @@ function WorkCard({ work }: { work: WorkItem }) {
                     <p className="mt-3 line-clamp-3 flex-1 text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
                         {work.summary}
                     </p>
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                        {work.highlights.slice(0, 2).map((item) => (
+                            <span key={item} className="rounded-full bg-black/[0.04] px-2.5 py-1 text-[11px] text-neutral-500 dark:bg-white/[0.06] dark:text-neutral-300">
+                                {item}
+                            </span>
+                        ))}
+                    </div>
                     <div className="mt-5 flex items-center justify-between border-t border-black/5 pt-4 text-sm dark:border-white/10">
                         <span className="text-neutral-400">{work.date}</span>
                         <span className="inline-flex items-center gap-1 text-theme">
