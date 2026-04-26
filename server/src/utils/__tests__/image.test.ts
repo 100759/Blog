@@ -49,6 +49,17 @@ describe('extractImageWithMetadata', () => {
         const content = '![alt](https://example.com/image.png#blurhash=test&width=100&height=50)';
         expect(extractImageWithMetadata(content)).toBe('https://example.com/image.png#blurhash=test&width=100&height=50');
     });
+
+    it('should extract rich text html images for feed cards', () => {
+        const content = '<p>Intro</p><figure><img src="https://example.com/rich.png#blurhash=test&width=120&height=80" alt="rich"></figure>';
+        expect(extractImageWithMetadata(content)).toBe('https://example.com/rich.png#blurhash=test&width=120&height=80');
+        expect(extractImage(content)).toBe('https://example.com/rich.png');
+    });
+
+    it('should use the earliest image when content mixes markdown and html', () => {
+        const content = '<p><img src="https://example.com/html-first.png" alt=""></p>\n![md](https://example.com/markdown-second.png)';
+        expect(extractImageWithMetadata(content)).toBe('https://example.com/html-first.png');
+    });
 });
 
 describe('stripImageMetadataFromUrl', () => {

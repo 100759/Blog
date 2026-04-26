@@ -59,6 +59,27 @@ export function listContentImageUrls(content: string) {
     return [...listMarkdownImageUrls(content), ...listHtmlImageUrls(content)];
 }
 
+function findFirstContentImageUrl(content: string) {
+    const markdownPattern = /!\[.*?\]\((\S+?)(?:\s+"[^"]*")?\)/g;
+    const htmlPattern = /<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi;
+    const candidates: Array<{ index: number; url: string }> = [];
+
+    for (const match of content.matchAll(markdownPattern)) {
+        if (match[1]) {
+            candidates.push({ index: match.index ?? Number.MAX_SAFE_INTEGER, url: match[1] });
+        }
+    }
+
+    for (const match of content.matchAll(htmlPattern)) {
+        if (match[1]) {
+            candidates.push({ index: match.index ?? Number.MAX_SAFE_INTEGER, url: match[1] });
+        }
+    }
+
+    candidates.sort((a, b) => a.index - b.index);
+    return candidates[0]?.url;
+}
+
 export function contentHasImagesMissingMetadata(content: string) {
     return listContentImageUrls(content).some((url) => {
         const metadata = parseImageMetadataFromUrl(url);
@@ -67,17 +88,9 @@ export function contentHasImagesMissingMetadata(content: string) {
 }
 
 export function extractImage(content: string) {
-    const img_reg = /!\[.*?\]\((\S+?)(?:\s+"[^"]*")?\)/;
-    const img_match = img_reg.exec(content);
-    let avatar: string | undefined = undefined;
-    if (img_match) {
-        avatar = stripImageMetadataFromUrl(img_match[1]);
-    }
-    return avatar;
+    return stripImageMetadataFromUrl(findFirstContentImageUrl(content));
 }
 
 export function extractImageWithMetadata(content: string) {
-    const img_reg = /!\[.*?\]\((\S+?)(?:\s+"[^"]*")?\)/;
-    const img_match = img_reg.exec(content);
-    return img_match?.[1];
+    return findFirstContentImageUrl(content);
 }
