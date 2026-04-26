@@ -34,7 +34,7 @@ export function AdminLayout({
   title,
   description,
   children,
-  compact = false,
+  compact: _compact = false,
 }: {
   title: string;
   description: string;
@@ -46,33 +46,33 @@ export function AdminLayout({
 
   return (
     <div className="site-shell min-h-screen">
-      <div className={`mx-auto flex w-full max-w-[1460px] flex-col gap-6 px-4 py-6 lg:grid lg:px-6 ${compact ? "lg:grid-cols-[248px_minmax(0,1fr)]" : "lg:grid-cols-[280px_minmax(0,1fr)]"}`}>
-        <aside className={`w-full shrink-0 lg:sticky lg:self-start ${compact ? "lg:top-4 lg:w-[248px]" : "lg:top-6 lg:w-72"}`}>
-          <div className={`site-panel ${compact ? "rounded-[28px] p-4" : "rounded-[30px] p-5"}`}>
-            <Link href="/" className="flex items-center gap-4 rounded-[22px] px-2 py-2 transition-colors hover:bg-white/60 dark:hover:bg-white/[0.05]">
+      <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-5 px-4 py-5 lg:grid lg:grid-cols-[248px_minmax(0,1fr)] lg:px-6">
+        <aside className="w-full shrink-0 lg:sticky lg:top-5 lg:w-[248px] lg:self-start">
+          <div className="site-panel rounded-[24px] p-4">
+            <Link href="/" className="flex items-center gap-3 rounded-[16px] px-2 py-2 transition-colors hover:bg-white/60 dark:hover:bg-white/[0.05]">
               {siteConfig.avatar ? (
-                <img src={siteConfig.avatar} alt="Avatar" className="h-12 w-12 rounded-[18px] border border-black/10 dark:border-white/10" />
+                <img src={siteConfig.avatar} alt="Avatar" className="h-10 w-10 rounded-[14px] border border-black/10 dark:border-white/10" />
               ) : null}
               <div className="min-w-0">
                 <p className="site-kicker">{t("admin.title")}</p>
-                <p className="site-display truncate text-[1.35rem] text-neutral-900 dark:text-white">{siteConfig.name}</p>
+                <p className="truncate text-base font-semibold text-neutral-900 dark:text-white">{siteConfig.name}</p>
               </div>
             </Link>
 
-            <div className={`rounded-[22px] border border-black/5 bg-white/45 dark:border-white/10 dark:bg-white/[0.03] ${compact ? "mt-4 px-4 py-3" : "mt-5 px-4 py-4"}`}>
-              <p className="text-sm leading-6 text-neutral-600 dark:text-neutral-300">
-                {description}
+            <div className="mt-4 rounded-[16px] border border-black/5 bg-white/45 px-3 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+              <p className="text-xs leading-5 text-neutral-500 dark:text-neutral-400">
+                管理文章、站点设置和运行状态。
               </p>
               <Link
                 href="/"
-                className="mt-4 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/75 px-4 py-2 text-sm font-medium t-primary transition hover:border-black/20 dark:border-white/10 dark:bg-white/[0.06] dark:hover:bg-white/[0.08]"
+                className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/75 px-3 py-1.5 text-xs font-medium t-primary transition hover:border-black/20 dark:border-white/10 dark:bg-white/[0.06] dark:hover:bg-white/[0.08]"
               >
                 <i className="ri-arrow-left-line" />
                 <span>{t("admin.back_to_site")}</span>
               </Link>
             </div>
 
-            <div className={compact ? "mt-5" : "mt-6"}>
+            <div className="mt-5">
               <p className="px-2 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400 dark:text-neutral-500">
                 {t("admin.title")}
               </p>
@@ -88,13 +88,13 @@ export function AdminLayout({
         </aside>
 
         <main className="min-w-0 flex-1">
-          <div className={`site-panel ${compact ? "rounded-[30px] p-4 md:p-5" : "rounded-[34px] p-5 md:p-6"}`}>
-            <div className={`border-b border-black/5 dark:border-white/5 ${compact ? "pb-4" : "pb-5"}`}>
+          <div className="site-panel rounded-[26px] p-4 md:p-5">
+            <div className="min-h-[92px] border-b border-black/5 pb-4 dark:border-white/5">
               <p className="site-kicker">{t("admin.title")}</p>
-              <h1 className={`${compact ? "mt-2 text-[1.6rem] font-semibold md:text-[2rem]" : "site-display mt-3 text-[2.5rem] md:text-[3.4rem]"} text-neutral-900 dark:text-white`}>{title}</h1>
-              <p className={`${compact ? "mt-2 text-sm leading-6" : "mt-3 text-base leading-7"} max-w-3xl text-neutral-600 dark:text-neutral-300`}>{description}</p>
+              <h1 className="mt-2 text-[1.45rem] font-semibold text-neutral-900 dark:text-white md:text-[1.8rem]">{title}</h1>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-600 dark:text-neutral-300">{description}</p>
             </div>
-            <div className={compact ? "mt-4" : "mt-6"}>{children}</div>
+            <div className="mt-4">{children}</div>
           </div>
         </main>
       </div>
