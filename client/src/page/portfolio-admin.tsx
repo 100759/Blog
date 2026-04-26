@@ -103,13 +103,14 @@ export function PortfolioAdminPage() {
         }
 
         setAiRunning(true);
-        const response = await client.config.testAI({
-            testPrompt: buildAIPrompt(aiTarget, raw),
+        const response = await client.config.parsePortfolioWithAI({
+            target: aiTarget,
+            input: raw,
         });
         setAiRunning(false);
 
         if (response.error) {
-            showAlert(response.error.value || "AI 解析失败，请检查 AI 配置。");
+            showAlert(response.error.value || "AI 解析失败，请检查 AI 配置或网址是否可访问。");
             return;
         }
 
@@ -712,47 +713,6 @@ function duplicateSite(site: SiteItem): SiteItem {
         name: `${site.name || "网站"} 副本`,
         url: site.url || "https://",
     };
-}
-
-function buildAIPrompt(target: AiPublishTarget, input: string) {
-    const schema = target === "work"
-        ? `{
-  "title": "作品标题",
-  "slug": "english-kebab-case",
-  "type": "program | design | image",
-  "status": "状态",
-  "date": "年份或日期",
-  "summary": "一句话介绍，80字内",
-  "detail": "详细说明，150到260字",
-  "coverTone": "从可选项里选一个",
-  "tools": ["工具或技术"],
-  "highlights": ["亮点"],
-  "role": "我负责的内容",
-  "metrics": ["展示指标"],
-  "access": { "mode": "open | closed", "label": "按钮文字", "url": "GitHub或下载地址" },
-  "href": "作品入口，可为空",
-  "gallery": ["图片分类，可为空"]
-}`
-        : `{
-  "name": "网站名称",
-  "url": "https://example.com",
-  "description": "网站说明，80到160字",
-  "platform": "Cloudflare Workers | Cloudflare Pages | Vercel | 自有服务器",
-  "role": "主站/备用/项目等",
-  "status": "运行中/维护中等",
-  "color": "从可选项里选一个"
-}`;
-
-    return [
-        "你是一个中文个人站内容管理员。请把用户输入解析成严格 JSON。",
-        "只输出 JSON，不要 Markdown，不要解释，不要代码块。",
-        `目标类型：${target === "work" ? "作品" : "旗下网站"}`,
-        `可选封面色调：${tones.join(", ")}`,
-        `可选网站颜色：${siteColors.join(", ")}`,
-        `JSON 结构：${schema}`,
-        "规则：缺失字段请合理补全；slug 必须是英文小写、数字、短横线；type 只能是 program/design/image；开源、GitHub、下载、源码等表达算 open，否则 closed。",
-        `用户输入：\n${input}`,
-    ].join("\n\n");
 }
 
 function extractJSON(text: string): Record<string, any> {

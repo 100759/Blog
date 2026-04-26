@@ -261,6 +261,46 @@ export async function generateAISummaryResult(
     }
 }
 
+export async function generateAIText(
+    env: Env,
+    serverConfig: ConfigReader,
+    messages: Array<{ role: "system" | "user" | "assistant"; content: string }>
+): Promise<{ success: boolean; response?: string; error?: string; details?: string }> {
+    const config = await getAIConfig(serverConfig);
+
+    if (!config.enabled) {
+        return {
+            success: false,
+            error: "AI is not enabled",
+            details: "Please enable AI in server settings before using AI publish.",
+        };
+    }
+
+    try {
+        let result: string | null;
+
+        if (config.provider === "worker-ai") {
+            result = await executeWorkerAI(env, getWorkerAIModelId(config.model), messages);
+        } else {
+            result = await executeExternalAI(config, messages);
+        }
+
+        if (!result || !result.trim()) {
+            return {
+                success: false,
+                error: "Empty response from AI",
+            };
+        }
+
+        return {
+            success: true,
+            response: result.trim(),
+        };
+    } catch (error: any) {
+        return processAIError(error, config.model, config.provider);
+    }
+}
+
 /**
  * Process AI error and return user-friendly message
  */
