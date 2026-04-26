@@ -533,13 +533,6 @@ class ConfigAPI {
     return this.http.post<any>("/api/config/test-ai", body);
   }
 
-  async parsePortfolioWithAI(body: {
-    target: "work" | "site";
-    input: string;
-  }): Promise<ApiResponse<{ success: boolean; response?: string; error?: string; details?: string; pages?: Array<Record<string, unknown>> }>> {
-    return this.http.post<any>("/api/config/portfolio-ai", body);
-  }
-
   async testWebhook(body: {
     webhook_url?: string;
     "webhook.method"?: string;

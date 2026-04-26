@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { wrapTime } from "hono/timing";
 import type { AppContext } from "../core/hono-types";
 import { setAIConfig, getAIConfig } from "../utils/db-config";
-import { generateAIText, testAIModel } from "../utils/ai";
+import { testAIModel } from "../utils/ai";
 import { notify } from "../utils/webhook";
 import {
     buildCombinedConfigResponse,
@@ -37,98 +37,6 @@ export function ConfigService(): Hono {
         return `globalThis.__RIN_CLIENT_CONFIG__=${serialized};`;
     }
 
-    function extractUrls(input: string) {
-        return Array.from(new Set(input.match(/https?:\/\/[^\s"'<>，。)）]+/g) || [])).slice(0, 3);
-    }
-
-    function stripHtml(html: string) {
-        return html
-            .replace(/<script[\s\S]*?<\/script>/gi, " ")
-            .replace(/<style[\s\S]*?<\/style>/gi, " ")
-            .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
-            .replace(/<[^>]+>/g, " ")
-            .replace(/&nbsp;/gi, " ")
-            .replace(/&amp;/gi, "&")
-            .replace(/&lt;/gi, "<")
-            .replace(/&gt;/gi, ">")
-            .replace(/&quot;/gi, '"')
-            .replace(/&#39;/gi, "'")
-            .replace(/\s+/g, " ")
-            .trim();
-    }
-
-    function matchMeta(html: string, name: string) {
-        const pattern = new RegExp(`<meta[^>]+(?:name|property)=["']${name}["'][^>]+content=["']([^"']+)["'][^>]*>`, "i");
-        return html.match(pattern)?.[1]?.trim() || "";
-    }
-
-    async function fetchPageContext(url: string) {
-        const response = await fetch(url, {
-            headers: {
-                "User-Agent": "FuHengBlog-AI-Publisher/1.0",
-                "Accept": "text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.5",
-            },
-            redirect: "follow",
-        });
-
-        const contentType = response.headers.get("content-type") || "";
-        const text = await response.text();
-        const html = text.slice(0, 160000);
-        const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g, " ").trim() || "";
-        const description = matchMeta(html, "description") || matchMeta(html, "og:description");
-        const siteName = matchMeta(html, "og:site_name");
-        const plainText = contentType.includes("html") ? stripHtml(html) : text.replace(/\s+/g, " ").trim();
-
-        return {
-            url,
-            finalUrl: response.url,
-            status: response.status,
-            title,
-            description,
-            siteName,
-            excerpt: plainText.slice(0, 5000),
-        };
-    }
-
-    function buildPortfolioAIPrompt(target: string, input: string, pages: Array<Record<string, unknown>>) {
-        const workSchema = `{
-  "title": "作品标题",
-  "slug": "english-kebab-case",
-  "type": "program | design | image",
-  "status": "状态",
-  "date": "年份或日期",
-  "summary": "一句话介绍，80字内",
-  "detail": "详细说明，150到260字",
-  "coverTone": "from-teal-100 via-cyan-50 to-stone-50",
-  "tools": ["工具或技术"],
-  "highlights": ["亮点"],
-  "role": "我负责的内容",
-  "metrics": ["展示指标"],
-  "access": { "mode": "open | closed", "label": "按钮文字", "url": "GitHub或下载地址" },
-  "href": "作品入口，可为空",
-  "gallery": ["图片分类，可为空"]
-}`;
-        const siteSchema = `{
-  "name": "网站名称",
-  "url": "https://example.com",
-  "description": "网站说明，80到160字",
-  "platform": "Cloudflare Workers | Cloudflare Pages | Vercel | 自有服务器",
-  "role": "主站/备用/项目等",
-  "status": "运行中/维护中等",
-  "color": "bg-teal-600"
-}`;
-
-        return [
-            "你是一个中文个人站内容管理员。你可以阅读我提供的网页抓取内容，并基于网页事实和用户补充信息生成结构化 JSON。",
-            "只输出 JSON，不要 Markdown，不要解释，不要代码块。不要编造网页里没有、用户也没提到的具体技术栈；无法判断时用稳妥、通用的描述。",
-            `目标类型：${target === "site" ? "旗下网站" : "作品"}`,
-            `JSON 结构：${target === "site" ? siteSchema : workSchema}`,
-            "规则：slug 必须是英文小写、数字、短横线；作品 type 只能是 program/design/image；如果检测到 GitHub、源码、开源、下载地址则 access.mode=open，否则 closed；网站平台无法判断时优先 Cloudflare Workers。",
-            `用户输入：\n${input}`,
-            `网页抓取内容：\n${JSON.stringify(pages, null, 2)}`,
-        ].join("\n\n");
-    }
-
     // POST /config/test-ai - Test AI model configuration
     // NOTE: Must be defined BEFORE /:type route to avoid being captured as a type parameter
     app.post('/test-ai', async (c: AppContext) => {
@@ -159,52 +67,6 @@ export function ConfigService(): Hono {
         // Use unified test function
         const result = await wrapTime(c, 'ai_test', testAIModel(env, testConfig, testPrompt));
         return c.json(result);
-    });
-
-    app.post('/portfolio-ai', async (c: AppContext) => {
-        const admin = c.get('admin');
-
-        if (!admin) {
-            return c.json({ error: 'Unauthorized' }, 401);
-        }
-
-        const body = await wrapTime(c, 'request_body', c.req.json()) as {
-            target?: "work" | "site";
-            input?: string;
-        };
-        const input = body.input?.trim() || "";
-
-        if (!input) {
-            return c.json({ success: false, error: "Input is required" }, 400);
-        }
-
-        const urls = extractUrls(input);
-        const pages = await wrapTime(c, 'portfolio_url_context', Promise.all(urls.map(async (url) => {
-            try {
-                return await fetchPageContext(url);
-            } catch (error) {
-                return {
-                    url,
-                    error: error instanceof Error ? error.message : String(error),
-                };
-            }
-        })));
-        const prompt = buildPortfolioAIPrompt(body.target === "site" ? "site" : "work", input, pages);
-        const result = await wrapTime(c, 'portfolio_ai', generateAIText(c.get('env'), c.get('serverConfig'), [
-            {
-                role: "system",
-                content: "你是严谨的中文信息抽取助手，必须输出可 JSON.parse 的 JSON 对象。",
-            },
-            {
-                role: "user",
-                content: prompt,
-            },
-        ]));
-
-        return c.json({
-            ...result,
-            pages,
-        });
     });
 
     app.post('/test-webhook', async (c: AppContext) => {
