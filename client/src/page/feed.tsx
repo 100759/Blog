@@ -299,8 +299,7 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
 
             <aside className="hidden xl:block">
               <div className="sticky top-[6rem]">
-                <div className="site-panel overflow-hidden rounded-[10px] p-3.5">
-                  <p className="site-kicker mb-3">Outline</p>
+                <div className="site-panel overflow-hidden rounded-[22px] border-black/6 bg-white/55 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.04]">
                   <TOC />
                 </div>
               </div>
@@ -360,7 +359,6 @@ export function TOCHeader({ TOC }: { TOC: () => JSX.Element }) {
         onRequestClose={() => setIsOpened(false)}
       >
         <div className="site-panel max-h-[75vh] overflow-auto rounded-[28px] p-5 t-primary">
-          <p className="site-kicker mb-4">Outline</p>
           <TOC />
         </div>
       </ReactModal>

@@ -5,6 +5,7 @@ export interface TableOfContent {
     index: number
     text: string
     marginLeft: number
+    level: number
     element: HTMLElement
 }
 
@@ -39,6 +40,7 @@ const useTableOfContents = (selector: string) => {
             index: i,
             text: header.textContent || '',
             marginLeft: (Number(header.tagName.charAt(1)) - 1) * 10,
+            level: Number(header.tagName.charAt(1)),
             element: header, // have to down little bit
         }))
         setTableOfContents(tocData)
@@ -84,24 +86,48 @@ const useTableOfContents = (selector: string) => {
     }
 
     return {
-        TOC: () => (<div className='rounded-2xl bg-w py-4 px-4 t-primary'>
-            <h2 className="text-lg font-bold">{t("index.title")}</h2>
-            <ul className="max-h-[calc(100vh-10.25rem)] overflow-auto" style={{ scrollbarWidth: "none" }}>
-                {tableOfContents.length === 0 && <li>{t("index.empty.title")}</li>}
+        TOC: () => (<div className="t-primary">
+            <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                    <p className="site-kicker">Outline</p>
+                    <h2 className="mt-1 text-base font-semibold text-neutral-900 dark:text-white">{t("index.title")}</h2>
+                </div>
+                <span className="rounded-full border border-black/8 bg-white/60 px-2.5 py-1 text-[11px] text-neutral-400 dark:border-white/10 dark:bg-white/[0.05]">
+                    {tableOfContents.length || 0} 节
+                </span>
+            </div>
+            <ul className="max-h-[calc(100vh-12rem)] overflow-auto pr-1" style={{ scrollbarWidth: "none" }}>
+                {tableOfContents.length === 0 && (
+                    <li className="rounded-[16px] border border-dashed border-black/8 bg-white/50 px-4 py-5 text-center text-sm text-neutral-400 dark:border-white/10 dark:bg-white/[0.04]">
+                        {t("index.empty.title")}
+                    </li>
+                )}
                 {tableOfContents.map((item) => (
                     <li
                         key={`toc$${item.index}`}
-                        className={`cursor-pointer hover:opacity-50 ${activeIndex === item.index ? "text-theme" : ""}`}
-                        style={{ marginLeft: item.marginLeft }}
-                        onClick={() => {
-                            const top = item.element.getBoundingClientRect().top + window.scrollY - getHeaderScrollOffset()
-                            window.scrollTo({
-                                top: Math.max(top, 0),
-                                behavior: 'smooth'
-                            })
-                        }}
+                        className="relative"
                     >
-                        {item.text}
+                        <button
+                            type="button"
+                            className={`group relative flex w-full items-start gap-2.5 rounded-[14px] px-2.5 py-2 text-left text-sm leading-5 transition ${
+                                activeIndex === item.index
+                                    ? "bg-theme/10 text-theme"
+                                    : "text-neutral-500 hover:bg-black/[0.035] hover:text-neutral-800 dark:text-neutral-300 dark:hover:bg-white/[0.05] dark:hover:text-white"
+                            }`}
+                            style={{ paddingLeft: 10 + Math.max(item.level - 2, 0) * 14 }}
+                            onClick={() => {
+                                const top = item.element.getBoundingClientRect().top + window.scrollY - getHeaderScrollOffset()
+                                window.scrollTo({
+                                    top: Math.max(top, 0),
+                                    behavior: 'smooth'
+                                })
+                            }}
+                        >
+                            <span className={`mt-2 size-1.5 shrink-0 rounded-full transition ${
+                                activeIndex === item.index ? "bg-theme" : "bg-neutral-300 group-hover:bg-theme/60 dark:bg-neutral-600"
+                            }`} />
+                            <span className="line-clamp-2">{item.text}</span>
+                        </button>
                     </li>
                 ))}
             </ul>
