@@ -19,6 +19,7 @@ import {
 
 type AdminTab = "works" | "sites";
 type WorkFilter = "all" | WorkType;
+type AiPublishTarget = "work" | "site";
 
 const platforms: Platform[] = ["Cloudflare Workers", "Cloudflare Pages", "Vercel", "自有服务器"];
 const workTypes: WorkFilter[] = ["all", "program", "design", "image"];
@@ -42,6 +43,9 @@ export function PortfolioAdminPage() {
     const [query, setQuery] = useState("");
     const [selectedWork, setSelectedWork] = useState(0);
     const [selectedSite, setSelectedSite] = useState(0);
+    const [aiTarget, setAiTarget] = useState<AiPublishTarget>("work");
+    const [aiInput, setAiInput] = useState("");
+    const [aiRunning, setAiRunning] = useState(false);
     const [saving, setSaving] = useState(false);
 
     const summary = useMemo(() => ({
@@ -75,11 +79,11 @@ export function PortfolioAdminPage() {
     const currentWork = works[selectedWork] || works[0];
     const currentSite = sites[selectedSite] || sites[0];
 
-    async function save() {
+    async function save(nextWorks = works, nextSites = sites) {
         setSaving(true);
         const response = await client.config.update("client", {
-            [WORKS_CONFIG_KEY]: JSON.stringify(works),
-            [SITES_CONFIG_KEY]: JSON.stringify(sites),
+            [WORKS_CONFIG_KEY]: JSON.stringify(nextWorks),
+            [SITES_CONFIG_KEY]: JSON.stringify(nextSites),
         });
         setSaving(false);
 
@@ -89,6 +93,56 @@ export function PortfolioAdminPage() {
         }
 
         showAlert("已保存。前台刷新后会显示最新内容。");
+    }
+
+    async function publishWithAI() {
+        const raw = aiInput.trim();
+        if (!raw) {
+            showAlert("先粘贴一段作品或网站介绍，我再帮你解析。");
+            return;
+        }
+
+        setAiRunning(true);
+        const response = await client.config.testAI({
+            testPrompt: buildAIPrompt(aiTarget, raw),
+        });
+        setAiRunning(false);
+
+        if (response.error) {
+            showAlert(response.error.value || "AI 解析失败，请检查 AI 配置。");
+            return;
+        }
+
+        if (!response.data?.success || !response.data.response) {
+            showAlert(response.data?.error || "AI 没有返回可用内容。");
+            return;
+        }
+
+        try {
+            const parsed = extractJSON(response.data.response);
+            if (aiTarget === "work") {
+                const nextWork = normalizeAIWork(parsed);
+                const nextWorks = [nextWork, ...works];
+                setWorks(nextWorks);
+                setSelectedWork(0);
+                setActiveTab("works");
+                await save(nextWorks, sites);
+                setAiInput("");
+                showAlert("作品已由 AI 解析并发布。");
+                return;
+            }
+
+            const nextSite = normalizeAISite(parsed);
+            const nextSites = [nextSite, ...sites];
+            setSites(nextSites);
+            setSelectedSite(0);
+            setActiveTab("sites");
+            await save(works, nextSites);
+            setAiInput("");
+            showAlert("网站已由 AI 解析并发布。");
+        } catch (error) {
+            showAlert(error instanceof Error ? error.message : "AI 返回内容解析失败。");
+        }
     }
 
     function addWork() {
@@ -137,6 +191,42 @@ export function PortfolioAdminPage() {
                             <MiniStat label="网站" value={summary.sites} />
                             <MiniStat label="运行" value={summary.running} />
                         </div>
+                    </div>
+                </section>
+
+                <section className="rounded-[24px] border border-theme/15 bg-theme/[0.06] p-4 dark:border-theme/20 dark:bg-theme/[0.08]">
+                    <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)_auto] xl:items-end">
+                        <div>
+                            <p className="site-kicker">AI Publish</p>
+                            <h2 className="mt-1 text-lg font-semibold text-neutral-900 dark:text-white">AI 自动解析一键发布</h2>
+                            <p className="mt-1 text-sm leading-6 text-neutral-500 dark:text-neutral-300">
+                                粘贴项目介绍、域名、开源地址等，AI 会整理成前台需要的字段。
+                            </p>
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-[170px_minmax(0,1fr)]">
+                            <SelectField
+                                label="发布到"
+                                value={aiTarget}
+                                onChange={(value) => setAiTarget(value as AiPublishTarget)}
+                                options={["work", "site"]}
+                                optionLabel={(value) => value === "work" ? "作品" : "旗下网站"}
+                            />
+                            <Field
+                                textarea
+                                label="待解析内容"
+                                value={aiInput}
+                                onChange={setAiInput}
+                                placeholder="例如：我做了一个个人导航站，部署在 Cloudflare Workers，地址是 https://xxx.com，闭源，主要用于展示所有项目..."
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            disabled={aiRunning}
+                            onClick={publishWithAI}
+                            className="rounded-full bg-theme px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {aiRunning ? "AI 解析中..." : "AI 解析并发布"}
+                        </button>
                     </div>
                 </section>
 
@@ -266,7 +356,7 @@ export function PortfolioAdminPage() {
                         <button
                             type="button"
                             disabled={saving}
-                            onClick={save}
+                            onClick={() => save()}
                             className="rounded-full bg-theme px-5 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {saving ? "保存中..." : "保存"}
@@ -622,6 +712,117 @@ function duplicateSite(site: SiteItem): SiteItem {
         name: `${site.name || "网站"} 副本`,
         url: site.url || "https://",
     };
+}
+
+function buildAIPrompt(target: AiPublishTarget, input: string) {
+    const schema = target === "work"
+        ? `{
+  "title": "作品标题",
+  "slug": "english-kebab-case",
+  "type": "program | design | image",
+  "status": "状态",
+  "date": "年份或日期",
+  "summary": "一句话介绍，80字内",
+  "detail": "详细说明，150到260字",
+  "coverTone": "从可选项里选一个",
+  "tools": ["工具或技术"],
+  "highlights": ["亮点"],
+  "role": "我负责的内容",
+  "metrics": ["展示指标"],
+  "access": { "mode": "open | closed", "label": "按钮文字", "url": "GitHub或下载地址" },
+  "href": "作品入口，可为空",
+  "gallery": ["图片分类，可为空"]
+}`
+        : `{
+  "name": "网站名称",
+  "url": "https://example.com",
+  "description": "网站说明，80到160字",
+  "platform": "Cloudflare Workers | Cloudflare Pages | Vercel | 自有服务器",
+  "role": "主站/备用/项目等",
+  "status": "运行中/维护中等",
+  "color": "从可选项里选一个"
+}`;
+
+    return [
+        "你是一个中文个人站内容管理员。请把用户输入解析成严格 JSON。",
+        "只输出 JSON，不要 Markdown，不要解释，不要代码块。",
+        `目标类型：${target === "work" ? "作品" : "旗下网站"}`,
+        `可选封面色调：${tones.join(", ")}`,
+        `可选网站颜色：${siteColors.join(", ")}`,
+        `JSON 结构：${schema}`,
+        "规则：缺失字段请合理补全；slug 必须是英文小写、数字、短横线；type 只能是 program/design/image；开源、GitHub、下载、源码等表达算 open，否则 closed。",
+        `用户输入：\n${input}`,
+    ].join("\n\n");
+}
+
+function extractJSON(text: string): Record<string, any> {
+    const cleaned = text.trim().replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+
+    if (start < 0 || end <= start) {
+        throw new Error("AI 没有返回 JSON，请换一种描述再试。");
+    }
+
+    return JSON.parse(cleaned.slice(start, end + 1));
+}
+
+function normalizeAIWork(value: Record<string, any>): WorkItem {
+    const type = value.type === "design" || value.type === "image" || value.type === "program" ? value.type : "program";
+    const title = toText(value.title) || "AI 解析作品";
+    const accessMode = value.access?.mode === "open" ? "open" : "closed";
+
+    return {
+        slug: slugify(toText(value.slug) || title) || `work-${Date.now()}`,
+        title,
+        type,
+        status: toText(value.status) || "整理中",
+        date: toText(value.date) || String(new Date().getFullYear()),
+        summary: toText(value.summary) || "这是一项由 AI 辅助整理的作品。",
+        detail: toText(value.detail) || toText(value.summary) || "补充作品背景、负责内容和展示说明。",
+        coverTone: tones.includes(value.coverTone) ? value.coverTone : tones[0],
+        tools: toList(value.tools),
+        highlights: toList(value.highlights),
+        role: toText(value.role) || "项目整理",
+        metrics: toList(value.metrics),
+        access: {
+            mode: accessMode,
+            label: toText(value.access?.label) || (type === "program" ? "GitHub 地址" : "下载"),
+            url: toText(value.access?.url),
+        },
+        href: toText(value.href),
+        gallery: toList(value.gallery),
+    };
+}
+
+function normalizeAISite(value: Record<string, any>): SiteItem {
+    const platform = platforms.includes(value.platform) ? value.platform : "Cloudflare Workers";
+
+    return {
+        name: toText(value.name) || "AI 解析网站",
+        url: toText(value.url) || "https://",
+        description: toText(value.description) || "这是一个由 AI 辅助整理的网站入口。",
+        platform,
+        role: toText(value.role) || "项目",
+        status: toText(value.status) || "运行中",
+        color: siteColors.includes(value.color) ? value.color : "bg-teal-600",
+    };
+}
+
+function toText(value: unknown) {
+    return typeof value === "string" ? value.trim() : "";
+}
+
+function toList(value: unknown) {
+    if (Array.isArray(value)) {
+        return value.map((item) => String(item).trim()).filter(Boolean);
+    }
+
+    if (typeof value === "string") {
+        return parseList(value);
+    }
+
+    return [];
 }
 
 function createWork(): WorkItem {
