@@ -22,6 +22,7 @@ const FriendsPage = lazyNamed(() => import("../page/friends"), "FriendsPage");
 const WorksPage = lazyNamed(() => import("../page/works"), "WorksPage");
 const WorkDetailPage = lazyNamed(() => import("../page/works"), "WorkDetailPage") as ComponentType<{ slug: string }>;
 const SitesPage = lazyNamed(() => import("../page/sites"), "SitesPage");
+const AboutPage = lazyNamed(() => import("../page/about"), "AboutPage");
 const SearchPage = lazyNamed(() => import("../page/search"), "SearchPage");
 const Settings = lazyNamed(() => import("../page/settings"), "Settings");
 const HealthPage = lazyNamed(() => import("../page/health"), "HealthPage");
@@ -43,6 +44,7 @@ const routePreloaders = {
   "/friends": () => import("../page/friends"),
   "/works": () => import("../page/works"),
   "/sites": () => import("../page/sites"),
+  "/about": () => import("../page/about"),
   "/search": () => import("../page/search"),
   "/feed": () => import("../page/feed"),
 } satisfies Record<string, () => Promise<unknown>>;
@@ -190,6 +192,10 @@ export function AppRoutes() {
 
       <AppRoute path="/sites">
         <SitesPage />
+      </AppRoute>
+
+      <AppRoute path="/about">
+        <AboutPage />
       </AppRoute>
 
       <AppRoute path="/search/:keyword">
