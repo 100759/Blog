@@ -394,9 +394,9 @@ export function createPublicCache(db: DB, env: Env, storageMode?: CacheStorageMo
 }
 
 export function createServerConfig(db: DB, env: Env, storageMode?: CacheStorageMode) {
-    return new CacheImpl(db, env, "server.config", storageMode);
+    return new CacheImpl(db, env, "server.config", storageMode ?? "database");
 }
 
 export function createClientConfig(db: DB, env: Env, storageMode?: CacheStorageMode) {
-    return new CacheImpl(db, env, "client.config", storageMode);
+    return new CacheImpl(db, env, "client.config", storageMode ?? "database");
 }
