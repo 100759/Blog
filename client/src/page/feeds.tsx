@@ -156,8 +156,12 @@ export function FeedsPage() {
                                     <span>{t("article.total$count", { count: currentFeedSet.size })}</span>
                                 </div>
                             </div>
-                            <div className="-mx-1 mt-4 flex items-center gap-2 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                <div className="flex shrink-0 gap-2">
+                            <div className={`-mx-1 mt-4 flex items-center gap-2 px-1 pb-1 ${
+                                searchOpen
+                                    ? "overflow-hidden"
+                                    : "overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                            }`}>
+                                <div className={`${searchOpen ? "hidden sm:flex" : "flex"} shrink-0 gap-2`}>
                                     <TypeToggle href="/" active={!queryCategory} label="全部分类" />
                                     {categories.map((category) => (
                                         <TypeToggle
@@ -168,11 +172,11 @@ export function FeedsPage() {
                                         />
                                     ))}
                                 </div>
-                                <div className="ml-auto flex shrink-0 items-center gap-2">
+                                <div className={`${searchOpen ? "w-full sm:ml-auto sm:w-auto" : "ml-auto"} flex shrink-0 items-center gap-2`}>
                                     <form
                                         onSubmit={submitSearch}
                                         className={`flex min-h-11 items-center overflow-hidden rounded-full border border-black/10 bg-white/65 shadow-sm transition-all duration-300 focus-within:border-theme/35 focus-within:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:focus-within:bg-white/[0.07] ${
-                                            searchOpen ? "w-[min(68vw,300px)] gap-2 px-3 py-1.5" : "w-11 justify-center px-0"
+                                            searchOpen ? "w-full gap-2 px-3 py-1.5 sm:w-[min(68vw,300px)]" : "w-11 justify-center px-0"
                                         }`}
                                     >
                                         <button
@@ -203,7 +207,9 @@ export function FeedsPage() {
                                             </>
                                         ) : null}
                                     </form>
-                                    <TimelineShortcut />
+                                    <div className={searchOpen ? "hidden sm:block" : ""}>
+                                        <TimelineShortcut />
+                                    </div>
                                 </div>
                             </div>
                         </div>
