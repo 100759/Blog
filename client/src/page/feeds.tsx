@@ -156,8 +156,8 @@ export function FeedsPage() {
                                     <span>{t("article.total$count", { count: currentFeedSet.size })}</span>
                                 </div>
                             </div>
-                            <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                                <div className="flex flex-wrap gap-2">
+                            <div className="-mx-1 mt-4 flex items-center gap-2 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                <div className="flex shrink-0 gap-2">
                                     <TypeToggle href="/" active={!queryCategory} label="全部分类" />
                                     {categories.map((category) => (
                                         <TypeToggle
@@ -168,11 +168,11 @@ export function FeedsPage() {
                                         />
                                     ))}
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="ml-auto flex shrink-0 items-center gap-2">
                                     <form
                                         onSubmit={submitSearch}
                                         className={`flex min-h-11 items-center overflow-hidden rounded-full border border-black/10 bg-white/65 shadow-sm transition-all duration-300 focus-within:border-theme/35 focus-within:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:focus-within:bg-white/[0.07] ${
-                                            searchOpen ? "w-[min(78vw,300px)] gap-2 px-3 py-1.5" : "w-11 justify-center px-0"
+                                            searchOpen ? "w-[min(68vw,300px)] gap-2 px-3 py-1.5" : "w-11 justify-center px-0"
                                         }`}
                                     >
                                         <button
@@ -268,7 +268,8 @@ function TimelineShortcut() {
     return (
         <Link
             href="/timeline"
-            className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-theme/18 bg-[linear-gradient(135deg,rgba(var(--theme-rgb),0.11),rgba(255,255,255,0.76))] px-2.5 py-1.5 text-sm font-medium text-neutral-800 shadow-sm transition hover:-translate-y-0.5 hover:border-theme/35 hover:text-theme dark:border-theme/25 dark:bg-[linear-gradient(135deg,rgba(var(--theme-rgb),0.18),rgba(255,255,255,0.05))] dark:text-neutral-100"
+            aria-label="时间轴"
+            className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-theme/18 bg-[linear-gradient(135deg,rgba(var(--theme-rgb),0.11),rgba(255,255,255,0.76))] px-1.5 py-1.5 text-sm font-medium text-neutral-800 shadow-sm transition hover:-translate-y-0.5 hover:border-theme/35 hover:text-theme dark:border-theme/25 dark:bg-[linear-gradient(135deg,rgba(var(--theme-rgb),0.18),rgba(255,255,255,0.05))] dark:text-neutral-100 sm:px-2.5"
             onMouseEnter={() => preloadRoute("/timeline")}
             onTouchStart={() => preloadRoute("/timeline")}
         >
@@ -277,8 +278,8 @@ function TimelineShortcut() {
                 <span className="absolute top-2 h-1.5 w-1.5 rounded-full bg-theme shadow-[0_8px_0_rgba(var(--theme-rgb),0.42),0_16px_0_rgba(var(--theme-rgb),0.24)]" />
                 <i className="ri-arrow-down-line absolute bottom-0.5 text-[10px] opacity-70" />
             </span>
-            <span>时间轴</span>
-            <i className="ri-arrow-right-line text-theme transition group-hover:translate-x-0.5" />
+            <span className="hidden sm:inline">时间轴</span>
+            <i className="ri-arrow-right-line hidden text-theme transition group-hover:translate-x-0.5 sm:inline" />
         </Link>
     );
 }
