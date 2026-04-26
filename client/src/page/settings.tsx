@@ -66,35 +66,30 @@ function SettingsGroup({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <section className={`rounded-[26px] border bg-white/45 shadow-sm shadow-black/[0.02] transition-all dark:bg-white/[0.035] ${
+    <section className={`rounded-[14px] border bg-white/55 transition-colors dark:bg-white/[0.03] ${
       open
-        ? "border-theme/20 ring-1 ring-theme/10"
+        ? "border-black/12 dark:border-white/15"
         : "border-black/8 hover:border-black/12 dark:border-white/10 dark:hover:border-white/15"
     }`}>
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex w-full items-start gap-3 p-4 text-left md:p-5"
+        className="flex w-full items-center gap-3 px-4 py-3 text-left"
         aria-expanded={open}
       >
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[16px] bg-theme/10 text-theme ring-1 ring-theme/15">
-          <i className={`${icon} text-lg`} />
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] border border-black/8 bg-white/60 text-neutral-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300">
+          <i className={`${icon} text-base`} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">{title}</h3>
-            {open ? (
-              <span className="rounded-full bg-theme/10 px-2 py-0.5 text-[11px] font-medium text-theme">已展开</span>
-            ) : null}
-          </div>
-          <p className="mt-1 text-sm leading-6 text-neutral-500 dark:text-neutral-400">{description}</p>
+          <h3 className="text-[15px] font-semibold text-neutral-900 dark:text-white">{title}</h3>
+          <p className="mt-0.5 text-[12px] leading-5 text-neutral-500 dark:text-neutral-400">{description}</p>
         </div>
-        <div className="mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-black/8 bg-white/60 text-neutral-500 transition dark:border-white/10 dark:bg-white/[0.04]">
-          <i className={`ri-arrow-down-s-line text-lg transition-transform ${open ? "rotate-180 text-theme" : ""}`} />
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] text-neutral-400 transition">
+          <i className={`ri-arrow-down-s-line text-lg transition-transform ${open ? "rotate-180 text-neutral-700 dark:text-neutral-100" : ""}`} />
         </div>
       </button>
       {open ? (
-        <div className="grid gap-3 border-t border-black/5 p-4 pt-4 dark:border-white/10 md:p-5 md:pt-4">
+        <div className="grid gap-2 border-t border-black/5 px-4 py-3 dark:border-white/10">
           {children}
         </div>
       ) : null}
@@ -243,43 +238,43 @@ export function Settings() {
   }
 
   return (
-    <div className="flex w-full flex-col gap-6">
+    <div className="flex w-full flex-col gap-4">
       <Helmet>
         <title>{`${t("settings.title")} - ${siteConfig.name}`}</title>
       </Helmet>
-      <section className="site-panel rounded-[30px] px-5 py-5 md:px-6 md:py-6">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+      <section className="rounded-[16px] border border-black/8 bg-white/50 px-4 py-4 dark:border-white/10 dark:bg-white/[0.03]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.72fr)] lg:items-center">
           <div>
             <p className="site-kicker">{t("settings.title")}</p>
-            <h2 className="site-display mt-3 text-[2.2rem] text-neutral-900 dark:text-white md:text-[3rem]">
+            <h2 className="mt-2 text-xl font-semibold text-neutral-900 dark:text-white md:text-2xl">
               {previewSiteName}
             </h2>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-neutral-600 dark:text-neutral-300">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-600 dark:text-neutral-300">
               {String(clientConfig.get("site.description") ?? clientConfig.default("site.description") ?? "")}
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="rounded-[12px] border border-black/8 bg-white/45 px-3 py-2.5 dark:border-white/10 dark:bg-white/[0.03]">
               <p className="site-kicker">{t("settings.theme_preset.title")}</p>
-              <p className="mt-3 text-lg font-semibold text-neutral-900 dark:text-white">{currentThemePresetLabel}</p>
+              <p className="mt-1 text-sm font-medium text-neutral-800 dark:text-white">{currentThemePresetLabel}</p>
             </div>
-            <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="rounded-[12px] border border-black/8 bg-white/45 px-3 py-2.5 dark:border-white/10 dark:bg-white/[0.03]">
               <p className="site-kicker">{t("settings.header_layout.title")}</p>
-              <p className="mt-3 text-lg font-semibold text-neutral-900 dark:text-white">{currentHeaderLayoutLabel}</p>
+              <p className="mt-1 text-sm font-medium text-neutral-800 dark:text-white">{currentHeaderLayoutLabel}</p>
             </div>
-            <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="rounded-[12px] border border-black/8 bg-white/45 px-3 py-2.5 dark:border-white/10 dark:bg-white/[0.03]">
               <p className="site-kicker">{t("settings.feed_card.title")}</p>
-              <p className="mt-3 text-lg font-semibold text-neutral-900 dark:text-white">{currentFeedCardLabel}</p>
+              <p className="mt-1 text-sm font-medium text-neutral-800 dark:text-white">{currentFeedCardLabel}</p>
             </div>
-            <div className="rounded-[24px] border border-black/10 bg-white/55 px-4 py-4 dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="rounded-[12px] border border-black/8 bg-white/45 px-3 py-2.5 dark:border-white/10 dark:bg-white/[0.03]">
               <p className="site-kicker">{t("settings.feed_layout.title")}</p>
-              <p className="mt-3 text-lg font-semibold text-neutral-900 dark:text-white">{currentFeedLayoutLabel}</p>
+              <p className="mt-1 text-sm font-medium text-neutral-800 dark:text-white">{currentFeedLayoutLabel}</p>
             </div>
           </div>
         </div>
       </section>
       <main className="w-full" aria-label={t("main_content")}>
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-3">
           {(loading || saving) && (
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-black/10 bg-white/70 px-3 py-2 text-sm text-neutral-500 dark:border-white/10 dark:bg-white/[0.05]">
               <ReactLoading width="1em" height="1em" type="spin" color="#FC466B" />
@@ -290,7 +285,7 @@ export function Settings() {
           <SettingsGroup
             icon="ri-dashboard-line"
             title={t("settings.site.title")}
-            description="站点名称、简介、头像和分页数量，优先放这里，日常最常用。"
+            description="名称、简介、头像、分页数量。"
           >
           <ItemInput
             title={t("settings.site.name.title")}
@@ -338,7 +333,7 @@ export function Settings() {
           <SettingsGroup
             icon="ri-layout-top-line"
             title={t("settings.personalization.title")}
-            description="控制前台视觉风格、导航样式、文章列表和主题色。"
+            description="主题、导航、文章列表样式。"
           >
           <div className="w-full overflow-hidden rounded-[22px] border border-black/5 bg-white/40 dark:border-white/10 dark:bg-white/[0.03]">
             <SettingsCard>
@@ -576,7 +571,7 @@ export function Settings() {
           <SettingsGroup
             icon="ri-settings-3-line"
             title={t("settings.other.title")}
-            description="登录、评论、浏览统计、RSS、站点图标和页脚内容。"
+            description="登录、评论、统计、RSS、页脚。"
           >
           <ItemSwitch
             title={t("settings.login.enable.title")}
@@ -630,7 +625,7 @@ export function Settings() {
           <SettingsGroup
             icon="ri-link"
             title={t("settings.webhook.title")}
-            description="文章发布后的通知回调，一般配置好以后很少需要改。"
+            description="发布通知和回调测试。"
           >
           <ItemInput
             title={t("settings.webhook.url.title")}
@@ -732,7 +727,7 @@ export function Settings() {
           <SettingsGroup
             icon="ri-user-received-line"
             title={t("settings.friend.title")}
-            description="朋友页申请入口、健康检查和访问请求头。"
+            description="申请入口、健康检查、请求头。"
           >
           <ItemSwitch
             title={t("settings.friend.apply.title")}
@@ -765,7 +760,7 @@ export function Settings() {
           <SettingsGroup
             icon="ri-git-branch-line"
             title={t("settings.maintenance.title")}
-            description="缓存、导入和 AI 摘要等偏维护性质的配置。"
+            description="缓存、导入、AI 摘要。"
           >
           <ItemSwitch
             title={t("settings.cache.enabled.title")}
