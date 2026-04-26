@@ -4,7 +4,12 @@ import { Link, useSearch } from "wouter";
 import { siteName } from "../utils/constants";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 
-type WorkType = "design" | "program" | "image" | "website";
+type WorkType = "design" | "program" | "image";
+type WorkAccess = {
+    mode: "open" | "closed";
+    label?: string;
+    url?: string;
+};
 
 type WorkItem = {
     slug: string;
@@ -19,6 +24,7 @@ type WorkItem = {
     highlights: string[];
     role: string;
     metrics: string[];
+    access?: WorkAccess;
     href?: string;
     gallery?: string[];
 };
@@ -27,22 +33,17 @@ const typeMeta: Record<WorkType, { label: string; intro: string; icon: string }>
     design: {
         label: "设计作品",
         intro: "品牌、界面、视觉改版和体验整理。",
-        icon: "ri-pencil-ruler-2-line",
+        icon: "ri-layout-top-line",
     },
     program: {
         label: "程序",
         intro: "能运行、能维护、能持续迭代的小产品。",
-        icon: "ri-terminal-box-line",
+        icon: "ri-computer-line",
     },
     image: {
         label: "图片",
         intro: "摄影、插画、视觉素材和灵感收集。",
-        icon: "ri-image-2-line",
-    },
-    website: {
-        label: "网站",
-        intro: "完整站点、页面重构和线上入口。",
-        icon: "ri-window-line",
+        icon: "ri-image-line",
     },
 };
 
@@ -60,6 +61,11 @@ const works: WorkItem[] = [
         highlights: ["富文本写作", "R2 图片上传", "动态与文章分流", "移动端阅读优化"],
         role: "全栈二开 / 产品整理 / 视觉重构",
         metrics: ["主站系统", "长期维护", "移动端优先"],
+        access: {
+            mode: "open",
+            label: "GitHub 开源地址",
+            url: "https://github.com/100759/Blog",
+        },
         href: "https://blog.fuheng.vip",
     },
     {
@@ -75,6 +81,9 @@ const works: WorkItem[] = [
         highlights: ["降低大字号压迫感", "弱化版块边界", "修正顶部安全区", "优化内容首屏"],
         role: "界面重整 / 移动端体验",
         metrics: ["手机端", "阅读体验", "已落地"],
+        access: {
+            mode: "closed",
+        },
     },
     {
         slug: "moment-publisher",
@@ -89,6 +98,9 @@ const works: WorkItem[] = [
         highlights: ["文字图片混排", "可选定位", "紧凑图片网格", "移动端优先"],
         role: "功能设计 / 发布流程",
         metrics: ["轻发布", "图片上传", "位置可选"],
+        access: {
+            mode: "closed",
+        },
     },
     {
         slug: "portrait-assets",
@@ -103,12 +115,17 @@ const works: WorkItem[] = [
         highlights: ["黑白线条", "高识别度", "适合小尺寸", "可继续扩展"],
         role: "视觉素材整理",
         metrics: ["品牌识别", "多场景", "轻量素材"],
+        access: {
+            mode: "open",
+            label: "下载素材",
+            url: "/avatar.png",
+        },
         gallery: ["头像", "文章封面", "卡片占位", "社交分享"],
     },
     {
         slug: "site-index",
         title: "旗下网站索引",
-        type: "website",
+        type: "program",
         status: "已上线",
         date: "2026",
         summary: "把所有长期维护的网站入口集中展示，方便访客从一个地方找到主站、备用地址和后续新项目。",
@@ -118,6 +135,9 @@ const works: WorkItem[] = [
         highlights: ["集中入口", "状态标记", "外链直达", "后续可扩展"],
         role: "信息架构 / 页面设计",
         metrics: ["站点索引", "线上入口", "持续扩展"],
+        access: {
+            mode: "closed",
+        },
         href: "/sites",
     },
 ];
@@ -127,7 +147,6 @@ const filters: Array<{ value: "all" | WorkType; label: string }> = [
     { value: "design", label: "设计作品" },
     { value: "program", label: "程序" },
     { value: "image", label: "图片" },
-    { value: "website", label: "网站" },
 ];
 
 export function WorksPage() {
@@ -166,7 +185,7 @@ export function WorksPage() {
                                 作品
                             </h1>
                             <p className="mt-2 max-w-2xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
-                                这里放做过的程序、设计过的网站、图片素材和其他长期维护的小项目。每个作品都有自己的详情页，方便慢慢补充过程和说明。
+                                这里放做过的程序、设计作品和图片素材。开源作品会直接给出 GitHub 或下载入口，闭源作品只保留说明和展示。
                             </p>
                         </div>
                         <div className="rounded-[22px] border border-black/8 bg-white/45 p-4 text-sm text-neutral-600 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300">
@@ -299,6 +318,11 @@ export function WorkDetailPage({ slug }: { slug: string }) {
                             <div className="mt-6 flex flex-wrap gap-2">
                                 <span className="rounded-full bg-white/65 px-3 py-1.5 text-xs font-medium text-neutral-700">{work.status}</span>
                                 <span className="rounded-full bg-white/65 px-3 py-1.5 text-xs font-medium text-neutral-700">{work.date}</span>
+                                {work.access ? (
+                                    <span className="rounded-full bg-white/65 px-3 py-1.5 text-xs font-medium text-neutral-700">
+                                        {work.access.mode === "open" ? "开源" : "闭源"}
+                                    </span>
+                                ) : null}
                             </div>
                         </div>
                         <WorkVisual work={work} />
@@ -335,6 +359,45 @@ export function WorkDetailPage({ slug }: { slug: string }) {
                             <p className="site-kicker">Role</p>
                             <p className="mt-3 text-sm leading-6 text-neutral-650 dark:text-neutral-300">{work.role}</p>
                         </div>
+
+                        {work.access ? (
+                            <div className="site-panel rounded-[24px] px-5 py-5">
+                                <p className="site-kicker">Access</p>
+                                <div className="mt-4 flex items-center justify-between gap-3">
+                                    <div>
+                                        <h3 className="font-semibold text-neutral-900 dark:text-white">
+                                            {work.access.mode === "open" ? "开源作品" : "闭源作品"}
+                                        </h3>
+                                        <p className="mt-1 text-sm leading-6 text-neutral-500 dark:text-neutral-300">
+                                            {work.access.mode === "open"
+                                                ? work.type === "program"
+                                                    ? "可以查看源码仓库。"
+                                                    : "可以直接下载素材。"
+                                                : "暂不提供公开源码或下载。"}
+                                        </p>
+                                    </div>
+                                    <span className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${
+                                        work.access.mode === "open"
+                                            ? "bg-theme/10 text-theme"
+                                            : "bg-black/[0.04] text-neutral-500 dark:bg-white/[0.06] dark:text-neutral-300"
+                                    }`}>
+                                        {work.access.mode === "open" ? "开源" : "闭源"}
+                                    </span>
+                                </div>
+                                {work.access.mode === "open" && work.access.url ? (
+                                    <a
+                                        href={work.access.url}
+                                        target={work.access.url.startsWith("http") ? "_blank" : undefined}
+                                        rel={work.access.url.startsWith("http") ? "noreferrer" : undefined}
+                                        download={!work.access.url.startsWith("http") ? true : undefined}
+                                        className="mt-4 flex items-center justify-between rounded-[18px] border border-theme/20 bg-theme/10 px-4 py-3 text-sm font-medium text-theme transition hover:bg-theme hover:text-white"
+                                    >
+                                        {work.access.label || (work.type === "program" ? "查看 GitHub" : "下载")}
+                                        <i className={work.type === "program" ? "ri-github-line" : "ri-upload-2-line"} />
+                                    </a>
+                                ) : null}
+                            </div>
+                        ) : null}
 
                         <div className="site-panel rounded-[24px] px-5 py-5">
                             <p className="site-kicker">Type</p>
@@ -382,7 +445,7 @@ function WorkCard({ work }: { work: WorkItem }) {
     const meta = typeMeta[work.type];
 
     return (
-        <Link href={`/works/${work.slug}`} className="group block h-full">
+        <div className="group block h-full">
             <article className="site-panel flex h-full min-h-[260px] flex-col overflow-hidden rounded-[22px] transition hover:-translate-y-0.5 hover:border-theme/30">
                 <WorkVisual work={work} compact />
                 <div className="flex flex-1 flex-col px-4 py-4 md:px-5">
@@ -391,9 +454,22 @@ function WorkCard({ work }: { work: WorkItem }) {
                             <i className={meta.icon} />
                             {meta.label}
                         </span>
-                        <span className="text-xs text-neutral-400">{work.status}</span>
+                        <div className="flex items-center gap-1.5">
+                            {work.access ? (
+                                <span className={`rounded-full px-2 py-0.5 text-[11px] ${
+                                    work.access.mode === "open"
+                                        ? "bg-theme/10 text-theme"
+                                        : "bg-black/[0.04] text-neutral-400 dark:bg-white/[0.06]"
+                                }`}>
+                                    {work.access.mode === "open" ? "开源" : "闭源"}
+                                </span>
+                            ) : null}
+                            <span className="text-xs text-neutral-400">{work.status}</span>
+                        </div>
                     </div>
-                    <h2 className="mt-3 text-lg font-semibold text-neutral-900 dark:text-white">{work.title}</h2>
+                    <Link href={`/works/${work.slug}`} className="mt-3 text-lg font-semibold text-neutral-900 transition hover:text-theme dark:text-white">
+                        {work.title}
+                    </Link>
                     <p className="mt-3 line-clamp-3 flex-1 text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
                         {work.summary}
                     </p>
@@ -406,14 +482,29 @@ function WorkCard({ work }: { work: WorkItem }) {
                     </div>
                     <div className="mt-5 flex items-center justify-between border-t border-black/5 pt-4 text-sm dark:border-white/10">
                         <span className="text-neutral-400">{work.date}</span>
-                        <span className="inline-flex items-center gap-1 text-theme">
-                            查看详情
-                            <i className="ri-arrow-right-line transition group-hover:translate-x-0.5" />
-                        </span>
+                        <div className="inline-flex items-center gap-3">
+                            {work.access?.mode === "open" && work.access.url ? (
+                                <a
+                                    href={work.access.url}
+                                    target={work.access.url.startsWith("http") ? "_blank" : undefined}
+                                    rel={work.access.url.startsWith("http") ? "noreferrer" : undefined}
+                                    download={!work.access.url.startsWith("http") ? true : undefined}
+                                    onClick={(event) => event.stopPropagation()}
+                                    className="relative z-10 inline-flex items-center gap-1 text-neutral-500 transition hover:text-theme dark:text-neutral-300"
+                                >
+                                    {work.type === "program" ? "GitHub" : "下载"}
+                                    <i className={work.type === "program" ? "ri-github-line" : "ri-upload-2-line"} />
+                                </a>
+                            ) : null}
+                            <Link href={`/works/${work.slug}`} className="inline-flex items-center gap-1 text-theme">
+                                详情
+                                <i className="ri-arrow-right-line transition group-hover:translate-x-0.5" />
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </article>
-        </Link>
+        </div>
     );
 }
 
@@ -492,7 +583,7 @@ function WorkVisual({ work, compact = false }: { work: WorkItem; compact?: boole
 }
 
 function normalizeType(value: string | null): "all" | WorkType {
-    if (value === "design" || value === "program" || value === "image" || value === "website") {
+    if (value === "design" || value === "program" || value === "image") {
         return value;
     }
 
