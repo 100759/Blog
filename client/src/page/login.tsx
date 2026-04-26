@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "wouter";
 import { client, oauth_url } from "../app/runtime";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { setAuthToken } from "../utils/auth";
@@ -10,7 +9,6 @@ import { getLoginRedirectPath } from "../utils/auth-redirect";
 export function LoginPage() {
   const { t } = useTranslation();
   const siteConfig = useSiteConfig();
-  const [, setLocation] = useLocation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [authStatus, setAuthStatus] = useState<{ github: boolean; password: boolean }>({ github: false, password: false });
@@ -52,8 +50,7 @@ export function LoginPage() {
           setAuthToken(data.token);
         }
 
-        setLocation(getLoginRedirectPath(window.location.search));
-        window.location.reload();
+        window.location.replace(getLoginRedirectPath(window.location.search));
         return;
       }
 

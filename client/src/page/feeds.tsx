@@ -32,6 +32,7 @@ type FeedRecord = {
     listed?: number;
     top?: number;
     title: string;
+    category?: string;
     summary: string;
     createdAt: Date | string;
     updatedAt: Date | string;
@@ -69,6 +70,7 @@ export function FeedsPage() {
                         id: String(item.id),
                         avatar: item.avatar || undefined,
                         title: item.title || t("unlisted"),
+                        category: item.category || undefined,
                         summary: item.summary,
                         createdAt: item.createdAt,
                         updatedAt: item.updatedAt,
@@ -232,6 +234,7 @@ function FeaturedFeedLead({ feed }: { feed: FeedRecord }) {
                             {feed.top === 1 ? <span className="rounded-full bg-theme/10 px-2 py-1 text-theme">{t("article.top.title")}</span> : null}
                             {feed.draft === 1 ? <span>{t("draft")}</span> : null}
                             {feed.listed === 0 ? <span>{t("unlisted")}</span> : null}
+                            {feed.category ? <span>{feed.category}</span> : null}
                         </div>
                         <h2 className="site-display mt-3 text-[1.35rem] font-semibold text-neutral-900 dark:text-white sm:mt-4 sm:text-[1.8rem] md:text-[2.15rem]">
                             {feed.title}

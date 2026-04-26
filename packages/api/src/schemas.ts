@@ -13,6 +13,7 @@ export const feedListSchema = t.Object({
 
 export const feedCreateSchema = t.Object({
   title: t.String(),
+  category: t.String({ optional: true }),
   content: t.String(),
   summary: t.String({ optional: true }),
   alias: t.String({ optional: true }),
@@ -24,6 +25,7 @@ export const feedCreateSchema = t.Object({
 
 export const feedUpdateSchema = t.Object({
   title: t.String({ optional: true }),
+  category: t.String({ optional: true }),
   alias: t.String({ optional: true }),
   content: t.String({ optional: true }),
   summary: t.String({ optional: true }),

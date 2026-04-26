@@ -31,6 +31,7 @@ function buildSuggestedSummary(value: string) {
 
 function buildPersistedSnapshot({
   title,
+  category,
   content,
   summary,
   draft,
@@ -38,6 +39,7 @@ function buildPersistedSnapshot({
   createdAt,
 }: {
   title: string;
+  category: string;
   content: string;
   summary: string;
   draft: boolean;
@@ -46,6 +48,7 @@ function buildPersistedSnapshot({
 }) {
   return JSON.stringify({
     title: title.trim(),
+    category: category.trim(),
     content,
     summary: summary.trim(),
     draft,
@@ -60,6 +63,7 @@ export function WritingPage({ id }: { id?: number }) {
   const [, setLocation] = useLocation();
   const cache = Cache.with(id);
   const [title, setTitle] = cache.useCache("title", "");
+  const [category, setCategory] = cache.useCache("category", "");
   const [summary, setSummary] = cache.useCache("summary", "");
   const [draft, setDraft] = useState(id === undefined);
   const listed = true;
@@ -75,6 +79,7 @@ export function WritingPage({ id }: { id?: number }) {
     id === undefined
       ? buildPersistedSnapshot({
           title,
+          category,
           content: convertStoredContentToEditorHtml(cachedContent),
           summary,
           draft: true,
@@ -90,13 +95,14 @@ export function WritingPage({ id }: { id?: number }) {
     () =>
       buildPersistedSnapshot({
         title,
+        category,
         content,
         summary,
         draft,
         listed,
         createdAt,
       }),
-    [content, createdAt, draft, listed, summary, title],
+    [category, content, createdAt, draft, listed, summary, title],
   );
 
   const readingTitle = title.trim() || t("writing_editor.untitled");
@@ -110,6 +116,7 @@ export function WritingPage({ id }: { id?: number }) {
   const applyFetchedSnapshot = useCallback((data: any) => {
     lastPersistedSnapshotRef.current = buildPersistedSnapshot({
       title: data.title ?? "",
+      category: data.category ?? "",
       content: convertStoredContentToEditorHtml(data.content ?? ""),
       summary: data.summary ?? "",
       draft: data.draft === 1,
@@ -130,6 +137,7 @@ export function WritingPage({ id }: { id?: number }) {
       }
 
       if (title === "" && data.title) setTitle(data.title);
+      if (category === "" && data.category) setCategory(data.category);
       if (cachedContent === "") setContent(convertStoredContentToEditorHtml(data.content));
       if (summary === "") setSummary((data as any).summary || "");
       setDraft((data as any).draft === 1);
@@ -139,7 +147,7 @@ export function WritingPage({ id }: { id?: number }) {
       setSaveState("idle");
       setLoadingFeed(false);
     });
-  }, [applyFetchedSnapshot, cachedContent, id, setContent, setSummary, setTitle, summary, title]);
+  }, [applyFetchedSnapshot, cachedContent, category, id, setCategory, setContent, setSummary, setTitle, summary, title]);
 
   useEffect(() => {
     if (cachedContent === content) return;
@@ -178,6 +186,7 @@ export function WritingPage({ id }: { id?: number }) {
       if (publishing) return;
 
       const trimmedTitle = title.trim();
+      const trimmedCategory = category.trim();
       const trimmedSummary = summary.trim() || buildSuggestedSummary(content);
       const effectiveDraft = forcePublished ? false : draft;
 
@@ -201,6 +210,7 @@ export function WritingPage({ id }: { id?: number }) {
 
       const payload = {
         title: trimmedTitle,
+        category: trimmedCategory,
         content,
         summary: trimmedSummary,
         tags: [],
@@ -223,6 +233,7 @@ export function WritingPage({ id }: { id?: number }) {
           Cache.with(id).clear();
           lastPersistedSnapshotRef.current = buildPersistedSnapshot({
             title: trimmedTitle,
+            category: trimmedCategory,
             content,
             summary: trimmedSummary,
             draft: effectiveDraft,
@@ -273,7 +284,7 @@ export function WritingPage({ id }: { id?: number }) {
         setPublishing(null);
       }
     },
-    [content, createdAt, draft, id, listed, publishing, setLocation, showAlert, summary, t, title],
+    [category, content, createdAt, draft, id, listed, publishing, setLocation, showAlert, summary, t, title],
   );
 
   useEffect(() => {
@@ -408,6 +419,17 @@ export function WritingPage({ id }: { id?: number }) {
                     value={title}
                     setValue={setTitle}
                     placeholder={t("title")}
+                    variant="flat"
+                    className="text-base"
+                  />
+                </div>
+
+                <div className="lg:col-span-2">
+                  <Input
+                    id={id}
+                    value={category}
+                    setValue={setCategory}
+                    placeholder="分类，例如：生活、技术、随笔"
                     variant="flat"
                     className="text-base"
                   />

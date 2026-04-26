@@ -1,4 +1,4 @@
-export const DEFAULT_LOGIN_REDIRECT = "/";
+export const DEFAULT_LOGIN_REDIRECT = "/admin/writing";
 export const HIDDEN_LOGIN_REDIRECT = "/admin/writing";
 
 export function buildLoginPath(redirectTo?: string): string {

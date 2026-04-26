@@ -92,6 +92,7 @@ export type FeedCardProps = {
     listed?: number;
     top?: number;
     title: string;
+    category?: string;
     summary: string;
     createdAt: Date;
     updatedAt: Date;
@@ -99,7 +100,7 @@ export type FeedCardProps = {
     variant?: FeedCardVariant;
 };
 
-export function FeedCard({ id, title, avatar, draft, listed, top, summary, createdAt, updatedAt, preview = false, variant }: FeedCardProps) {
+export function FeedCard({ id, title, avatar, draft, listed, top, category, summary, createdAt, updatedAt, preview = false, variant }: FeedCardProps) {
     const { t } = useTranslation();
     const siteConfig = useSiteConfig();
     const activeVariant = normalizeFeedCardVariant(variant ?? siteConfig.feedCardVariant);
@@ -122,6 +123,7 @@ export function FeedCard({ id, title, avatar, draft, listed, top, summary, creat
                     ) : null}
                     {draft === 1 ? <span>{t("draft")}</span> : null}
                     {listed === 0 ? <span>{t("unlisted")}</span> : null}
+                    {category ? <span>{category}</span> : null}
                 </div>
                 <h1 className={styles.title}>{title}</h1>
                 <p className={`space-x-2 ${styles.meta}`}>

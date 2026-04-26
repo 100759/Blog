@@ -153,6 +153,7 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
                 <div className="border-b border-black/5 px-4 py-5 dark:border-white/10 md:px-7 md:py-7">
                   <div className="flex max-w-2xl flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500 dark:text-neutral-400">
                     {top > 0 ? <span className="rounded-[6px] bg-theme/10 px-2.5 py-1 text-theme">{t("article.top.title")}</span> : null}
+                    {feed.category ? <span className="rounded-[6px] bg-black/[0.04] px-2.5 py-1 text-neutral-600 dark:bg-white/[0.06] dark:text-neutral-300">{feed.category}</span> : null}
                   </div>
 
                   <h1 className="site-display mt-3 max-w-3xl break-words text-[1.55rem] font-semibold leading-tight text-neutral-900 dark:text-white sm:text-[2rem] md:text-[2.35rem]">

@@ -1,14 +1,13 @@
 import { useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "wouter";
 import { useSiteConfig } from "../hooks/useSiteConfig";
+import { DEFAULT_LOGIN_REDIRECT } from "../utils/auth-redirect";
 import { setAuthToken } from "../utils/auth";
 
 export function CallbackPage() {
   const { t } = useTranslation();
   const siteConfig = useSiteConfig();
-  const [, setLocation] = useLocation();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -18,8 +17,8 @@ export function CallbackPage() {
       setAuthToken(token);
     }
 
-    setLocation("/");
-  }, [setLocation]);
+    window.location.replace(DEFAULT_LOGIN_REDIRECT);
+  }, []);
 
   return (
     <>

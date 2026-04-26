@@ -8,6 +8,7 @@ export const feeds = sqliteTable("feeds", {
     id: integer("id").primaryKey(),
     alias: text("alias"),
     title: text("title"),
+    category: text("category").default("").notNull(),
     summary: text("summary").default("").notNull(),
     ai_summary: text("ai_summary").default("").notNull(),
     ai_summary_status: text("ai_summary_status").default("idle").notNull(),

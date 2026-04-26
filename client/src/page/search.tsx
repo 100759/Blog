@@ -12,6 +12,7 @@ import { tryInt } from "../utils/int";
 type SearchFeedRecord = {
     id: number;
     title: string | null;
+    category?: string;
     summary: string;
     avatar?: string | null;
     createdAt: Date | string;

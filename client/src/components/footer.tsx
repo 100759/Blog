@@ -153,9 +153,7 @@ function Footer() {
                             className="cursor-default"
                         >
                             Copyright {new Date().getFullYear()} Powered by{" "}
-                            <a className="hover:text-theme" href="https://github.com/openRin/Rin" target="_blank">
-                                Rin
-                            </a>
+                            <span>FuHeng</span>
                         </p>
                         <p className="text-xs uppercase tracking-[0.18em] text-neutral-400 dark:text-neutral-500">
                             {modeState}

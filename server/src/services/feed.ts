@@ -129,10 +129,11 @@ export function FeedService(): Hono<{
         const admin = c.get('admin');
         const uid = c.get('uid');
         const body = await profileAsync(c, 'feed_create_parse', () => c.req.json());
-        const { title, alias, listed, content, summary, draft, tags, createdAt } = body;
+        const { title, alias, listed, content, summary, category, draft, tags, createdAt } = body;
         const normalizedTitle = typeof title === "string" ? title.trim() : "";
         const normalizedContent = typeof content === "string" ? content : "";
         const normalizedSummary = typeof summary === "string" ? summary.trim() : "";
+        const normalizedCategory = typeof category === "string" ? category.trim().slice(0, 40) : "";
         const normalizedAlias = typeof alias === "string" ? alias.trim() : "";
         const isDraft = Boolean(draft);
 
@@ -165,6 +166,7 @@ export function FeedService(): Hono<{
 
         const result = await profileAsync(c, 'feed_create_insert', () => db.insert(feeds).values({
             title: normalizedTitle || null,
+            category: normalizedCategory,
             content: normalizedContent,
             summary: normalizedSummary,
             ai_summary: "",
@@ -317,6 +319,7 @@ export function FeedService(): Hono<{
                 const cacheData = {
                     id: feed.id,
                     title: feed.title,
+                    category: feed.category,
                     summary: summary,
                     hashtags: hashtags_flatten,
                     createdAt: feed.createdAt,
@@ -382,7 +385,7 @@ export function FeedService(): Hono<{
         const uid = c.get('uid');
         const id = c.req.param('id');
         const body = await profileAsync(c, 'feed_update_parse', () => c.req.json());
-        const { title, listed, content, summary, alias, draft, top, tags, createdAt } = body;
+        const { title, listed, content, summary, category, alias, draft, top, tags, createdAt } = body;
 
         const id_num = parseInt(id);
         const feed = await profileAsync(c, 'feed_update_lookup', () => db.query.feeds.findFirst({ where: eq(feeds.id, id_num) }));
@@ -402,6 +405,7 @@ export function FeedService(): Hono<{
 
         await profileAsync(c, 'feed_update_db', () => db.update(feeds).set({
             title,
+            category: typeof category === "string" ? category.trim().slice(0, 40) : undefined,
             content,
             summary,
             ai_summary: shouldQueueAISummary ? "" : undefined,

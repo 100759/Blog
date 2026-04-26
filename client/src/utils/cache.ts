@@ -2,6 +2,7 @@ import React from "react";
 
 export type Keys =
     | "title"
+    | "category"
     | "content"
     | "tags"
     | "summary"
@@ -12,6 +13,7 @@ export type Keys =
     ;
 const keys: Keys[] = [
     "title",
+    "category",
     "content",
     "tags",
     "summary",

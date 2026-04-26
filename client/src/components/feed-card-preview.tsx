@@ -15,6 +15,7 @@ const PREVIEW_IMAGE_URL = attachImageMetadataToUrl(
 const PREVIEW_PROPS: FeedCardProps = {
   id: "preview-feed-card",
   title: "A quieter card with stronger hierarchy",
+  category: "Design",
   summary:
     "This preview shows how article lists feel before you save. The image, metadata, and spacing all respond to the selected feed card style.",
   avatar: PREVIEW_IMAGE_URL,
