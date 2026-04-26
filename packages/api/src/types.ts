@@ -63,6 +63,11 @@ export interface FeedListResponse {
   hasNext: boolean;
 }
 
+export interface FeedCategory {
+  name: string;
+  count: number;
+}
+
 export interface TimelineItem {
   id: number;
   title: string | null;

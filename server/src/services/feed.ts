@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gt, like, lt, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, like, lt, ne, or } from "drizzle-orm";
 import { Hono } from "hono";
 import type { Variables } from "../core/hono-types";
 import { profileAsync } from "../core/server-timing";
@@ -42,6 +42,7 @@ export function FeedService(): Hono<{
         const page = c.req.query('page');
         const limit = c.req.query('limit');
         const type = c.req.query('type');
+        const category = c.req.query('category')?.trim();
 
         if ((type === 'draft' || type === 'unlisted') && !admin) {
             return c.text('Permission denied', 403);
@@ -49,18 +50,19 @@ export function FeedService(): Hono<{
 
         const page_num = (page ? parseInt(page) > 0 ? parseInt(page) : 1 : 1) - 1;
         const limit_num = limit ? parseInt(limit) > 50 ? 50 : parseInt(limit) : 20;
-        const cacheKey = `feeds_${type}_${page_num}_${limit_num}`;
+        const cacheKey = `feeds_${type}_${category || 'all'}_${page_num}_${limit_num}`;
         const cached = await profileAsync(c, 'feed_list_cache_get', () => cache.get(cacheKey));
 
         if (cached) {
             return c.json(cached);
         }
 
-        const where = type === 'draft'
+        const baseWhere = type === 'draft'
             ? eq(feeds.draft, 1)
             : type === 'unlisted'
                 ? and(eq(feeds.draft, 0), eq(feeds.listed, 0))
                 : and(eq(feeds.draft, 0), eq(feeds.listed, 1));
+        const where = category ? and(baseWhere, eq(feeds.category, category)) : baseWhere;
 
         const size = await profileAsync(c, 'feed_list_count', () => db.select({ count: count() }).from(feeds).where(where));
 
@@ -105,6 +107,28 @@ export function FeedService(): Hono<{
             await profileAsync(c, 'feed_list_cache_set', () => cache.set(cacheKey, data));
         }
 
+        return c.json(data);
+    });
+
+    // GET /feed/categories
+    app.get('/categories', async (c) => {
+        const db = c.get('db');
+        const cache = c.get('cache');
+        const cacheKey = 'feed_categories';
+        const cached = await profileAsync(c, 'feed_categories_cache_get', () => cache.get(cacheKey));
+
+        if (cached) {
+            return c.json(cached);
+        }
+
+        const data = await profileAsync(c, 'feed_categories_db', () => db
+            .select({ name: feeds.category, count: count() })
+            .from(feeds)
+            .where(and(eq(feeds.draft, 0), eq(feeds.listed, 1), ne(feeds.category, "")))
+            .groupBy(feeds.category)
+            .orderBy(desc(count())));
+
+        await profileAsync(c, 'feed_categories_cache_set', () => cache.set(cacheKey, data));
         return c.json(data);
     });
 
@@ -187,6 +211,7 @@ export function FeedService(): Hono<{
             resetSummary: true,
         }));
         await profileAsync(c, 'feed_create_cache_invalidate', () => cache.deletePrefix('feeds_'));
+        await profileAsync(c, 'feed_create_categories_cache_invalidate', () => cache.delete('feed_categories', false));
 
         if (result.length === 0) {
             return c.text('Failed to insert', 500);
@@ -432,6 +457,7 @@ export function FeedService(): Hono<{
         }
 
         await profileAsync(c, 'feed_update_cache_invalidate', () => clearFeedCache(cache, id_num, feed.alias, alias || null));
+        await profileAsync(c, 'feed_update_categories_cache_invalidate', () => cache.delete('feed_categories', false));
         return c.text('Updated');
     });
 
@@ -482,6 +508,7 @@ export function FeedService(): Hono<{
 
         await profileAsync(c, 'feed_delete_db', () => db.delete(feeds).where(eq(feeds.id, id_num)));
         await profileAsync(c, 'feed_delete_cache_invalidate', () => clearFeedCache(cache, id_num, feed.alias, null));
+        await profileAsync(c, 'feed_delete_categories_cache_invalidate', () => cache.delete('feed_categories', false));
         return c.text('Deleted');
     });
     return app;

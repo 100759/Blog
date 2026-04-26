@@ -1,11 +1,10 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { Link, useSearch } from "wouter";
 import { FeedCard } from "../components/feed_card";
 import { Waiting } from "../components/loading";
 import { client } from "../app/runtime";
 import { preloadRoute } from "../app/routes";
-import { ProfileContext } from "../state/profile";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { stripImageUrlMetadata } from "../utils/image-upload";
 import { tryInt } from "../utils/int";
@@ -17,12 +16,6 @@ type FeedsData = {
     size: number;
     data: FeedRecord[];
     hasNext: boolean;
-}
-
-type FeedType = "draft" | "unlisted" | "normal";
-
-type FeedsMap = {
-    [key in FeedType]: FeedsData;
 }
 
 type FeedRecord = {
@@ -38,29 +31,30 @@ type FeedRecord = {
     updatedAt: Date | string;
 }
 
+type FeedCategory = {
+    name: string;
+    count: number;
+}
+
 export function FeedsPage() {
     const { t } = useTranslation();
     const siteConfig = useSiteConfig();
     const query = new URLSearchParams(useSearch());
-    const profile = useContext(ProfileContext);
-    const queryType = (query.get("type") as FeedType) || "normal";
+    const queryCategory = query.get("category")?.trim() || "";
     const queryPage = query.get("page");
-    const [listState, setListState] = useState<FeedType>(queryType);
     const [status, setStatus] = useState<"loading" | "idle">("idle");
-    const [feeds, setFeeds] = useState<FeedsMap>({
-        draft: { size: 0, data: [], hasNext: false },
-        unlisted: { size: 0, data: [], hasNext: false },
-        normal: { size: 0, data: [], hasNext: false },
-    });
+    const [feeds, setFeeds] = useState<FeedsData>({ size: 0, data: [], hasNext: false });
+    const [categories, setCategories] = useState<FeedCategory[]>([]);
     const page = tryInt(1, queryPage);
     const limit = tryInt(siteConfig.pageSize, query.get("limit"));
     const ref = useRef("");
 
-    function fetchFeeds(type: FeedType) {
+    function fetchFeeds(category: string) {
         client.feed.list({
             page,
             limit,
-            type,
+            type: "normal",
+            category: category || undefined,
         }).then(({ data }) => {
             if (data) {
                 const normalizedData: FeedsData = {
@@ -76,10 +70,7 @@ export function FeedsPage() {
                         updatedAt: item.updatedAt,
                     })),
                 };
-                setFeeds((current) => ({
-                    ...current,
-                    [type]: normalizedData,
-                }));
+                setFeeds(normalizedData);
             }
             setStatus("idle");
         }).catch(() => {
@@ -88,22 +79,27 @@ export function FeedsPage() {
     }
 
     useEffect(() => {
-        const key = `${queryPage} ${queryType} ${limit}`;
+        const key = `${queryPage} ${queryCategory} ${limit}`;
         if (ref.current === key) return;
-        if (queryType !== listState) {
-            setListState(queryType);
-        }
         setStatus("loading");
-        fetchFeeds(queryType);
+        fetchFeeds(queryCategory);
         ref.current = key;
-    }, [limit, listState, queryPage, queryType]);
+    }, [limit, queryCategory, queryPage]);
 
-    const currentFeedSet = feeds[listState];
+    useEffect(() => {
+        client.feed.categories().then(({ data }) => {
+            if (data) {
+                setCategories(data.filter((item) => item.name.trim().length > 0));
+            }
+        });
+    }, []);
+
+    const currentFeedSet = feeds;
     const allFeeds = currentFeedSet.data || [];
-    const featuredFeed = listState === "normal" && page === 1 ? allFeeds[0] : undefined;
+    const featuredFeed = page === 1 ? allFeeds[0] : undefined;
     const remainingFeeds = featuredFeed ? allFeeds.slice(1) : allFeeds;
     const visibleFeeds = featuredFeed ? remainingFeeds : allFeeds;
-    const listTitle = listState === "draft" ? t("draft_bin") : listState === "normal" ? t("article.title") : t("unlisted");
+    const listTitle = queryCategory || t("article.title");
     const listDescription = siteConfig.description || t("article.total$count", { count: currentFeedSet.size });
     const feedListClass =
         siteConfig.feedLayout === "masonry"
@@ -120,7 +116,7 @@ export function FeedsPage() {
                 <meta property="og:type" content="article" />
                 <meta property="og:url" content={document.URL} />
             </Helmet>
-            <Waiting for={feeds.draft.size + feeds.normal.size + feeds.unlisted.size > 0 || status === "idle"}>
+            <Waiting for={feeds.size > 0 || status === "idle"}>
                 <main className="w-full pb-14">
                     <section className="wauto ani-show pt-4 md:pt-8">
                         <div className="border-b border-black/8 pb-5 dark:border-white/10">
@@ -138,13 +134,15 @@ export function FeedsPage() {
                             </div>
                             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex flex-wrap gap-2">
-                                    <TypeToggle href="/?type=normal" active={listState === "normal"} label={t("article.title")} />
-                                    {profile?.permission ? (
-                                        <>
-                                            <TypeToggle href="/?type=draft" active={listState === "draft"} label={t("draft_bin")} />
-                                            <TypeToggle href="/?type=unlisted" active={listState === "unlisted"} label={t("unlisted")} />
-                                        </>
-                                    ) : null}
+                                    <TypeToggle href="/" active={!queryCategory} label="全部分类" />
+                                    {categories.map((category) => (
+                                        <TypeToggle
+                                            key={category.name}
+                                            href={`/?category=${encodeURIComponent(category.name)}`}
+                                            active={queryCategory === category.name}
+                                            label={`${category.name} ${category.count}`}
+                                        />
+                                    ))}
                                 </div>
                                 {siteConfig.avatar ? (
                                     <img
@@ -194,14 +192,14 @@ export function FeedsPage() {
 
                             <div className="mt-8 flex flex-col-reverse items-stretch justify-between gap-3 sm:flex-row sm:items-center">
                                 {page > 1 ? (
-                                    <Link href={`/?type=${listState}&page=${page - 1}`} className="site-panel inline-flex min-h-11 items-center justify-center rounded-full px-5 py-3 text-sm font-medium t-primary">
+                                    <Link href={buildPageHref(queryCategory, page - 1)} className="site-panel inline-flex min-h-11 items-center justify-center rounded-full px-5 py-3 text-sm font-medium t-primary">
                                         {t("previous")}
                                     </Link>
                                 ) : (
                                     <div />
                                 )}
                                 {currentFeedSet?.hasNext ? (
-                                    <Link href={`/?type=${listState}&page=${page + 1}`} className="inline-flex min-h-11 items-center justify-center rounded-[8px] bg-theme px-5 py-3 text-sm font-medium text-white">
+                                    <Link href={buildPageHref(queryCategory, page + 1)} className="inline-flex min-h-11 items-center justify-center rounded-[8px] bg-theme px-5 py-3 text-sm font-medium text-white">
                                         {t("next")}
                                     </Link>
                                 ) : null}
@@ -279,6 +277,13 @@ function FeaturedFeedLead({ feed }: { feed: FeedRecord }) {
     );
 }
 
+function buildPageHref(category: string, page: number) {
+    const params = new URLSearchParams();
+    if (category) params.set("category", category);
+    if (page > 1) params.set("page", String(page));
+    const query = params.toString();
+    return query ? `/?${query}` : "/";
+}
 
 function TypeToggle({ href, active, label }: { href: string; active: boolean; label: string }) {
     return (

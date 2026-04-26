@@ -9,6 +9,7 @@ import type {
   ApiResponse,
   RequestOptions,
   Feed,
+  FeedCategory,
   FeedListResponse,
   TimelineItem,
   CreateFeedRequest,
@@ -279,11 +280,12 @@ class FeedAPI {
   constructor(private http: HttpClient) {}
 
   // GET /api/feed
-  async list(params?: { page?: number; limit?: number; type?: 'draft' | 'unlisted' | 'normal' }): Promise<ApiResponse<FeedListResponse>> {
+  async list(params?: { page?: number; limit?: number; type?: 'draft' | 'unlisted' | 'normal'; category?: string }): Promise<ApiResponse<FeedListResponse>> {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set("page", params.page.toString());
     if (params?.limit) searchParams.set("limit", params.limit.toString());
     if (params?.type) searchParams.set("type", params.type);
+    if (params?.category) searchParams.set("category", params.category);
     
     const query = searchParams.toString();
     return this.http.get<FeedListResponse>(`/api/feed${query ? `?${query}` : ""}`);
@@ -292,6 +294,11 @@ class FeedAPI {
   // GET /api/feed/timeline
   async timeline(): Promise<ApiResponse<TimelineItem[]>> {
     return this.http.get<TimelineItem[]>("/api/feed/timeline");
+  }
+
+  // GET /api/feed/categories
+  async categories(): Promise<ApiResponse<FeedCategory[]>> {
+    return this.http.get<FeedCategory[]>("/api/feed/categories");
   }
 
   // GET /api/feed/:id
