@@ -57,7 +57,7 @@ export function WorksPage() {
             <main className="wauto ani-show pb-14 pt-6 md:pt-8">
                 <section className="border-b border-black/8 pb-5 dark:border-white/10">
                     <p className="site-kicker">Portfolio</p>
-                    <div className="mt-2 grid gap-5 md:grid-cols-[1fr_320px] md:items-end">
+                    <div className="mt-2">
                         <div>
                             <h1 className="site-display text-[1.65rem] font-semibold text-neutral-900 dark:text-white md:text-[2.35rem]">
                                 作品
@@ -66,7 +66,10 @@ export function WorksPage() {
                                 这里放做过的程序、设计作品和图片素材。开源作品会直接给出 GitHub 或下载入口，闭源作品保留说明和展示。
                             </p>
                         </div>
-                        <div className="rounded-[22px] border border-black/8 bg-white/45 p-4 text-sm text-neutral-600 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300">
+                        <p className="mt-2 text-[12px] text-neutral-400 dark:text-neutral-500">
+                            共 {works.length} 个作品 · 程序 {typeCounts.find((item) => item.value === "program")?.count || 0} · 设计 {typeCounts.find((item) => item.value === "design")?.count || 0}
+                        </p>
+                        <div className="hidden rounded-[22px] border border-black/8 bg-white/45 p-4 text-sm text-neutral-600 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-300">
                             <span className="site-kicker">Collection</span>
                             <div className="mt-3 flex items-end justify-between">
                                 <strong className="site-display text-4xl text-neutral-900 dark:text-white">{works.length}</strong>
