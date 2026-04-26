@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
-import { Link, useSearch } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { FeedCard } from "../components/feed_card";
 import { Waiting } from "../components/loading";
 import { client } from "../app/runtime";
@@ -42,9 +42,11 @@ export function FeedsPage() {
     const query = new URLSearchParams(useSearch());
     const queryCategory = query.get("category")?.trim() || "";
     const queryPage = query.get("page");
+    const [, setLocation] = useLocation();
     const [status, setStatus] = useState<"loading" | "idle">("idle");
     const [feeds, setFeeds] = useState<FeedsData>({ size: 0, data: [], hasNext: false });
     const [categories, setCategories] = useState<FeedCategory[]>([]);
+    const [searchKeyword, setSearchKeyword] = useState("");
     const page = tryInt(1, queryPage);
     const limit = tryInt(siteConfig.pageSize, query.get("limit"));
     const ref = useRef("");
@@ -106,6 +108,13 @@ export function FeedsPage() {
             ? "columns-1 gap-5 md:columns-2 [&>*]:mb-5"
             : "grid gap-5 lg:grid-cols-2";
 
+    function submitSearch(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        const keyword = searchKeyword.trim();
+        if (!keyword) return;
+        setLocation(`/search/${encodeURIComponent(keyword)}`);
+    }
+
     return (
         <>
             <Helmet>
@@ -132,7 +141,7 @@ export function FeedsPage() {
                                     <span>{t("article.total$count", { count: currentFeedSet.size })}</span>
                                 </div>
                             </div>
-                            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                            <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                 <div className="flex flex-wrap gap-2">
                                     <TypeToggle href="/" active={!queryCategory} label="全部分类" />
                                     {categories.map((category) => (
@@ -144,25 +153,27 @@ export function FeedsPage() {
                                         />
                                     ))}
                                 </div>
-                                <Link
-                                    href="/timeline"
-                                    className="inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-black/10 bg-white/55 px-2.5 py-2 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 hover:text-theme dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
-                                    onMouseEnter={() => preloadRoute("/timeline")}
-                                    onTouchStart={() => preloadRoute("/timeline")}
-                                >
-                                    {siteConfig.avatar ? (
-                                        <img
-                                            src={stripImageUrlMetadata(siteConfig.avatar)}
-                                            alt=""
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="h-7 w-7 rounded-[7px] border border-black/10 object-cover dark:border-white/10"
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                    <form
+                                        onSubmit={submitSearch}
+                                        className="flex min-h-11 items-center gap-2 rounded-full border border-black/10 bg-white/65 px-3 py-1.5 shadow-sm transition focus-within:border-theme/35 focus-within:bg-white dark:border-white/10 dark:bg-white/[0.04] dark:focus-within:bg-white/[0.07]"
+                                    >
+                                        <i className="ri-search-line text-neutral-400" />
+                                        <input
+                                            value={searchKeyword}
+                                            onChange={(event) => setSearchKeyword(event.target.value)}
+                                            placeholder="搜索文章"
+                                            className="min-w-0 bg-transparent text-sm text-neutral-700 outline-none placeholder:text-neutral-400 dark:text-neutral-100"
                                         />
-                                    ) : (
-                                        <i className="ri-history-line text-base" />
-                                    )}
-                                    <span>时间轴</span>
-                                </Link>
+                                        <button
+                                            type="submit"
+                                            className="rounded-full bg-theme/10 px-3 py-1.5 text-xs font-medium text-theme transition hover:bg-theme hover:text-white"
+                                        >
+                                            搜索
+                                        </button>
+                                    </form>
+                                    <TimelineShortcut avatar={siteConfig.avatar} siteName={siteConfig.name} />
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -219,6 +230,34 @@ export function FeedsPage() {
                 </main>
             </Waiting>
         </>
+    );
+}
+
+function TimelineShortcut({ avatar, siteName }: { avatar?: string; siteName: string }) {
+    return (
+        <Link
+            href="/timeline"
+            className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-theme/18 bg-[linear-gradient(135deg,rgba(var(--theme-rgb),0.12),rgba(255,255,255,0.72))] px-2.5 py-1.5 text-sm font-medium text-neutral-800 shadow-sm transition hover:-translate-y-0.5 hover:border-theme/35 hover:text-theme dark:border-theme/25 dark:bg-[linear-gradient(135deg,rgba(var(--theme-rgb),0.18),rgba(255,255,255,0.05))] dark:text-neutral-100"
+            onMouseEnter={() => preloadRoute("/timeline")}
+            onTouchStart={() => preloadRoute("/timeline")}
+        >
+            <span className="relative grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-theme/12 text-theme">
+                {avatar ? (
+                    <img
+                        src={stripImageUrlMetadata(avatar)}
+                        alt={siteName}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover"
+                    />
+                ) : (
+                    <i className="ri-history-line text-base" />
+                )}
+                <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-theme dark:border-neutral-900" />
+            </span>
+            <span>时间轴</span>
+            <i className="ri-arrow-right-line text-theme transition group-hover:translate-x-0.5" />
+        </Link>
     );
 }
 

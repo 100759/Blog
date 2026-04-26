@@ -24,7 +24,6 @@ export function HeaderActions({
 }) {
   return (
     <div className={className}>
-      <SearchButton plain={plain} />
       <LanguageSwitch plain={plain} popoverUp={popoverUp} />
       <UserAvatar profile={profile} plain={plain} popoverUp={popoverUp} />
     </div>
