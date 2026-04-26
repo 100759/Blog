@@ -144,15 +144,25 @@ export function FeedsPage() {
                                         />
                                     ))}
                                 </div>
-                                {siteConfig.avatar ? (
-                                    <img
-                                        src={stripImageUrlMetadata(siteConfig.avatar)}
-                                        alt={siteConfig.name}
-                                        loading="lazy"
-                                        decoding="async"
-                                        className="h-9 w-9 rounded-[8px] border border-black/10 object-cover dark:border-white/10"
-                                    />
-                                ) : null}
+                                <Link
+                                    href="/timeline"
+                                    className="inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-black/10 bg-white/55 px-2.5 py-2 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 hover:text-theme dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
+                                    onMouseEnter={() => preloadRoute("/timeline")}
+                                    onTouchStart={() => preloadRoute("/timeline")}
+                                >
+                                    {siteConfig.avatar ? (
+                                        <img
+                                            src={stripImageUrlMetadata(siteConfig.avatar)}
+                                            alt=""
+                                            loading="lazy"
+                                            decoding="async"
+                                            className="h-7 w-7 rounded-[7px] border border-black/10 object-cover dark:border-white/10"
+                                        />
+                                    ) : (
+                                        <i className="ri-history-line text-base" />
+                                    )}
+                                    <span>时间轴</span>
+                                </Link>
                             </div>
                         </div>
                     </section>
