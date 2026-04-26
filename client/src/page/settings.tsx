@@ -1,5 +1,5 @@
 import { SearchableSelect, SettingsCard, SettingsCardBody, SettingsCardHeader, SettingsCardRow } from "@rin/ui";
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useTranslation } from "react-i18next";
 import ReactLoading from "react-loading";
@@ -21,7 +21,7 @@ import { FEED_LAYOUT_OPTIONS, normalizeFeedLayout } from "../components/feed-lay
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { applySiteTheme, normalizeThemeColor, normalizeThemePreset, THEME_PRESET_DEFINITIONS } from "../utils/theme-color";
 import { AISummarySettings } from "./settings-ai";
-import { ItemButton, ItemImageInput, ItemInput, ItemSwitch, ItemTitle, ItemWithUpload } from "./settings-items";
+import { ItemButton, ItemImageInput, ItemInput, ItemSwitch, ItemWithUpload } from "./settings-items";
 import {
   areSettingsDraftsEqual,
   buildAIConfigDraftValue,
@@ -49,6 +49,33 @@ const THEME_COLOR_OPTIONS = [
   { label: "Teal", value: "#0f766e" },
   { label: "Orange", value: "#ea580c" },
 ];
+
+function SettingsGroup({
+  icon,
+  title,
+  description,
+  children,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-[26px] border border-black/8 bg-white/45 p-4 shadow-sm shadow-black/[0.02] dark:border-white/10 dark:bg-white/[0.035] md:p-5">
+      <div className="flex items-start gap-3 border-b border-black/5 pb-4 dark:border-white/10">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[16px] bg-theme/10 text-theme ring-1 ring-theme/15">
+          <i className={`${icon} text-lg`} />
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">{title}</h3>
+          <p className="mt-1 text-sm leading-6 text-neutral-500 dark:text-neutral-400">{description}</p>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-3">{children}</div>
+    </section>
+  );
+}
 
 export function Settings() {
   const { t } = useTranslation();
@@ -227,9 +254,19 @@ export function Settings() {
         </div>
       </section>
       <main className="w-full" aria-label={t("main_content")}>
-        <div className="flex flex-col items-start space-y-2">
-          {(loading || saving) && <ReactLoading width="1em" height="1em" type="spin" color="#FC466B" />}
-          <ItemTitle title={t("settings.site.title")} />
+        <div className="flex flex-col gap-5">
+          {(loading || saving) && (
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-black/10 bg-white/70 px-3 py-2 text-sm text-neutral-500 dark:border-white/10 dark:bg-white/[0.05]">
+              <ReactLoading width="1em" height="1em" type="spin" color="#FC466B" />
+              <span>{saving ? t("save") : "加载中"}</span>
+            </div>
+          )}
+
+          <SettingsGroup
+            icon="ri-dashboard-line"
+            title={t("settings.site.title")}
+            description="站点名称、简介、头像和分页数量，优先放这里，日常最常用。"
+          >
           <ItemInput
             title={t("settings.site.name.title")}
             description={t("settings.site.name.desc")}
@@ -271,9 +308,14 @@ export function Settings() {
               setConfigValue("client", "site.page_size", value);
             }}
           />
+          </SettingsGroup>
 
-          <ItemTitle title={t("settings.personalization.title")} />
-          <div className="w-full">
+          <SettingsGroup
+            icon="ri-layout-top-line"
+            title={t("settings.personalization.title")}
+            description="控制前台视觉风格、导航样式、文章列表和主题色。"
+          >
+          <div className="w-full overflow-hidden rounded-[22px] border border-black/5 bg-white/40 dark:border-white/10 dark:bg-white/[0.03]">
             <SettingsCard>
               <SettingsCardRow
                 header={
@@ -504,8 +546,13 @@ export function Settings() {
               </div>
             </SettingsCard>
           </div>
+          </SettingsGroup>
 
-          <ItemTitle title={t("settings.other.title")} />
+          <SettingsGroup
+            icon="ri-settings-3-line"
+            title={t("settings.other.title")}
+            description="登录、评论、浏览统计、RSS、站点图标和页脚内容。"
+          >
           <ItemSwitch
             title={t("settings.login.enable.title")}
             description={t("settings.login.enable.desc", { url: oauth_url })}
@@ -553,8 +600,13 @@ export function Settings() {
               setConfigValue("client", "footer", value);
             }}
           />
+          </SettingsGroup>
 
-          <ItemTitle title={t("settings.webhook.title")} />
+          <SettingsGroup
+            icon="ri-link"
+            title={t("settings.webhook.title")}
+            description="文章发布后的通知回调，一般配置好以后很少需要改。"
+          >
           <ItemInput
             title={t("settings.webhook.url.title")}
             description={t("settings.webhook.url.desc")}
@@ -650,8 +702,13 @@ export function Settings() {
               </SettingsCardBody>
             </SettingsCard>
           </div>
+          </SettingsGroup>
 
-          <ItemTitle title={t("settings.friend.title")} />
+          <SettingsGroup
+            icon="ri-user-received-line"
+            title={t("settings.friend.title")}
+            description="朋友页申请入口、健康检查和访问请求头。"
+          >
           <ItemSwitch
             title={t("settings.friend.apply.title")}
             description={t("settings.friend.apply.desc")}
@@ -678,8 +735,13 @@ export function Settings() {
               setConfigValue("server", "friend_ua", value);
             }}
           />
+          </SettingsGroup>
 
-          <ItemTitle title={t("settings.maintenance.title")} />
+          <SettingsGroup
+            icon="ri-git-branch-line"
+            title={t("settings.maintenance.title")}
+            description="缓存、导入和 AI 摘要等偏维护性质的配置。"
+          >
           <ItemSwitch
             title={t("settings.cache.enabled.title")}
             description={t("settings.cache.enabled.desc")}
@@ -729,6 +791,7 @@ export function Settings() {
               }
             }}
           />
+          </SettingsGroup>
 
           {hasUnsavedChanges && (
             <div className="sticky bottom-4 z-20 mt-6 w-full pb-2">
