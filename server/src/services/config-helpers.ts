@@ -18,6 +18,11 @@ type ConfigReaderLike = {
 
 type ConfigProfiler = <T>(name: string, task: () => Promise<T>) => Promise<T>;
 
+const DEFERRED_PUBLIC_CLIENT_CONFIG_KEYS = new Set([
+  "portfolio.works",
+  "portfolio.sites",
+]);
+
 type ServerConfigResponseEnv = {
   WEBHOOK_URL?: string;
 };
@@ -228,6 +233,7 @@ export async function buildClientConfigResponse(
   serverConfig: ConfigReaderLike,
   env: Env,
   profile?: ConfigProfiler,
+  options: { includeDeferred?: boolean } = {},
 ) {
   const clientConfigData = profile
     ? await profile("client_config_defaults", () => getClientConfigWithDefaults(clientConfig, env, profile))
@@ -236,10 +242,27 @@ export async function buildClientConfigResponse(
     ? await profile("client_ai_enabled", () => getFrontendAIEnabled(serverConfig))
     : await getFrontendAIEnabled(serverConfig);
 
-  return {
+  const response: Record<string, unknown> = {
     ...clientConfigData,
     "ai_summary.enabled": aiEnabled,
   };
+
+  if (!options.includeDeferred) {
+    for (const key of DEFERRED_PUBLIC_CLIENT_CONFIG_KEYS) {
+      delete response[key];
+    }
+  }
+
+  return response;
+}
+
+export async function buildPortfolioConfigResponse(clientConfig: ConfigReaderLike) {
+  const [works, sites] = await Promise.all([
+    clientConfig.get("portfolio.works"),
+    clientConfig.get("portfolio.sites"),
+  ]);
+
+  return { works, sites };
 }
 
 export async function buildCombinedConfigResponse(
@@ -248,7 +271,7 @@ export async function buildCombinedConfigResponse(
   env: Env,
 ) {
   const [clientConfigData, serverConfigData] = await Promise.all([
-    buildClientConfigResponse(clientConfig, serverConfig, env),
+    buildClientConfigResponse(clientConfig, serverConfig, env, undefined, { includeDeferred: true }),
     buildServerConfigResponse(serverConfig, env),
   ]);
 

@@ -1,7 +1,7 @@
-import { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import { Link, useSearch } from "wouter";
-import { siteName } from "../utils/constants";
+import { client } from "../app/runtime";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { ClientConfigContext } from "../state/config";
 import {
@@ -16,7 +16,7 @@ import {
 export function WorksPage() {
     const siteConfig = useSiteConfig();
     const config = useContext(ClientConfigContext);
-    const works = parseWorksConfig(config.get(WORKS_CONFIG_KEY));
+    const [works, setWorks] = useState(() => parseWorksConfig(config.get(WORKS_CONFIG_KEY)));
     const query = new URLSearchParams(useSearch());
     const activeType = normalizeType(query.get("type"));
     const visibleWorks = useMemo(
@@ -32,11 +32,23 @@ export function WorksPage() {
         [works],
     );
 
+    useEffect(() => {
+        let cancelled = false;
+        client.config.getPortfolio().then(({ data }) => {
+            if (!cancelled && data) {
+                setWorks(parseWorksConfig(data.works));
+            }
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
     return (
         <>
             <Helmet>
                 <title>{`作品 - ${siteConfig.name}`}</title>
-                <meta property="og:site_name" content={siteName} />
+                <meta property="og:site_name" content={siteConfig.name} />
                 <meta property="og:title" content="作品" />
                 <meta property="og:image" content={siteConfig.avatar} />
                 <meta property="og:type" content="website" />
@@ -139,8 +151,20 @@ export function WorksPage() {
 export function WorkDetailPage({ slug }: { slug: string }) {
     const siteConfig = useSiteConfig();
     const config = useContext(ClientConfigContext);
-    const works = parseWorksConfig(config.get(WORKS_CONFIG_KEY));
+    const [works, setWorks] = useState(() => parseWorksConfig(config.get(WORKS_CONFIG_KEY)));
     const work = works.find((item) => item.slug === slug);
+
+    useEffect(() => {
+        let cancelled = false;
+        client.config.getPortfolio().then(({ data }) => {
+            if (!cancelled && data) {
+                setWorks(parseWorksConfig(data.works));
+            }
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     if (!work) {
         return (
@@ -162,7 +186,7 @@ export function WorkDetailPage({ slug }: { slug: string }) {
         <>
             <Helmet>
                 <title>{`${work.title} - 作品 - ${siteConfig.name}`}</title>
-                <meta property="og:site_name" content={siteName} />
+                <meta property="og:site_name" content={siteConfig.name} />
                 <meta property="og:title" content={work.title} />
                 <meta property="og:description" content={work.summary} />
                 <meta property="og:image" content={siteConfig.avatar} />
@@ -222,6 +246,19 @@ export function WorkDetailPage({ slug }: { slug: string }) {
                                 </div>
                             ))}
                         </div>
+                        {work.gallery?.length ? (
+                            <div className="mt-7 rounded-[20px] border border-black/8 bg-white/45 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                                <p className="site-kicker">Gallery</p>
+                                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                                    {work.gallery.map((item, index) => (
+                                        <div key={`${item}-${index}`} className="flex min-h-16 items-center justify-between rounded-[14px] border border-black/8 bg-white/60 px-4 py-3 text-sm text-neutral-700 dark:border-white/10 dark:bg-white/[0.05] dark:text-neutral-200">
+                                            <span>{item}</span>
+                                            <span className="text-xs text-neutral-400">{String(index + 1).padStart(2, "0")}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : null}
                     </article>
 
                     <aside className="space-y-4">

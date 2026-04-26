@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { Waiting } from "../components/loading";
 import { client } from "../app/runtime";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-import { siteName } from "../utils/constants";
 
 interface FeedItemRecord {
     id: number;
@@ -59,7 +58,7 @@ export function TimelinePage() {
         <>
             <Helmet>
                 <title>{`${t("timeline")} - ${siteConfig.name}`}</title>
-                <meta property="og:site_name" content={siteName} />
+                <meta property="og:site_name" content={siteConfig.name} />
                 <meta property="og:title" content={t("timeline")} />
                 <meta property="og:image" content={siteConfig.avatar} />
                 <meta property="og:type" content="article" />

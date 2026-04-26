@@ -1,9 +1,8 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import Popup from "reactjs-popup";
 import { useLocation } from "wouter";
 import { ClientConfigContext } from "../state/config";
 import { Helmet } from "react-helmet";
-import { siteName } from "../utils/constants";
 import { useTranslation } from "react-i18next";
 import { buildLoginPath, HIDDEN_LOGIN_REDIRECT } from "../utils/auth-redirect";
 
@@ -15,8 +14,8 @@ function Footer() {
     const [modeState, setModeState] = useState<ThemeMode>("system");
     const config = useContext(ClientConfigContext);
     const footerHtml = config.get<string>("footer");
+    const safeFooterHtml = useMemo(() => sanitizeFooterHtml(footerHtml || ""), [footerHtml]);
     const footerHtmlRef = useRef<HTMLDivElement | null>(null);
-    const mountedScriptNodesRef = useRef<HTMLScriptElement[]>([]);
     const loginEnabled = config.getBoolean("login.enabled");
     const siteTitle = config.get<string>("site.name") || "Rin";
     const siteDescription = config.get<string>("site.description") || "A lightweight personal blogging system";
@@ -34,39 +33,17 @@ function Footer() {
             return;
         }
 
-        mountedScriptNodesRef.current.forEach((script) => script.remove());
-        mountedScriptNodesRef.current = [];
         container.replaceChildren();
 
-        if (!footerHtml) {
+        if (!safeFooterHtml) {
             return;
         }
 
         const template = document.createElement("template");
-        template.innerHTML = footerHtml;
-
-        const scripts = Array.from(template.content.querySelectorAll("script"));
-        scripts.forEach((script) => script.remove());
+        template.innerHTML = safeFooterHtml;
 
         container.appendChild(template.content.cloneNode(true));
-
-        scripts.forEach((script) => {
-            const nextScript = document.createElement("script");
-
-            Array.from(script.attributes).forEach((attribute) => {
-                nextScript.setAttribute(attribute.name, attribute.value);
-            });
-
-            nextScript.textContent = script.textContent;
-            container.appendChild(nextScript);
-            mountedScriptNodesRef.current.push(nextScript);
-        });
-
-        return () => {
-            mountedScriptNodesRef.current.forEach((script) => script.remove());
-            mountedScriptNodesRef.current = [];
-        };
-    }, [footerHtml]);
+    }, [safeFooterHtml]);
 
     const setMode = (mode: ThemeMode) => {
         setModeState(mode);
@@ -88,9 +65,9 @@ function Footer() {
     return (
         <footer className="wauto pb-10 pt-6">
             <Helmet>
-                <link rel="alternate" type="application/rss+xml" title={siteName} href="/rss.xml" />
-                <link rel="alternate" type="application/atom+xml" title={siteName} href="/atom.xml" />
-                <link rel="alternate" type="application/json" title={siteName} href="/rss.json" />
+                <link rel="alternate" type="application/rss+xml" title={siteTitle} href="/rss.xml" />
+                <link rel="alternate" type="application/atom+xml" title={siteTitle} href="/atom.xml" />
+                <link rel="alternate" type="application/json" title={siteTitle} href="/rss.json" />
             </Helmet>
 
             <div className="border-t border-black/8 pt-6 dark:border-white/10">
@@ -180,6 +157,28 @@ function ThemeButton({ current, mode, label, icon, onClick }: { current: ThemeMo
             <i className={icon} />
         </button>
     );
+}
+
+function sanitizeFooterHtml(html: string) {
+    if (!html.trim() || typeof document === "undefined") {
+        return "";
+    }
+
+    const template = document.createElement("template");
+    template.innerHTML = html;
+
+    template.content.querySelectorAll("script, iframe, object, embed").forEach((node) => node.remove());
+    template.content.querySelectorAll("*").forEach((element) => {
+        Array.from(element.attributes).forEach((attribute) => {
+            const name = attribute.name.toLowerCase();
+            const value = attribute.value.trim().toLowerCase();
+            if (name.startsWith("on") || value.startsWith("javascript:")) {
+                element.removeAttribute(attribute.name);
+            }
+        });
+    });
+
+    return template.innerHTML;
 }
 
 export default Footer;

@@ -9,7 +9,6 @@ import { Waiting } from "../components/loading";
 import { useAlert, useConfirm } from "../components/dialog";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { ProfileContext } from "../state/profile";
-import { siteName } from "../utils/constants";
 import { buildMarkdownImage, uploadImageFile } from "../utils/image-upload";
 import { tryInt } from "../utils/int";
 
@@ -102,7 +101,7 @@ export function MomentsPage() {
             })
             .then(({ data }) => {
                 if (data) {
-                    setLength(data.data.length);
+                    setLength(typeof data.size === "number" ? data.size : data.data.length);
                     setHasNextPage(data.hasNext);
 
                     if (append) {
@@ -180,21 +179,11 @@ export function MomentsPage() {
 
         setLocating(true);
         navigator.geolocation.getCurrentPosition(
-            async (position) => {
+            (position) => {
                 const { latitude, longitude } = position.coords;
-                const fallback = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-                try {
-                    const response = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
-                    );
-                    const data = await response.json() as { display_name?: string };
-                    setDraftLocation(data.display_name || fallback);
-                } catch {
-                    setDraftLocation(fallback);
-                } finally {
-                    setUseLocation(true);
-                    setLocating(false);
-                }
+                setDraftLocation(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+                setUseLocation(true);
+                setLocating(false);
             },
             () => {
                 setLocating(false);
@@ -290,7 +279,7 @@ export function MomentsPage() {
         <>
             <Helmet>
                 <title>{`${t("moments.title")} - ${siteConfig.name}`}</title>
-                <meta property="og:site_name" content={siteName} />
+                <meta property="og:site_name" content={siteConfig.name} />
                 <meta property="og:title" content={t("moments.title")} />
                 <meta property="og:image" content={siteConfig.avatar} />
                 <meta property="og:type" content="article" />

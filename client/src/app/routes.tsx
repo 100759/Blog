@@ -90,10 +90,26 @@ function RoutePending() {
   return (
     <div className="wauto py-10">
       <div className="site-panel rounded-[28px] px-6 py-10 text-center text-sm text-neutral-500 dark:text-neutral-300">
-        Loading...
+        加载中...
       </div>
     </div>
   );
+}
+
+function shouldPreloadOnIdle() {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  const connection = (navigator as Navigator & {
+    connection?: { saveData?: boolean; effectiveType?: string };
+  }).connection;
+
+  if (connection?.saveData) {
+    return false;
+  }
+
+  return connection?.effectiveType !== "slow-2g" && connection?.effectiveType !== "2g";
 }
 
 export function preloadRoute(pathname: string) {
@@ -119,14 +135,14 @@ export function AppRoutes() {
 
   useEffect(() => {
     const preloadCommonRoutes = () => {
-      preloadRoute("/timeline");
-      preloadRoute("/moments");
-      preloadRoute("/friends");
       preloadRoute("/works");
-      preloadRoute("/sites");
     };
 
     if (typeof window === "undefined") {
+      return;
+    }
+
+    if (!shouldPreloadOnIdle()) {
       return;
     }
 

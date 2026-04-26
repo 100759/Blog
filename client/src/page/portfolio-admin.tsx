@@ -76,6 +76,12 @@ export function PortfolioAdminPage() {
     const currentSite = sites[selectedSite] || sites[0];
 
     async function save() {
+        const validationErrors = validatePortfolio(works, sites);
+        if (validationErrors.length > 0) {
+            showAlert(`保存前先处理这些问题：\n${validationErrors.slice(0, 6).join("\n")}`);
+            return;
+        }
+
         setSaving(true);
         const response = await client.config.update("client", {
             [WORKS_CONFIG_KEY]: JSON.stringify(works),
@@ -606,6 +612,45 @@ function slugify(value: string) {
 
 function cleanUrl(url: string) {
     return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+}
+
+function validatePortfolio(works: WorkItem[], sites: SiteItem[]) {
+    const errors: string[] = [];
+    const seenSlugs = new Set<string>();
+
+    works.forEach((work, index) => {
+        const prefix = `作品 ${index + 1}`;
+        const slug = work.slug.trim();
+        if (!work.title.trim()) errors.push(`${prefix}：标题不能为空`);
+        if (!slug) errors.push(`${prefix}：别名不能为空`);
+        if (slug && seenSlugs.has(slug)) errors.push(`${prefix}：别名重复`);
+        if (slug) seenSlugs.add(slug);
+        if (!/^[a-z0-9-]+$/.test(slug)) errors.push(`${prefix}：别名只能使用英文、数字和短横线`);
+        if (work.href && !isValidLink(work.href)) errors.push(`${prefix}：作品入口链接格式不正确`);
+        if (work.access?.mode === "open" && !isValidLink(work.access.url || "")) {
+            errors.push(`${prefix}：开源/下载地址不能为空，且需要是 https:// 或站内路径`);
+        }
+    });
+
+    sites.forEach((site, index) => {
+        const prefix = `网站 ${index + 1}`;
+        if (!site.name.trim()) errors.push(`${prefix}：名称不能为空`);
+        if (!isValidLink(site.url)) errors.push(`${prefix}：访问地址需要以 https:// 开头`);
+    });
+
+    return errors;
+}
+
+function isValidLink(value: string) {
+    const link = value.trim();
+    if (!link) return false;
+    if (link.startsWith("/")) return true;
+    try {
+        const url = new URL(link);
+        return url.protocol === "https:" || url.protocol === "http:";
+    } catch {
+        return false;
+    }
 }
 
 function duplicateWork(work: WorkItem): WorkItem {

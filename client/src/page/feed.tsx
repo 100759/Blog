@@ -1,5 +1,5 @@
 import type { Feed } from "@rin/api";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import { useTranslation } from "react-i18next";
 import ReactModal from "react-modal";
@@ -8,30 +8,22 @@ import { Link, useLocation } from "wouter";
 import { Button } from "../components/button";
 import { useAlert, useConfirm } from "../components/dialog";
 import { Waiting } from "../components/loading";
-import { Markdown } from "../components/markdown";
 import { Tips } from "../components/tips";
 import { client } from "../app/runtime";
 import { AdjacentSection } from "../components/adjacent_feed.tsx";
 import { ClientConfigContext } from "../state/config";
 import { ProfileContext } from "../state/profile";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-import { siteName } from "../utils/constants";
 import { stripImageUrlMetadata } from "../utils/image-upload";
 import { extractFirstContentImageUrl, isHtmlContent, normalizeRichHtml, stripContentToPlainText } from "../utils/rich-content";
 import { timeago } from "../utils/timeago";
+
+const Markdown = lazy(() => import("../components/markdown").then((module) => ({ default: module.Markdown })));
 
 function buildArticleExcerpt(content: string, fallback?: string | null) {
   const trimmed = fallback?.trim() || stripContentToPlainText(content);
   if (!trimmed) return "";
   return trimmed.length > 220 ? `${trimmed.slice(0, 220)}...` : trimmed;
-}
-
-void buildExcerpt;
-
-function buildExcerpt(content: string, fallback?: string | null) {
-  const trimmed = fallback?.trim() || content.replace(/[#>*`[\]()!-]/g, " ").replace(/\s+/g, " ").trim();
-  if (!trimmed) return "";
-  return trimmed.length > 220 ? `${trimmed.slice(0, 220)}…` : trimmed;
 }
 
 export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Element; clean: (id: string) => void }) {
@@ -118,14 +110,14 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
   }, [feed]);
   const createdAt = feed ? new Date(feed.createdAt) : undefined;
   const updatedAt = feed ? new Date(feed.updatedAt) : undefined;
-  const showHeroImage = headImage || siteConfig.avatar;
+  const showHeroImage = headImage;
 
   return (
     <Waiting for={feed || error}>
       {feed ? (
         <Helmet>
           <title>{`${feed.title ?? "Unnamed"} - ${siteConfig.name}`}</title>
-          <meta property="og:site_name" content={siteName} />
+          <meta property="og:site_name" content={siteConfig.name} />
           <meta property="og:title" content={feed.title ?? ""} />
           <meta property="og:image" content={headImage ?? siteConfig.avatar} />
           <meta property="og:type" content="article" />
@@ -139,7 +131,7 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
       {error ? (
         <div className="wauto ani-show py-10">
           <div className="site-panel flex flex-col items-center justify-center rounded-[32px] px-8 py-14 text-center">
-            <p className="site-kicker">Error</p>
+            <p className="site-kicker">错误</p>
             <h1 className="site-display mt-5 text-[3rem] text-neutral-900 dark:text-white">{error}</h1>
             {error === "Not found" && id === "about" ? <Tips value={t("about.notfound")} /> : null}
             <div className="mt-8">
@@ -226,14 +218,7 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
                         alt=""
                         className="h-[180px] w-full rounded-[8px] object-cover md:h-[220px] md:max-w-3xl"
                       />
-                    ) : (
-                      <div className="flex min-h-[150px] w-full items-end rounded-[8px] border border-dashed border-black/10 bg-white/40 p-5 dark:border-white/10 dark:bg-white/[0.04] md:max-w-3xl">
-                        <div>
-                          <p className="site-kicker">{feed.user.username}</p>
-                          <p className="site-display mt-4 text-[1.8rem] text-neutral-900 dark:text-white">{siteConfig.name}</p>
-                        </div>
-                      </div>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 
@@ -266,7 +251,9 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
                     {isHtmlContent(feed.content) ? (
                       <RichArticleContent content={renderedContent} />
                     ) : (
-                      <Markdown content={renderedContent} />
+                      <Suspense fallback={<div className="text-sm text-neutral-400">正文加载中...</div>}>
+                        <Markdown content={renderedContent} />
+                      </Suspense>
                     )}
                   </div>
                 </div>
@@ -332,7 +319,7 @@ export function TOCHeader({ TOC }: { TOC: () => JSX.Element }) {
         className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-black/10 bg-white/70 px-4 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
       >
         <i className="ri-menu-2-line" />
-        <span>Outline</span>
+        <span>目录</span>
       </button>
       <ReactModal
         isOpen={isOpened}
@@ -346,7 +333,7 @@ export function TOCHeader({ TOC }: { TOC: () => JSX.Element }) {
             transform: "translateX(-50%)",
             padding: "0",
             border: "none",
-            borderRadius: "28px",
+            borderRadius: "22px",
             background: "transparent",
             maxWidth: "90vw",
             width: "min(420px, 90vw)",
@@ -358,7 +345,7 @@ export function TOCHeader({ TOC }: { TOC: () => JSX.Element }) {
         }}
         onRequestClose={() => setIsOpened(false)}
       >
-        <div className="site-panel max-h-[75vh] overflow-auto rounded-[28px] p-5 t-primary">
+        <div className="site-panel max-h-[75vh] overflow-auto rounded-[22px] p-4 t-primary">
           <TOC />
         </div>
       </ReactModal>

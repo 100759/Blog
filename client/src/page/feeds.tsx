@@ -8,7 +8,6 @@ import { preloadRoute } from "../app/routes";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { stripImageUrlMetadata } from "../utils/image-upload";
 import { tryInt } from "../utils/int";
-import { siteName } from "../utils/constants";
 import { timeago } from "../utils/timeago";
 import { useTranslation } from "react-i18next";
 
@@ -134,7 +133,7 @@ export function FeedsPage() {
         <>
             <Helmet>
                 <title>{`${t("article.title")} - ${siteConfig.name}`}</title>
-                <meta property="og:site_name" content={siteName} />
+                <meta property="og:site_name" content={siteConfig.name} />
                 <meta property="og:title" content={t("article.title")} />
                 <meta property="og:image" content={siteConfig.avatar} />
                 <meta property="og:type" content="article" />
@@ -198,6 +197,19 @@ export function FeedsPage() {
                                                     placeholder="搜索文章"
                                                     className="min-w-0 flex-1 bg-transparent text-sm text-neutral-700 outline-none placeholder:text-neutral-400 dark:text-neutral-100"
                                                 />
+                                                {searchKeyword ? (
+                                                    <button
+                                                        type="button"
+                                                        aria-label="清空搜索"
+                                                        onClick={() => {
+                                                            setSearchKeyword("");
+                                                            searchInputRef.current?.focus();
+                                                        }}
+                                                        className="grid h-7 w-7 place-items-center rounded-full text-neutral-400 transition hover:bg-black/5 hover:text-neutral-700 dark:hover:bg-white/10 dark:hover:text-neutral-100"
+                                                    >
+                                                        <i className="ri-close-line" />
+                                                    </button>
+                                                ) : null}
                                                 <button
                                                     type="submit"
                                                     className="rounded-full bg-theme/10 px-3 py-1.5 text-xs font-medium text-theme transition hover:bg-theme hover:text-white"

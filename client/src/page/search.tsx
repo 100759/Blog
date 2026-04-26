@@ -6,7 +6,6 @@ import { FeedCard } from "../components/feed_card";
 import { Waiting } from "../components/loading";
 import { client } from "../app/runtime";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-import { siteName } from "../utils/constants";
 import { tryInt } from "../utils/int";
 
 type SearchFeedRecord = {
@@ -66,7 +65,7 @@ export function SearchPage({ keyword }: { keyword: string }) {
         <>
             <Helmet>
                 <title>{`${title} - ${siteConfig.name}`}</title>
-                <meta property="og:site_name" content={siteName} />
+                <meta property="og:site_name" content={siteConfig.name} />
                 <meta property="og:title" content={title} />
                 <meta property="og:image" content={siteConfig.avatar} />
                 <meta property="og:type" content="article" />

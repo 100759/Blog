@@ -11,7 +11,6 @@ import { client } from "../app/runtime";
 import { ClientConfigContext } from "../state/config";
 import { ProfileContext } from "../state/profile";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-import { siteName } from "../utils/constants";
 
 type FriendItem = {
     name: string;
@@ -99,7 +98,7 @@ export function FriendsPage() {
         <>
             <Helmet>
                 <title>{`${t("friends.title")} - ${siteConfig.name}`}</title>
-                <meta property="og:site_name" content={siteName} />
+                <meta property="og:site_name" content={siteConfig.name} />
                 <meta property="og:title" content={t("friends.title")} />
                 <meta property="og:image" content={siteConfig.avatar} />
                 <meta property="og:type" content="article" />

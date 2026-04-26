@@ -127,6 +127,11 @@ export interface CompatBlurhashApplyResponse {
   updated: boolean;
 }
 
+export interface PortfolioConfigResponse {
+  works?: unknown;
+  sites?: unknown;
+}
+
 // Re-export for external use
 export type {
   ApiResponse,
@@ -432,13 +437,13 @@ class MomentsAPI {
   constructor(private http: HttpClient) {}
 
   // GET /api/moments
-  async list(params?: { page?: number; limit?: number }): Promise<ApiResponse<{ data: Moment[]; hasNext: boolean }>> {
+  async list(params?: { page?: number; limit?: number }): Promise<ApiResponse<{ data: Moment[]; hasNext: boolean; size?: number }>> {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set("page", params.page.toString());
     if (params?.limit) searchParams.set("limit", params.limit.toString());
     
     const query = searchParams.toString();
-    return this.http.get<{ data: Moment[]; hasNext: boolean }>(`/api/moments${query ? `?${query}` : ""}`);
+    return this.http.get<{ data: Moment[]; hasNext: boolean; size?: number }>(`/api/moments${query ? `?${query}` : ""}`);
   }
 
   // POST /api/moments
@@ -471,6 +476,10 @@ class ConfigAPI {
   // GET /api/config/:type
   async get(type: ConfigType): Promise<ApiResponse<ConfigResponse>> {
     return this.http.get<ConfigResponse>(`/api/config/${type}`);
+  }
+
+  async getPortfolio(): Promise<ApiResponse<PortfolioConfigResponse>> {
+    return this.http.get<PortfolioConfigResponse>("/api/config/portfolio");
   }
 
   // POST /api/config

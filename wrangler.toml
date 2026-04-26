@@ -1,0 +1,31 @@
+name = "rin-blog-100759"
+main = "server/src/_worker.ts"
+compatibility_date = "2026-04-26"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+CACHE_STORAGE_MODE = "database"
+
+[assets]
+directory = "dist/client"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rin-blog-100759"
+database_id = "e4806aa2-bd47-4fbc-823b-459e3186d588"
+
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "rin-blog-100759-images"
+
+[ai]
+binding = "AI"
+
+[[queues.producers]]
+binding = "TASK_QUEUE"
+queue = "rin-blog-100759-tasks"
+
+[[queues.consumers]]
+queue = "rin-blog-100759-tasks"

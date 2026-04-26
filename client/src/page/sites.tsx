@@ -1,6 +1,6 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
-import { siteName } from "../utils/constants";
+import { client } from "../app/runtime";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { ClientConfigContext } from "../state/config";
 import { parseSitesConfig, platformTone, SITES_CONFIG_KEY, type SiteItem } from "./portfolio-data";
@@ -8,13 +8,25 @@ import { parseSitesConfig, platformTone, SITES_CONFIG_KEY, type SiteItem } from 
 export function SitesPage() {
     const siteConfig = useSiteConfig();
     const config = useContext(ClientConfigContext);
-    const sites = parseSitesConfig(config.get(SITES_CONFIG_KEY));
+    const [sites, setSites] = useState(() => parseSitesConfig(config.get(SITES_CONFIG_KEY)));
+
+    useEffect(() => {
+        let cancelled = false;
+        client.config.getPortfolio().then(({ data }) => {
+            if (!cancelled && data) {
+                setSites(parseSitesConfig(data.sites));
+            }
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     return (
         <>
             <Helmet>
                 <title>{`旗下网站 - ${siteConfig.name}`}</title>
-                <meta property="og:site_name" content={siteName} />
+                <meta property="og:site_name" content={siteConfig.name} />
                 <meta property="og:title" content="旗下网站" />
                 <meta property="og:image" content={siteConfig.avatar} />
                 <meta property="og:type" content="website" />

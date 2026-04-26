@@ -7,6 +7,7 @@ import { notify } from "../utils/webhook";
 import {
     buildCombinedConfigResponse,
     buildClientConfigResponse,
+    buildPortfolioConfigResponse,
     buildServerConfigResponse,
     isConfigType,
     persistRegularConfig,
@@ -307,6 +308,11 @@ export function ConfigService(): Hono {
                 'cache-control': 'public, max-age=0, must-revalidate',
             },
         });
+    });
+
+    app.get('/portfolio', async (c: AppContext) => {
+        const clientConfig = c.get('clientConfig');
+        return c.json(await wrapTime(c, 'portfolio_config', buildPortfolioConfigResponse(clientConfig)));
     });
 
     // GET /config/:type

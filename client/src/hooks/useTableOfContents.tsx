@@ -87,18 +87,22 @@ const useTableOfContents = (selector: string) => {
 
     return {
         TOC: () => (<div className="t-primary">
-            <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                    <p className="site-kicker">Outline</p>
-                    <h2 className="mt-1 text-base font-semibold text-neutral-900 dark:text-white">{t("index.title")}</h2>
+            <div className="mb-3 flex items-center gap-3">
+                <span className="relative grid size-9 shrink-0 place-items-center rounded-full bg-theme/10 text-theme ring-1 ring-theme/15">
+                    <span className="absolute left-1/2 top-2 h-5 w-px -translate-x-1/2 rounded-full bg-theme/30" />
+                    <span className="absolute top-2 size-1.5 rounded-full bg-theme shadow-[0_9px_0_rgba(var(--theme-rgb),0.42)]" />
+                </span>
+                <div className="min-w-0">
+                    <p className="site-kicker">目录</p>
+                    <h2 className="mt-1 truncate text-base font-semibold text-neutral-900 dark:text-white">{t("index.title")}</h2>
                 </div>
-                <span className="rounded-full border border-black/8 bg-white/60 px-2.5 py-1 text-[11px] text-neutral-400 dark:border-white/10 dark:bg-white/[0.05]">
-                    {tableOfContents.length || 0} 节
+                <span className="ml-auto rounded-full border border-black/8 bg-white/60 px-2.5 py-1 text-[11px] text-neutral-400 dark:border-white/10 dark:bg-white/[0.05]">
+                    {tableOfContents.length || 0}
                 </span>
             </div>
             <ul className="max-h-[calc(100vh-12rem)] overflow-auto pr-1" style={{ scrollbarWidth: "none" }}>
                 {tableOfContents.length === 0 && (
-                    <li className="rounded-[16px] border border-dashed border-black/8 bg-white/50 px-4 py-5 text-center text-sm text-neutral-400 dark:border-white/10 dark:bg-white/[0.04]">
+                    <li className="rounded-[14px] border border-dashed border-black/8 bg-white/50 px-4 py-5 text-center text-sm text-neutral-400 dark:border-white/10 dark:bg-white/[0.04]">
                         {t("index.empty.title")}
                     </li>
                 )}
