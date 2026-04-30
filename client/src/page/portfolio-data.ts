@@ -36,8 +36,42 @@ export type SiteItem = {
     color: string;
 };
 
+export type ProjectDisplayOptions = {
+    id: string;
+    showWebsite: boolean;
+    showGithub: boolean;
+    showDomain: boolean;
+    showImage: boolean;
+};
+
+export type StudioProject = {
+    id: number | string;
+    name: string;
+    description: string;
+    type: "opensource" | "self" | string;
+    icon?: string | null;
+    logo_url?: string | null;
+    image_url?: string | null;
+    status?: string | null;
+    github_url?: string | null;
+    deploy_url?: string | null;
+    domain?: string | null;
+    tech_stack?: string[];
+    tags?: string[];
+    updated_at?: string;
+    created_at?: string;
+};
+
+export type ProjectsResponse = {
+    ok: boolean;
+    count: number;
+    projects: StudioProject[];
+};
+
+export const PROJECTS_ENDPOINT = "https://studio.fuheng.vip/api/public/projects";
 export const WORKS_CONFIG_KEY = "portfolio.works";
 export const SITES_CONFIG_KEY = "portfolio.sites";
+export const PROJECTS_CONFIG_KEY = "portfolio.projects";
 
 export const typeMeta: Record<WorkType, { label: string; intro: string; icon: string }> = {
     design: {
@@ -195,6 +229,25 @@ export function parseSitesConfig(value: unknown): SiteItem[] {
     return parseConfigArray<SiteItem>(value, DEFAULT_SITES).map(normalizeSite);
 }
 
+export function parseProjectDisplayConfig(value: unknown): ProjectDisplayOptions[] {
+    return parseConfigArray<ProjectDisplayOptions>(value, []).map(normalizeProjectDisplay);
+}
+
+export function projectDisplayId(project: StudioProject) {
+    return String(project.id || project.domain || project.name);
+}
+
+export function getProjectDisplayOptions(settings: ProjectDisplayOptions[], project: StudioProject): ProjectDisplayOptions {
+    const id = projectDisplayId(project);
+    return settings.find((item) => item.id === id) || {
+        id,
+        showWebsite: true,
+        showGithub: true,
+        showDomain: true,
+        showImage: true,
+    };
+}
+
 function parseConfigArray<T>(value: unknown, fallback: T[]): T[] {
     if (Array.isArray(value)) {
         return value as T[];
@@ -230,5 +283,15 @@ function normalizeSite(site: SiteItem): SiteItem {
         ...site,
         platform: site.platform || "Cloudflare Workers",
         color: site.color || "bg-teal-600",
+    };
+}
+
+function normalizeProjectDisplay(options: ProjectDisplayOptions): ProjectDisplayOptions {
+    return {
+        id: String(options.id || ""),
+        showWebsite: options.showWebsite !== false,
+        showGithub: options.showGithub !== false,
+        showDomain: options.showDomain !== false,
+        showImage: options.showImage !== false,
     };
 }

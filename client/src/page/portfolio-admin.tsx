@@ -1,4 +1,4 @@
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import { client } from "../app/runtime";
 import { useAlert } from "../components/dialog";
@@ -6,18 +6,26 @@ import { ClientConfigContext } from "../state/config";
 import {
     DEFAULT_SITES,
     DEFAULT_WORKS,
+    getProjectDisplayOptions,
+    parseProjectDisplayConfig,
     parseSitesConfig,
     parseWorksConfig,
+    projectDisplayId,
+    PROJECTS_CONFIG_KEY,
+    PROJECTS_ENDPOINT,
     SITES_CONFIG_KEY,
     typeMeta,
     WORKS_CONFIG_KEY,
     type Platform,
+    type ProjectDisplayOptions,
+    type ProjectsResponse,
     type SiteItem,
+    type StudioProject,
     type WorkItem,
     type WorkType,
 } from "./portfolio-data";
 
-type AdminTab = "works" | "sites";
+type AdminTab = "works" | "sites" | "projects";
 type WorkFilter = "all" | WorkType;
 
 const platforms: Platform[] = ["Cloudflare Workers", "Cloudflare Pages", "Vercel", "自有服务器"];
@@ -37,6 +45,9 @@ export function PortfolioAdminPage() {
     const { showAlert, AlertUI } = useAlert();
     const [works, setWorks] = useState(() => parseWorksConfig(config.get(WORKS_CONFIG_KEY)));
     const [sites, setSites] = useState(() => parseSitesConfig(config.get(SITES_CONFIG_KEY)));
+    const [projectSettings, setProjectSettings] = useState(() => parseProjectDisplayConfig(config.get(PROJECTS_CONFIG_KEY)));
+    const [studioProjects, setStudioProjects] = useState<StudioProject[]>([]);
+    const [projectStatus, setProjectStatus] = useState<"loading" | "ready" | "error">("loading");
     const [activeTab, setActiveTab] = useState<AdminTab>("works");
     const [workFilter, setWorkFilter] = useState<WorkFilter>("all");
     const [query, setQuery] = useState("");
@@ -47,9 +58,37 @@ export function PortfolioAdminPage() {
     const summary = useMemo(() => ({
         works: works.length,
         sites: sites.length,
+        projects: studioProjects.length,
         open: works.filter((work) => work.access?.mode === "open").length,
         running: sites.filter((site) => site.status.includes("运行")).length,
-    }), [sites, works]);
+    }), [sites, studioProjects.length, works]);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        fetch(PROJECTS_ENDPOINT, {
+            signal: controller.signal,
+            headers: { Accept: "application/json" },
+        })
+            .then(async (response) => {
+                if (!response.ok) {
+                    throw new Error(String(response.status));
+                }
+                return response.json() as Promise<ProjectsResponse>;
+            })
+            .then((data) => {
+                setStudioProjects(Array.isArray(data.projects) ? data.projects : []);
+                setProjectStatus("ready");
+            })
+            .catch((error) => {
+                if (error instanceof DOMException && error.name === "AbortError") {
+                    return;
+                }
+                setProjectStatus("error");
+            });
+
+        return () => controller.abort();
+    }, []);
 
     const filteredWorks = useMemo(() => {
         const keyword = query.trim().toLowerCase();
@@ -72,6 +111,21 @@ export function PortfolioAdminPage() {
             });
     }, [query, sites]);
 
+    const filteredProjects = useMemo(() => {
+        const keyword = query.trim().toLowerCase();
+        return studioProjects.filter((project) => {
+            if (!keyword) return true;
+            return [
+                project.name,
+                project.description,
+                project.domain,
+                project.deploy_url,
+                project.github_url,
+                ...(project.tech_stack || []),
+            ].some((value) => value?.toLowerCase().includes(keyword));
+        });
+    }, [query, studioProjects]);
+
     const currentWork = works[selectedWork] || works[0];
     const currentSite = sites[selectedSite] || sites[0];
 
@@ -86,6 +140,7 @@ export function PortfolioAdminPage() {
         const response = await client.config.update("client", {
             [WORKS_CONFIG_KEY]: JSON.stringify(works),
             [SITES_CONFIG_KEY]: JSON.stringify(sites),
+            [PROJECTS_CONFIG_KEY]: JSON.stringify(projectSettings),
         });
         setSaving(false);
 
@@ -137,23 +192,27 @@ export function PortfolioAdminPage() {
                                 先在左边选中条目，再在右边编辑。页面不会一次展开所有表单，后面内容多了也不乱。
                             </p>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4 xl:min-w-[430px]">
+                        <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-5 xl:min-w-[520px]">
                             <MiniStat label="作品" value={summary.works} />
                             <MiniStat label="开源" value={summary.open} />
                             <MiniStat label="网站" value={summary.sites} />
                             <MiniStat label="运行" value={summary.running} />
+                            <MiniStat label="项目" value={summary.projects} />
                         </div>
                     </div>
                 </section>
 
                 <section className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
                     <aside className="rounded-[24px] border border-black/8 bg-white/65 p-3 dark:border-white/10 dark:bg-white/[0.04] xl:sticky xl:top-5 xl:self-start">
-                        <div className="grid grid-cols-2 gap-2 rounded-[18px] bg-black/[0.035] p-1 dark:bg-white/[0.04]">
+                        <div className="grid grid-cols-3 gap-2 rounded-[18px] bg-black/[0.035] p-1 dark:bg-white/[0.04]">
                             <TabButton active={activeTab === "works"} onClick={() => setActiveTab("works")}>
                                 作品 {works.length}
                             </TabButton>
                             <TabButton active={activeTab === "sites"} onClick={() => setActiveTab("sites")}>
                                 网站 {sites.length}
+                            </TabButton>
+                            <TabButton active={activeTab === "projects"} onClick={() => setActiveTab("projects")}>
+                                项目 {studioProjects.length}
                             </TabButton>
                         </div>
 
@@ -161,16 +220,18 @@ export function PortfolioAdminPage() {
                             <input
                                 value={query}
                                 onChange={(event) => setQuery(event.target.value)}
-                                placeholder={activeTab === "works" ? "搜索作品标题、状态、角色" : "搜索网站名称、域名、平台"}
+                                placeholder={activeTab === "works" ? "搜索作品标题、状态、角色" : activeTab === "sites" ? "搜索网站名称、域名、平台" : "搜索项目名称、域名、技术栈"}
                                 className="min-w-0 flex-1 rounded-[16px] border border-black/10 bg-white/80 px-3 py-2 text-sm outline-none transition focus:border-theme/40 dark:border-white/10 dark:bg-white/[0.05] dark:text-neutral-100"
                             />
-                            <button
-                                type="button"
-                                onClick={activeTab === "works" ? addWork : addSite}
-                                className="shrink-0 rounded-[16px] bg-theme px-3 py-2 text-sm font-medium text-white transition hover:opacity-90"
-                            >
-                                新增
-                            </button>
+                            {activeTab === "projects" ? null : (
+                                <button
+                                    type="button"
+                                    onClick={activeTab === "works" ? addWork : addSite}
+                                    className="shrink-0 rounded-[16px] bg-theme px-3 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                                >
+                                    新增
+                                </button>
+                            )}
                         </div>
 
                         {activeTab === "works" ? (
@@ -202,7 +263,7 @@ export function PortfolioAdminPage() {
                                         onClick={() => setSelectedWork(index)}
                                     />
                                 )) : <EmptyList text="没有找到作品" />
-                            ) : (
+                            ) : activeTab === "sites" ? (
                                 filteredSites.length ? filteredSites.map(({ site, index }) => (
                                     <SiteListItem
                                         key={`${site.url}-${index}`}
@@ -211,6 +272,10 @@ export function PortfolioAdminPage() {
                                         onClick={() => setSelectedSite(index)}
                                     />
                                 )) : <EmptyList text="没有找到网站" />
+                            ) : (
+                                filteredProjects.length ? filteredProjects.map((project) => (
+                                    <ProjectListItem key={projectDisplayId(project)} project={project} settings={getProjectDisplayOptions(projectSettings, project)} />
+                                )) : <EmptyList text={projectStatus === "error" ? "项目接口加载失败" : "没有找到项目"} />
                             )}
                         </div>
                     </aside>
@@ -229,7 +294,7 @@ export function PortfolioAdminPage() {
                                     }}
                                 />
                             ) : <EmptyEditor title="还没有作品" action="新增作品" onClick={addWork} />
-                        ) : (
+                        ) : activeTab === "sites" ? (
                             currentSite ? (
                                 <SiteEditor
                                     site={currentSite}
@@ -242,6 +307,13 @@ export function PortfolioAdminPage() {
                                     }}
                                 />
                             ) : <EmptyEditor title="还没有网站" action="新增网站" onClick={addSite} />
+                        ) : (
+                            <ProjectsDisplayEditor
+                                projects={filteredProjects}
+                                status={projectStatus}
+                                settings={projectSettings}
+                                onChange={setProjectSettings}
+                            />
                         )}
                     </main>
                 </section>
@@ -257,11 +329,15 @@ export function PortfolioAdminPage() {
                         <a href="/sites" target="_blank" rel="noreferrer" className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-neutral-600 transition hover:border-black/20 dark:border-white/10 dark:bg-white/[0.06] dark:text-neutral-200">
                             预览网站
                         </a>
+                        <a href="/projects" target="_blank" rel="noreferrer" className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-neutral-600 transition hover:border-black/20 dark:border-white/10 dark:bg-white/[0.06] dark:text-neutral-200">
+                            预览项目
+                        </a>
                         <button
                             type="button"
                             onClick={() => {
                                 setWorks(DEFAULT_WORKS);
                                 setSites(DEFAULT_SITES);
+                                setProjectSettings([]);
                                 setSelectedWork(0);
                                 setSelectedSite(0);
                             }}
@@ -491,6 +567,147 @@ function SiteListItem({ site, active, onClick }: { site: SiteItem; active: boole
                 <span className="size-1 rounded-full bg-neutral-300" />
                 <span>{site.status}</span>
             </div>
+        </button>
+    );
+}
+
+function ProjectListItem({ project, settings }: { project: StudioProject; settings: ProjectDisplayOptions }) {
+    const hiddenCount = [
+        settings.showWebsite,
+        settings.showGithub,
+        settings.showDomain,
+        settings.showImage,
+    ].filter((visible) => !visible).length;
+
+    return (
+        <div className="rounded-[18px] border border-black/8 bg-white/60 p-3 text-left transition dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="flex items-start gap-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-[13px] bg-theme/10 text-lg">
+                    {project.icon || "•"}
+                </span>
+                <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-neutral-900 dark:text-white">{project.name}</p>
+                    <p className="mt-1 truncate text-xs text-neutral-400">{project.domain || project.deploy_url || "未设置域名"}</p>
+                </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-[11px] text-neutral-500 dark:text-neutral-300">
+                <span>{project.tech_stack?.slice(0, 2).join(" / ") || "项目"}</span>
+                <span className="size-1 rounded-full bg-neutral-300" />
+                <span>{hiddenCount ? `已隐藏 ${hiddenCount} 项` : "全部展示"}</span>
+            </div>
+        </div>
+    );
+}
+
+function ProjectsDisplayEditor({
+    projects,
+    status,
+    settings,
+    onChange,
+}: {
+    projects: StudioProject[];
+    status: "loading" | "ready" | "error";
+    settings: ProjectDisplayOptions[];
+    onChange: (settings: ProjectDisplayOptions[]) => void;
+}) {
+    if (status === "loading") {
+        return (
+            <div className="rounded-[22px] border border-dashed border-black/10 bg-white/55 px-6 py-16 text-center text-sm text-neutral-400 dark:border-white/10 dark:bg-white/[0.03]">
+                正在同步 Studio 项目列表...
+            </div>
+        );
+    }
+
+    if (status === "error") {
+        return (
+            <div className="rounded-[22px] border border-rose-200 bg-rose-50 px-6 py-8 text-sm text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/25 dark:text-rose-200">
+                Studio 项目接口加载失败，稍后再试。已有展示设置不会丢失。
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="rounded-[22px] border border-black/8 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                <p className="site-kicker">Project Display</p>
+                <h3 className="mt-1 text-xl font-semibold text-neutral-900 dark:text-white">项目展示管理</h3>
+                <p className="mt-1 text-sm leading-6 text-neutral-500 dark:text-neutral-300">
+                    项目名称、介绍、截图仍从 Studio 自动同步。这里专门控制前台是否展示网站入口、GitHub、域名和截图。
+                </p>
+            </div>
+
+            {projects.length ? projects.map((project) => {
+                const display = getProjectDisplayOptions(settings, project);
+                const update = (patch: Partial<ProjectDisplayOptions>) => {
+                    const next = { ...display, ...patch, id: projectDisplayId(project) };
+                    const exists = settings.some((item) => item.id === next.id);
+                    onChange(exists ? settings.map((item) => item.id === next.id ? next : item) : [...settings, next]);
+                };
+
+                return (
+                    <section key={projectDisplayId(project)} className="rounded-[22px] border border-black/8 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="min-w-0">
+                                <p className="site-kicker">{project.type === "opensource" ? "Open Source" : "Project"}</p>
+                                <h4 className="mt-1 text-lg font-semibold text-neutral-900 dark:text-white">{project.name}</h4>
+                                <p className="mt-1 line-clamp-2 text-sm leading-6 text-neutral-500 dark:text-neutral-300">{project.description}</p>
+                                <div className="mt-3 flex flex-wrap gap-2 text-xs text-neutral-400">
+                                    {project.domain ? <span>{project.domain}</span> : null}
+                                    {project.github_url ? <span>GitHub</span> : null}
+                                    {project.deploy_url ? <span>网站入口</span> : null}
+                                </div>
+                            </div>
+                            {project.image_url ? (
+                                <img src={project.image_url} alt="" className="h-24 w-full rounded-[14px] object-cover lg:w-44" loading="lazy" decoding="async" />
+                            ) : null}
+                        </div>
+
+                        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                            <ToggleCard label="展示网站入口" description="控制“打开网站”按钮" checked={display.showWebsite} disabled={!project.deploy_url} onChange={(showWebsite) => update({ showWebsite })} />
+                            <ToggleCard label="展示 GitHub" description="控制仓库地址按钮" checked={display.showGithub} disabled={!project.github_url} onChange={(showGithub) => update({ showGithub })} />
+                            <ToggleCard label="展示域名" description="控制域名小标签" checked={display.showDomain} disabled={!project.domain} onChange={(showDomain) => update({ showDomain })} />
+                            <ToggleCard label="展示截图" description="隐藏后卡片更简洁" checked={display.showImage} onChange={(showImage) => update({ showImage })} />
+                        </div>
+                    </section>
+                );
+            }) : (
+                <EmptyList text="Studio 暂时没有公开项目" />
+            )}
+        </div>
+    );
+}
+
+function ToggleCard({
+    label,
+    description,
+    checked,
+    disabled,
+    onChange,
+}: {
+    label: string;
+    description: string;
+    checked: boolean;
+    disabled?: boolean;
+    onChange: (checked: boolean) => void;
+}) {
+    return (
+        <button
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(!checked)}
+            className={`rounded-[16px] border p-3 text-left transition ${
+                checked && !disabled
+                    ? "border-theme/30 bg-theme/10"
+                    : "border-black/8 bg-white/65 hover:border-theme/25 dark:border-white/10 dark:bg-white/[0.04]"
+            } disabled:cursor-not-allowed disabled:opacity-45`}
+        >
+            <span className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100">{label}</span>
+                <span className={`h-5 w-9 rounded-full p-0.5 transition ${checked && !disabled ? "bg-theme" : "bg-black/10 dark:bg-white/15"}`}>
+                    <span className={`block size-4 rounded-full bg-white transition ${checked && !disabled ? "translate-x-4" : ""}`} />
+                </span>
+            </span>
+            <span className="mt-1 block text-xs leading-5 text-neutral-400">{disabled ? "当前项目没有这个内容" : description}</span>
         </button>
     );
 }

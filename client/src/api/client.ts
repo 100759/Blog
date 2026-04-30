@@ -130,6 +130,7 @@ export interface CompatBlurhashApplyResponse {
 export interface PortfolioConfigResponse {
   works?: unknown;
   sites?: unknown;
+  projects?: unknown;
 }
 
 // Re-export for external use

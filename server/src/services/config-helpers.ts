@@ -21,6 +21,7 @@ type ConfigProfiler = <T>(name: string, task: () => Promise<T>) => Promise<T>;
 const DEFERRED_PUBLIC_CLIENT_CONFIG_KEYS = new Set([
   "portfolio.works",
   "portfolio.sites",
+  "portfolio.projects",
 ]);
 
 type ServerConfigResponseEnv = {
@@ -257,12 +258,13 @@ export async function buildClientConfigResponse(
 }
 
 export async function buildPortfolioConfigResponse(clientConfig: ConfigReaderLike) {
-  const [works, sites] = await Promise.all([
+  const [works, sites, projects] = await Promise.all([
     clientConfig.get("portfolio.works"),
     clientConfig.get("portfolio.sites"),
+    clientConfig.get("portfolio.projects"),
   ]);
 
-  return { works, sites };
+  return { works, sites, projects: projects ?? [] };
 }
 
 export async function buildCombinedConfigResponse(

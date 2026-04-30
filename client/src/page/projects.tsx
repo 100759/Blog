@@ -1,37 +1,24 @@
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
+import { client } from "../app/runtime";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-
-const PROJECTS_ENDPOINT = "https://studio.fuheng.vip/api/public/projects";
-
-type StudioProject = {
-    id: number;
-    name: string;
-    description: string;
-    type: "opensource" | "self" | string;
-    icon?: string | null;
-    logo_url?: string | null;
-    image_url?: string | null;
-    status?: string | null;
-    github_url?: string | null;
-    deploy_url?: string | null;
-    domain?: string | null;
-    tech_stack?: string[];
-    tags?: string[];
-    updated_at?: string;
-    created_at?: string;
-};
-
-type ProjectsResponse = {
-    ok: boolean;
-    count: number;
-    projects: StudioProject[];
-};
+import { ClientConfigContext } from "../state/config";
+import {
+    getProjectDisplayOptions,
+    parseProjectDisplayConfig,
+    PROJECTS_CONFIG_KEY,
+    PROJECTS_ENDPOINT,
+    type ProjectDisplayOptions,
+    type ProjectsResponse,
+    type StudioProject,
+} from "./portfolio-data";
 
 export function ProjectsPage() {
     const siteConfig = useSiteConfig();
+    const config = useContext(ClientConfigContext);
     const [projects, setProjects] = useState<StudioProject[]>([]);
+    const [displaySettings, setDisplaySettings] = useState<ProjectDisplayOptions[]>(() => parseProjectDisplayConfig(config.get(PROJECTS_CONFIG_KEY)));
     const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
     const [error, setError] = useState("");
 
@@ -66,11 +53,23 @@ export function ProjectsPage() {
         return () => controller.abort();
     }, []);
 
+    useEffect(() => {
+        let cancelled = false;
+        client.config.getPortfolio().then(({ data }) => {
+            if (!cancelled && data) {
+                setDisplaySettings(parseProjectDisplayConfig(data.projects));
+            }
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
     const featuredProject = projects[0];
     const otherProjects = featuredProject ? projects.slice(1) : projects;
-    const openSourceCount = useMemo(
-        () => projects.filter((project) => project.type === "opensource" || Boolean(project.github_url)).length,
-        [projects],
+    const visibleGithubCount = useMemo(
+        () => projects.filter((project) => getProjectDisplayOptions(displaySettings, project).showGithub && project.github_url).length,
+        [displaySettings, projects],
     );
 
     return (
@@ -93,10 +92,10 @@ export function ProjectsPage() {
                         项目
                     </h1>
                     <p className="mt-2 max-w-2xl text-[14px] leading-6 text-neutral-600 dark:text-neutral-300">
-                        从 Studio 自动同步的项目和网站。这里更偏“正在做什么”，可以直接打开站点、查看源码或了解技术栈。
+                        从 Studio 同步我的项目和网站。这里更像一张在线作品名片，必要时可以隐藏网站入口、GitHub 地址、域名或截图。
                     </p>
                     <p className="mt-2 text-[12px] text-neutral-400 dark:text-neutral-500">
-                        共 {projects.length} 个项目 · {openSourceCount} 个可查看源码
+                        共 {projects.length} 个项目 · {visibleGithubCount} 个公开仓库入口
                     </p>
                 </section>
 
@@ -115,14 +114,14 @@ export function ProjectsPage() {
 
                 {status === "ready" && featuredProject ? (
                     <section className="mt-6">
-                        <ProjectCard project={featuredProject} featured />
+                        <ProjectCard project={featuredProject} display={getProjectDisplayOptions(displaySettings, featuredProject)} featured />
                     </section>
                 ) : null}
 
                 {status === "ready" && otherProjects.length > 0 ? (
                     <section className="mt-4 grid gap-4 md:grid-cols-2">
                         {otherProjects.map((project) => (
-                            <ProjectCard key={project.id} project={project} />
+                            <ProjectCard key={project.id} project={project} display={getProjectDisplayOptions(displaySettings, project)} />
                         ))}
                     </section>
                 ) : null}
@@ -137,11 +136,14 @@ export function ProjectsPage() {
     );
 }
 
-function ProjectCard({ project, featured = false }: { project: StudioProject; featured?: boolean }) {
+function ProjectCard({ project, display, featured = false }: { project: StudioProject; display: ProjectDisplayOptions; featured?: boolean }) {
     const updatedAt = project.updated_at ? new Date(project.updated_at) : null;
+    const hasWebsite = display.showWebsite && Boolean(project.deploy_url);
+    const hasGithub = display.showGithub && Boolean(project.github_url);
+    const hasMedia = display.showImage;
 
     return (
-        <article className={`site-panel group overflow-hidden rounded-[22px] transition hover:-translate-y-0.5 hover:border-theme/30 ${featured ? "md:grid md:grid-cols-[minmax(0,1fr)_minmax(280px,0.72fr)]" : ""}`}>
+        <article className={`site-panel group overflow-hidden rounded-[22px] transition hover:-translate-y-0.5 hover:border-theme/30 ${featured && hasMedia ? "md:grid md:grid-cols-[minmax(0,1fr)_minmax(280px,0.72fr)]" : ""}`}>
             <div className="px-4 py-5 md:px-5">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -160,7 +162,7 @@ function ProjectCard({ project, featured = false }: { project: StudioProject; fe
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                    {project.domain ? <Badge>{project.domain}</Badge> : null}
+                    {display.showDomain && project.domain ? <Badge>{project.domain}</Badge> : null}
                     {project.status ? <Badge>{statusLabel(project.status)}</Badge> : null}
                     {updatedAt ? <Badge>{updatedAt.toLocaleDateString("zh-CN")} 更新</Badge> : null}
                 </div>
@@ -175,50 +177,54 @@ function ProjectCard({ project, featured = false }: { project: StudioProject; fe
                     </div>
                 ) : null}
 
-                <div className="mt-5 flex flex-wrap gap-2">
-                    {project.deploy_url ? (
-                        <a
-                            href={project.deploy_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex min-h-10 items-center gap-2 rounded-[10px] bg-theme px-4 text-sm font-medium text-white transition hover:opacity-90"
-                        >
-                            打开网站
-                            <i className="ri-arrow-right-up-line" />
-                        </a>
-                    ) : null}
-                    {project.github_url ? (
-                        <a
-                            href={project.github_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-black/10 bg-white/55 px-4 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 hover:text-theme dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
-                        >
-                            GitHub
-                            <i className="ri-github-line" />
-                        </a>
-                    ) : null}
-                </div>
+                {hasWebsite || hasGithub ? (
+                    <div className="mt-5 flex flex-wrap gap-2">
+                        {hasWebsite ? (
+                            <a
+                                href={project.deploy_url || undefined}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex min-h-10 items-center gap-2 rounded-[10px] bg-theme px-4 text-sm font-medium text-white transition hover:opacity-90"
+                            >
+                                打开网站
+                                <i className="ri-arrow-right-up-line" />
+                            </a>
+                        ) : null}
+                        {hasGithub ? (
+                            <a
+                                href={project.github_url || undefined}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex min-h-10 items-center gap-2 rounded-[10px] border border-black/10 bg-white/55 px-4 text-sm font-medium text-neutral-700 transition hover:border-theme/30 hover:bg-theme/10 hover:text-theme dark:border-white/10 dark:bg-white/[0.04] dark:text-neutral-200 dark:hover:bg-theme/15"
+                            >
+                                GitHub
+                                <i className="ri-github-line" />
+                            </a>
+                        ) : null}
+                    </div>
+                ) : null}
             </div>
 
-            <div className={`${featured ? "md:border-l md:border-t-0" : ""} border-t border-black/5 bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.03),rgba(255,255,255,0.1))] p-3 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.05),rgba(255,255,255,0.02))]`}>
-                {project.image_url ? (
-                    <img
-                        src={project.image_url}
-                        alt={project.name}
-                        loading={featured ? "eager" : "lazy"}
-                        decoding="async"
-                        className={`${featured ? "min-h-[230px]" : "min-h-[180px]"} h-full w-full rounded-[14px] object-cover shadow-sm`}
-                    />
-                ) : (
-                    <div className={`${featured ? "min-h-[230px]" : "min-h-[180px]"} flex h-full items-end rounded-[14px] border border-dashed border-black/10 bg-white/45 p-4 dark:border-white/10 dark:bg-white/[0.04]`}>
-                        <div>
-                            <p className="site-kicker">Project</p>
-                            <p className="mt-2 text-lg font-semibold text-neutral-900 dark:text-white">{project.name}</p>
+            {hasMedia ? (
+                <div className={`${featured ? "md:border-l md:border-t-0" : ""} border-t border-black/5 bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.03),rgba(255,255,255,0.1))] p-3 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(var(--theme-rgb),0.05),rgba(255,255,255,0.02))]`}>
+                    {project.image_url ? (
+                        <img
+                            src={project.image_url}
+                            alt={project.name}
+                            loading={featured ? "eager" : "lazy"}
+                            decoding="async"
+                            className={`${featured ? "min-h-[230px]" : "min-h-[180px]"} h-full w-full rounded-[14px] object-cover shadow-sm`}
+                        />
+                    ) : (
+                        <div className={`${featured ? "min-h-[230px]" : "min-h-[180px]"} flex h-full items-end rounded-[14px] border border-dashed border-black/10 bg-white/45 p-4 dark:border-white/10 dark:bg-white/[0.04]`}>
+                            <div>
+                                <p className="site-kicker">Project</p>
+                                <p className="mt-2 text-lg font-semibold text-neutral-900 dark:text-white">{project.name}</p>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            ) : null}
         </article>
     );
 }
