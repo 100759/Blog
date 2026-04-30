@@ -18,6 +18,7 @@ export function NavBar({
     <>
       <NavItem menu={menu} onClick={onClick} itemClassName={itemClassName} icon="ri-file-list-3-line" title={t("article.title")} selected={location === "/" || location.startsWith("/feed")} href="/" />
       <NavItem menu={menu} onClick={onClick} itemClassName={itemClassName} icon="ri-quill-pen-line" title={t("moments.title")} selected={location === "/moments"} href="/moments" />
+      <NavItem menu={menu} onClick={onClick} itemClassName={itemClassName} icon="ri-rocket-line" title="项目" selected={location === "/projects"} href="/projects" />
       <NavItem menu={menu} onClick={onClick} itemClassName={itemClassName} icon="ri-dashboard-line" title="作品" selected={location === "/works" || location.startsWith("/works/")} href="/works" />
       <NavItem menu={menu} onClick={onClick} itemClassName={itemClassName} icon="ri-computer-line" title="旗下网站" selected={location === "/sites"} href="/sites" />
       <NavItem menu={menu} onClick={onClick} itemClassName={itemClassName} icon="ri-user-received-line" title={t("friends.title")} selected={location === "/friends"} href="/friends" />
