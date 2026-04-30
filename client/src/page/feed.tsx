@@ -156,10 +156,6 @@ export function FeedPage({ id, TOC, clean }: { id: string; TOC: () => JSX.Elemen
                     {feed.title}
                   </h1>
 
-                  {excerpt ? (
-                    <p className="mt-4 max-w-2xl text-[14px] leading-7 text-neutral-600 dark:text-neutral-300 md:text-[15px]">{excerpt}</p>
-                  ) : null}
-
                   <div className="mt-4 flex max-w-2xl flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-neutral-500 dark:text-neutral-400">
                     {createdAt ? (
                       <span title={createdAt.toLocaleString()}>
