@@ -16,14 +16,14 @@ export function StorageService(): Hono {
     app.post('/', async (c: AppContext) => {
         const uid = c.get('uid');
         const env = c.get('env');
-        
-        const body = await profileAsync(c, 'storage_parse', () => c.req.parseBody());
-        const key = body.key as string;
-        const file = body.file as File;
-        
+
         if (!uid) {
             return c.text('Unauthorized', 401);
         }
+
+        const body = await profileAsync(c, 'storage_parse', () => c.req.parseBody());
+        const key = body.key as string;
+        const file = body.file as File;
 
         if (!key || !file) {
             return c.text('File and key are required', 400);

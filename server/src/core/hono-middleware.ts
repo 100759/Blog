@@ -112,15 +112,28 @@ export const authMiddleware = createMiddleware<{
         const jwt = c.get('jwt');
         const db = c.get('db');
 
-        const token = await profileAsync(c, "auth_token", () => {
+        const tokens = await profileAsync(c, "auth_token", () => {
+            const candidates: string[] = [];
             const authHeader = c.req.header('authorization');
             if (authHeader && authHeader.startsWith('Bearer ')) {
-                return authHeader.substring(7);
+                candidates.push(authHeader.substring(7));
             }
-            return getCookie(c, 'token');
+            const tokenCookie = getCookie(c, 'token');
+            const readableTokenCookie = getCookie(c, 'auth_token');
+            if (tokenCookie) {
+                candidates.push(tokenCookie);
+            }
+            if (readableTokenCookie && readableTokenCookie !== tokenCookie) {
+                candidates.push(readableTokenCookie);
+            }
+            return candidates;
         });
 
-        if (token && jwt) {
+        for (const token of tokens) {
+            if (!token || !jwt) {
+                continue;
+            }
+
             const profile = await profileAsync(c, "auth_verify", () => jwt.verify(token));
             if (profile) {
                 const { users } = await import("../db/schema");
@@ -132,6 +145,7 @@ export const authMiddleware = createMiddleware<{
                     c.set('uid', user.id);
                     c.set('username', user.username);
                     c.set('admin', user.permission === 1);
+                    break;
                 }
             }
         }

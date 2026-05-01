@@ -3,6 +3,22 @@ const TOKEN_KEY = 'rin_auth_token';
 // In-memory fallback for environments without localStorage (e.g., tests)
 let memoryToken: string | null = null;
 
+function getCookieValue(name: string): string | null {
+    if (typeof document === 'undefined') {
+        return null;
+    }
+
+    const cookies = document.cookie ? document.cookie.split(';') : [];
+    for (const cookie of cookies) {
+        const [rawKey, ...rawValue] = cookie.trim().split('=');
+        if (rawKey === name) {
+            return decodeURIComponent(rawValue.join('='));
+        }
+    }
+
+    return null;
+}
+
 function isLocalStorageAvailable(): boolean {
     try {
         if (typeof localStorage === 'undefined') {
@@ -19,9 +35,9 @@ function isLocalStorageAvailable(): boolean {
 
 export function getAuthToken(): string | null {
     if (isLocalStorageAvailable()) {
-        return localStorage.getItem(TOKEN_KEY);
+        return localStorage.getItem(TOKEN_KEY) || getCookieValue('auth_token');
     }
-    return memoryToken;
+    return memoryToken || getCookieValue('auth_token');
 }
 
 export function setAuthToken(token: string): void {
